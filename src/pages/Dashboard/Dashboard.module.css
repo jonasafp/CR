@@ -1,0 +1,40 @@
+.page {
+  animation: fadeIn 0.35s ease;
+}
+
+.placeholder {
+  min-height: 280px;
+  padding: 35px;
+
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.placeholder > span {
+  display: inline-flex;
+  padding: 7px 11px;
+
+  color: var(--primary);
+  border-radius: 999px;
+  background: var(--primary-light);
+
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.placeholder h2 {
+  margin-top: 20px;
+  color: var(--text);
+  font-size: 25px;
+  letter-spacing: -0.5px;
+}
+
+.placeholder p {
+  max-width: 650px;
+  margin-top: 10px;
+  font-size: 14px;
+}

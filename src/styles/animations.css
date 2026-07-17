@@ -1,0 +1,49 @@
+.fade-in{
+
+    animation:fadeIn .35s ease;
+
+}
+
+.scale{
+
+    transition:var(--transition);
+
+}
+
+.scale:hover{
+
+    transform:scale(1.03);
+
+}
+
+.raise{
+
+    transition:var(--transition);
+
+}
+
+.raise:hover{
+
+    transform:translateY(-4px);
+
+}
+
+@keyframes fadeIn{
+
+    from{
+
+        opacity:0;
+
+        transform:translateY(12px);
+
+    }
+
+    to{
+
+        opacity:1;
+
+        transform:translateY(0);
+
+    }
+
+}

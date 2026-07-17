@@ -1,0 +1,135 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
+
+body{
+
+    font-family:"Inter",sans-serif;
+
+    background:var(--background);
+
+    color:var(--text);
+
+    -webkit-font-smoothing:antialiased;
+
+    -moz-osx-font-smoothing:grayscale;
+
+}
+
+#root{
+
+    min-height:100vh;
+
+}
+
+h1{
+
+    font-size:34px;
+
+    font-weight:700;
+
+}
+
+h2{
+
+    font-size:28px;
+
+    font-weight:700;
+
+}
+
+h3{
+
+    font-size:22px;
+
+    font-weight:600;
+
+}
+
+p{
+
+    color:var(--text-secondary);
+
+    line-height:1.6;
+
+}
+
+.container{
+
+    width:100%;
+
+    max-width:1700px;
+
+    margin:auto;
+
+}
+
+.page{
+
+    padding:35px;
+
+}
+
+.card{
+
+    background:var(--surface);
+
+    border-radius:var(--radius-lg);
+
+    box-shadow:var(--shadow-sm);
+
+}
+
+.flex{
+
+    display:flex;
+
+}
+
+.grid{
+
+    display:grid;
+
+}
+
+.center{
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+}
+
+.space-between{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+}
+
+.text-success{
+
+    color:var(--success);
+
+}
+
+.text-danger{
+
+    color:var(--danger);
+
+}
+
+.text-warning{
+
+    color:var(--warning);
+
+}
+
+.text-primary{
+
+    color:var(--primary);
+
+}

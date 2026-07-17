@@ -1,0 +1,377 @@
+.sidebar {
+  position: fixed;
+  z-index: 50;
+  top: 0;
+  bottom: 0;
+  left: 0;
+
+  display: flex;
+  width: var(--sidebar-width);
+  flex-direction: column;
+
+  padding: 24px 18px 18px;
+
+  color: #dbeafe;
+  background:
+    radial-gradient(
+      circle at 20% 0%,
+      rgb(59 130 246 / 22%),
+      transparent 28%
+    ),
+    linear-gradient(180deg, #172554 0%, #1e3a8a 100%);
+
+  box-shadow: 10px 0 30px rgb(15 23 42 / 12%);
+  transition:
+    transform var(--transition),
+    width var(--transition);
+}
+
+.brandArea {
+  display: flex;
+  align-items: center;
+  min-height: 54px;
+  padding: 0 8px;
+}
+
+.brandIcon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  place-items: center;
+
+  color: #ffffff;
+  border: 1px solid rgb(255 255 255 / 15%);
+  border-radius: 14px;
+  background: rgb(255 255 255 / 12%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 14%);
+}
+
+.brandText {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  margin-left: 12px;
+}
+
+.brandText strong {
+  overflow: hidden;
+  color: #ffffff;
+  font-size: 17px;
+  font-weight: 750;
+  letter-spacing: -0.3px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.brandText span {
+  margin-top: 3px;
+  color: #93c5fd;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.closeButton {
+  display: none;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  color: #bfdbfe;
+  border-radius: 11px;
+}
+
+.closeButton:hover {
+  color: #ffffff;
+  background: rgb(255 255 255 / 10%);
+}
+
+.businessCard {
+  display: flex;
+  align-items: center;
+  margin-top: 28px;
+  padding: 12px;
+
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 16px;
+  background: rgb(255 255 255 / 8%);
+}
+
+.businessAvatar {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  place-items: center;
+
+  color: #1e3a8a;
+  border-radius: 12px;
+  background: #dbeafe;
+
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.businessInfo {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  margin-left: 11px;
+}
+
+.businessInfo strong {
+  overflow: hidden;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.businessInfo span {
+  overflow: hidden;
+  margin-top: 3px;
+  color: #93c5fd;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.businessArrow {
+  flex-shrink: 0;
+  color: #93c5fd;
+}
+
+.navigation {
+  flex: 1;
+  margin-top: 28px;
+  overflow-y: auto;
+}
+
+.navigation::-webkit-scrollbar {
+  width: 4px;
+}
+
+.navigation::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgb(255 255 255 / 15%);
+}
+
+.sectionLabel {
+  display: block;
+  padding: 0 12px 9px;
+
+  color: #93c5fd;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.1px;
+  text-transform: uppercase;
+}
+
+.settingsLabel {
+  margin-top: 25px;
+}
+
+.menuList {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.menuLink {
+  position: relative;
+
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  padding: 0 13px;
+
+  color: #bfdbfe;
+  border: 1px solid transparent;
+  border-radius: 13px;
+
+  font-size: 14px;
+  font-weight: 550;
+
+  transition:
+    color var(--transition),
+    background var(--transition),
+    transform var(--transition);
+}
+
+.menuLink:hover {
+  color: #ffffff;
+  background: rgb(255 255 255 / 8%);
+  transform: translateX(2px);
+}
+
+.menuLinkActive {
+  color: #ffffff;
+  border-color: rgb(255 255 255 / 12%);
+  background: rgb(255 255 255 / 14%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 10%),
+    0 8px 18px rgb(15 23 42 / 12%);
+}
+
+.menuLinkActive::before {
+  position: absolute;
+  top: 12px;
+  bottom: 12px;
+  left: -6px;
+  width: 3px;
+
+  border-radius: 999px;
+  background: #60a5fa;
+
+  content: "";
+}
+
+.menuIcon {
+  display: grid;
+  width: 25px;
+  flex-shrink: 0;
+  place-items: center;
+}
+
+.menuLabel {
+  margin-left: 12px;
+  white-space: nowrap;
+}
+
+.sidebarFooter {
+  padding-top: 18px;
+  border-top: 1px solid rgb(255 255 255 / 10%);
+}
+
+.userSummary {
+  display: flex;
+  align-items: center;
+  padding: 0 7px 15px;
+}
+
+.userAvatar {
+  display: grid;
+  width: 39px;
+  height: 39px;
+  flex-shrink: 0;
+  place-items: center;
+
+  color: #ffffff;
+  border: 2px solid rgb(255 255 255 / 22%);
+  border-radius: 50%;
+  background: #2563eb;
+
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.userInfo {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  margin-left: 11px;
+}
+
+.userInfo strong {
+  overflow: hidden;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.userInfo span {
+  margin-top: 3px;
+  color: #93c5fd;
+  font-size: 10px;
+}
+
+.logoutButton {
+  display: flex;
+  width: 100%;
+  min-height: 46px;
+  align-items: center;
+  padding: 0 14px;
+
+  color: #bfdbfe;
+  border-radius: 13px;
+
+  font-size: 14px;
+  font-weight: 550;
+  transition: var(--transition);
+}
+
+.logoutButton:hover {
+  color: #ffffff;
+  background: rgb(239 68 68 / 20%);
+}
+
+@media (max-width: 1100px) and (min-width: 769px) {
+  .sidebar {
+    width: 88px;
+    align-items: center;
+    padding-inline: 14px;
+  }
+
+  .brandArea {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .brandText,
+  .businessCard,
+  .sectionLabel,
+  .menuLabel,
+  .userInfo {
+    display: none;
+  }
+
+  .navigation {
+    width: 100%;
+  }
+
+  .menuLink {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .menuLink:hover {
+    transform: none;
+  }
+
+  .menuLinkActive::before {
+    left: -8px;
+  }
+
+  .menuIcon {
+    width: auto;
+  }
+
+  .userSummary {
+    justify-content: center;
+    padding-inline: 0;
+  }
+
+  .logoutButton {
+    justify-content: center;
+    padding: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: min(290px, 86vw);
+    transform: translateX(-105%);
+  }
+
+  .sidebarOpen {
+    transform: translateX(0);
+  }
+
+  .closeButton {
+    display: grid;
+  }
+}
