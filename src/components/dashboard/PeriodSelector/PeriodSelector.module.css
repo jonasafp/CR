@@ -1,0 +1,55 @@
+.selector {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+}
+
+.option {
+  min-height: 34px;
+  padding: 0 13px;
+
+  color: var(--text-light);
+  border-radius: 10px;
+
+  font-size: 11px;
+  font-weight: 650;
+
+  transition:
+    color var(--transition),
+    background var(--transition),
+    box-shadow var(--transition);
+}
+
+.option:hover {
+  color: var(--primary);
+  background: var(--primary-light);
+}
+
+.optionActive {
+  color: #ffffff;
+  background: var(--primary);
+  box-shadow: 0 5px 12px rgb(37 99 235 / 22%);
+}
+
+.optionActive:hover {
+  color: #ffffff;
+  background: var(--primary);
+}
+
+@media (max-width: 480px) {
+  .selector {
+    width: 100%;
+  }
+
+  .option {
+    flex: 1;
+    padding-inline: 8px;
+  }
+}

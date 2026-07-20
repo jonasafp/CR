@@ -2,39 +2,135 @@
   animation: fadeIn 0.35s ease;
 }
 
-.placeholder {
-  min-height: 280px;
-  padding: 35px;
-
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  box-shadow: var(--shadow-sm);
+.pageHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 28px;
+  margin-bottom: 25px;
 }
 
-.placeholder > span {
+.pageIntroduction {
+  min-width: 0;
+}
+
+.eyebrow {
   display: inline-flex;
-  padding: 7px 11px;
+  min-height: 27px;
+  align-items: center;
+  padding: 0 10px;
 
   color: var(--primary);
+  border: 1px solid #dbeafe;
   border-radius: 999px;
   background: var(--primary-light);
 
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 0.9px;
   text-transform: uppercase;
 }
 
-.placeholder h2 {
-  margin-top: 20px;
+.pageIntroduction h2 {
+  margin-top: 13px;
+
   color: var(--text);
-  font-size: 25px;
-  letter-spacing: -0.5px;
+  font-size: clamp(22px, 2vw, 27px);
+  font-weight: 750;
+  letter-spacing: -0.7px;
 }
 
-.placeholder p {
-  max-width: 650px;
+.pageIntroduction p {
+  margin-top: 6px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(
+    6,
+    minmax(190px, 1fr)
+  );
+  gap: 17px;
+}
+
+.nextSection {
+  display: flex;
+  min-height: 220px;
+  align-items: center;
+  margin-top: 22px;
+  padding: 32px;
+
+  border: 1px dashed #cbd5e1;
+  border-radius: 20px;
+  background:
+    linear-gradient(
+      145deg,
+      rgb(255 255 255 / 90%),
+      rgb(248 250 252 / 90%)
+    );
+}
+
+.nextSection > div {
+  max-width: 620px;
+}
+
+.nextSection span {
+  color: var(--primary);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+}
+
+.nextSection h3 {
   margin-top: 10px;
-  font-size: 14px;
+
+  color: var(--text);
+  font-size: 21px;
+  font-weight: 720;
+  letter-spacing: -0.4px;
+}
+
+.nextSection p {
+  margin-top: 8px;
+
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+@media (max-width: 1650px) {
+  .metricsGrid {
+    grid-template-columns: repeat(
+      3,
+      minmax(220px, 1fr)
+    );
+  }
+}
+
+@media (max-width: 1000px) {
+  .metricsGrid {
+    grid-template-columns: repeat(
+      2,
+      minmax(220px, 1fr)
+    );
+  }
+}
+
+@media (max-width: 650px) {
+  .pageHeader {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .metricsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .nextSection {
+    padding: 24px;
+  }
 }
