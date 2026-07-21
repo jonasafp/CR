@@ -8,6 +8,8 @@ import { useLocation } from "react-router-dom";
 
 import styles from "./Header.module.css";
 
+import { businessConfig } from "../../../config/businessConfig";
+
 interface HeaderProps {
   onToggleSidebar: () => void;
 }
@@ -121,7 +123,7 @@ export default function Header({
 
             <div className={styles.profileText}>
               <strong>Administrador</strong>
-              <span>Casa de Rações</span>
+              <span>{businessConfig.tradeName}</span>
             </div>
           </div>
         </div>

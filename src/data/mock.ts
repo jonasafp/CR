@@ -1,4 +1,4 @@
-import type { BusinessConfig } from "../types/Business";
+import { businessConfig } from "../config/businessConfig";
 
 import type {
   DashboardData,
@@ -11,25 +11,6 @@ import type {
 import type { Product } from "../types/Product";
 
 import { calculateProductFinancialData } from "../utils/productCalculations";
-
-export const businessConfig: BusinessConfig = {
-  id: 1,
-
-  name: "Casa de Rações Central LTDA",
-  tradeName: "Casa de Rações",
-
-  businessType: "pet_store",
-
-  principalStockUnit: "kg",
-  currency: "BRL",
-
-  fiscalMode: false,
-  allowNegativeStock: false,
-  lowStockAlertsEnabled: true,
-
-  city: "Campo Grande",
-  state: "MS",
-};
 
 export const products: Product[] = [
   {

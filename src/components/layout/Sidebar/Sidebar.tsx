@@ -1,16 +1,15 @@
 import {
-  BarChart3,
-  Boxes,
   ChevronRight,
-  CircleDollarSign,
   LogOut,
-  Package,
   Settings,
-  ShoppingCart,
   Store,
   X,
 } from "lucide-react";
+
 import { NavLink } from "react-router-dom";
+
+import { businessConfig } from "../../../config/businessConfig";
+import { mainNavigationItems } from "../../../constants/navigation";
 
 import styles from "./Sidebar.module.css";
 
@@ -19,56 +18,16 @@ interface SidebarProps {
   onClose: () => void;
 }
 
-interface MenuItem {
-  label: string;
-  path: string;
-  icon: typeof BarChart3;
-  end?: boolean;
-}
-
-const menuItems: MenuItem[] = [
-  {
-    label: "Resumo",
-    path: "/",
-    icon: BarChart3,
-    end: true,
-  },
-  {
-    label: "Estoque",
-    path: "/estoque",
-    icon: Boxes,
-  },
-  {
-    label: "Vendas",
-    path: "/vendas",
-    icon: ShoppingCart,
-  },
-  {
-    label: "Produtos",
-    path: "/produtos",
-    icon: Package,
-  },
-  {
-    label: "Financeiro",
-    path: "/financeiro",
-    icon: CircleDollarSign,
-  },
-  {
-    label: "Relatórios",
-    path: "/relatorios",
-    icon: BarChart3,
-  },
-];
-
 export default function Sidebar({
   isOpen,
   onClose,
 }: SidebarProps) {
+  const enabledNavigationItems =
+    mainNavigationItems.filter(
+      (item) => businessConfig.modules[item.module],
+    );
+
   function handleLogout() {
-    /*
-     * O logout será implementado quando adicionarmos autenticação.
-     * Por enquanto, o botão permanece preparado visualmente.
-     */
     console.info("Logout ainda não implementado.");
   }
 
@@ -99,10 +58,12 @@ export default function Sidebar({
       </div>
 
       <div className={styles.businessCard}>
-        <div className={styles.businessAvatar}>CR</div>
+        <div className={styles.businessAvatar}>
+          {businessConfig.shortName}
+        </div>
 
         <div className={styles.businessInfo}>
-          <strong>Casa de Rações</strong>
+          <strong>{businessConfig.tradeName}</strong>
           <span>Unidade principal</span>
         </div>
 
@@ -116,10 +77,12 @@ export default function Sidebar({
         className={styles.navigation}
         aria-label="Navegação principal"
       >
-        <span className={styles.sectionLabel}>Menu principal</span>
+        <span className={styles.sectionLabel}>
+          Menu principal
+        </span>
 
         <ul className={styles.menuList}>
-          {menuItems.map((item) => {
+          {enabledNavigationItems.map((item) => {
             const Icon = item.icon;
 
             return (

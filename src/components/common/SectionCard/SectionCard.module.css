@@ -1,0 +1,44 @@
+.card {
+  overflow: hidden;
+
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+
+  transition:
+    border-color var(--transition),
+    box-shadow var(--transition);
+}
+
+.card:hover {
+  border-color: #d8e1ec;
+  box-shadow: var(--shadow-md);
+}
+
+.headerArea {
+  padding: 21px 22px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.content {
+  padding: 22px;
+}
+
+.noPadding {
+  padding: 0;
+}
+
+@media (max-width: 600px) {
+  .headerArea {
+    padding: 19px 18px 16px;
+  }
+
+  .content {
+    padding: 18px;
+  }
+
+  .noPadding {
+    padding: 0;
+  }
+}

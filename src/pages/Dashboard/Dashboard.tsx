@@ -9,7 +9,8 @@ import {
   Percent,
 } from "lucide-react";
 
-import MetricCard from "../../components/dashboard/MetricCard/MetricCard";
+import StatisticCard from "../../components/common/StatisticCard/StatisticCard";
+import SectionCard from "../../components/common/SectionCard/SectionCard";
 import PeriodSelector from "../../components/dashboard/PeriodSelector/PeriodSelector";
 
 import { dashboardData } from "../../data/mock";
@@ -58,7 +59,7 @@ export default function Dashboard() {
       </div>
 
       <div className={styles.metricsGrid}>
-        <MetricCard
+        <StatisticCard
           title="Estoque disponível"
           value={formatStockQuantity(
             summary.totalStockQuantity,
@@ -74,7 +75,7 @@ export default function Dashboard() {
           variationLabel="crescimento do estoque"
         />
 
-        <MetricCard
+        <StatisticCard
           title="Quantidade vendida"
           value={formatStockQuantity(
             summary.totalSoldQuantity,
@@ -87,7 +88,7 @@ export default function Dashboard() {
           variationLabel="comparado ao período anterior"
         />
 
-        <MetricCard
+        <StatisticCard
           title="Faturamento realizado"
           value={formatCurrency(summary.realizedRevenue)}
           description="Valor bruto das vendas registradas"
@@ -95,10 +96,10 @@ export default function Dashboard() {
           color="green"
           variation={8.7}
           variationLabel="crescimento do faturamento"
-          highlight
+          highlighted
         />
 
-        <MetricCard
+        <StatisticCard
           title="Lucro realizado"
           value={formatCurrency(summary.realizedProfit)}
           description="Resultado após dedução dos custos"
@@ -106,10 +107,10 @@ export default function Dashboard() {
           color="green"
           variation={10.2}
           variationLabel="crescimento do resultado"
-          highlight
+          highlighted
         />
 
-        <MetricCard
+        <StatisticCard
           title="Margem média"
           value={formatPercentage(
             summary.averageProfitMargin,
@@ -121,7 +122,7 @@ export default function Dashboard() {
           variationLabel="evolução da margem"
         />
 
-        <MetricCard
+        <StatisticCard
           title="Atenção no estoque"
           value={formatNumber(unavailableProducts, 0)}
           description={`${summary.lowStockProductsCount} com estoque baixo e ${summary.outOfStockProductsCount} sem estoque`}
@@ -133,17 +134,17 @@ export default function Dashboard() {
       </div>
 
       <div className={styles.nextSection}>
-        <div>
-          <span>Próxima etapa</span>
-
-          <h3>Análise detalhada do negócio</h3>
-
-          <p>
-            Na sequência, esta área receberá o produto em
-            destaque, o resumo financeiro, os alertas de
-            estoque e os produtos mais vendidos.
+        <SectionCard
+          title="Análise detalhada do negócio"
+          description="Os próximos widgets utilizarão a nova biblioteca interna de componentes."
+          badge="Próxima etapa"
+        >
+          <p className={styles.sectionDescription}>
+            Esta área receberá o produto em destaque, o resumo
+            financeiro, os alertas de estoque e os produtos mais
+            vendidos.
           </p>
-        </div>
+        </SectionCard>
       </div>
     </section>
   );
