@@ -1,0 +1,218 @@
+.card {
+  height: 100%;
+}
+
+.content {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+}
+
+.productHeader {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.productImage {
+  display: grid;
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
+  overflow: hidden;
+  place-items: center;
+
+  color: var(--primary);
+  border: 1px solid #dbeafe;
+  border-radius: 18px;
+  background:
+    linear-gradient(
+      145deg,
+      #eff6ff,
+      #dbeafe
+    );
+}
+
+.productImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.productInformation {
+  min-width: 0;
+}
+
+.code {
+  display: inline-flex;
+  min-height: 22px;
+  align-items: center;
+  padding: 0 8px;
+
+  color: var(--primary);
+  border-radius: 999px;
+  background: var(--primary-light);
+
+  font-size: 9px;
+  font-weight: 750;
+}
+
+.productInformation h4 {
+  overflow: hidden;
+  margin-top: 8px;
+
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 740;
+  letter-spacing: -0.3px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.productInformation p {
+  margin-top: 4px;
+  color: var(--text-light);
+  font-size: 11px;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.metric {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 9px;
+  padding: 12px;
+
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.metricIcon {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  place-items: center;
+
+  color: var(--primary);
+  border-radius: 10px;
+  background: var(--primary-light);
+}
+
+.metric div {
+  min-width: 0;
+}
+
+.metric small {
+  display: block;
+  overflow: hidden;
+
+  color: var(--text-light);
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.metric strong {
+  display: block;
+  overflow: hidden;
+  margin-top: 4px;
+
+  color: var(--text);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.priceArea {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+  padding: 15px;
+
+  border: 1px solid var(--border);
+  border-radius: 15px;
+}
+
+.priceArea div:last-child {
+  text-align: right;
+}
+
+.priceArea small {
+  display: block;
+  color: var(--text-light);
+  font-size: 9px;
+}
+
+.priceArea span,
+.priceArea strong {
+  display: block;
+  margin-top: 5px;
+
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 720;
+}
+
+.priceArea strong {
+  color: #15803d;
+}
+
+.priceArrow {
+  color: var(--text-light);
+}
+
+.margin {
+  margin-top: 19px;
+}
+
+.marginHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.marginHeader strong {
+  color: #15803d;
+}
+
+.progressTrack {
+  height: 8px;
+  overflow: hidden;
+  margin-top: 9px;
+
+  border-radius: 999px;
+  background: #e2e8f0;
+}
+
+.progressValue {
+  height: 100%;
+  border-radius: inherit;
+  background:
+    linear-gradient(
+      90deg,
+      #22c55e,
+      #16a34a
+    );
+
+  transition: width 0.4s ease;
+}
+
+@media (max-width: 700px) {
+  .metrics {
+    grid-template-columns: 1fr;
+  }
+}

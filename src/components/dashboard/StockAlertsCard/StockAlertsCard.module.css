@@ -1,0 +1,153 @@
+.card {
+  height: 100%;
+}
+
+.viewAllButton {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 11px;
+
+  color: var(--primary);
+  border: 1px solid #dbeafe;
+  border-radius: 10px;
+  background: var(--primary-light);
+
+  font-size: 10px;
+  font-weight: 700;
+  text-decoration: none;
+
+  transition:
+    background var(--transition),
+    border-color var(--transition);
+}
+
+.viewAllButton:hover {
+  border-color: #bfdbfe;
+  background: #dbeafe;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+}
+
+.alertItem {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 22px;
+
+  border-bottom: 1px solid var(--border);
+}
+
+.alertItem:last-child {
+  border-bottom: 0;
+}
+
+.alertItem:hover {
+  background: #f8fafc;
+}
+
+.alertIcon {
+  display: grid;
+  width: 39px;
+  height: 39px;
+  place-items: center;
+  border-radius: 12px;
+}
+
+.warningIcon {
+  color: #c2410c;
+  background: #ffedd5;
+}
+
+.criticalIcon {
+  color: #b91c1c;
+  background: #fee2e2;
+}
+
+.alertInformation {
+  min-width: 0;
+}
+
+.alertInformation strong {
+  display: block;
+  overflow: hidden;
+
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 680;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alertInformation span {
+  display: block;
+  margin-top: 4px;
+
+  color: var(--text-light);
+  font-size: 9px;
+}
+
+.currentStock {
+  min-width: 72px;
+  text-align: right;
+}
+
+.currentStock span {
+  display: block;
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.currentStock strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+}
+
+.warningStock {
+  color: #c2410c;
+}
+
+.criticalStock {
+  color: #b91c1c;
+}
+
+.emptyState {
+  display: flex;
+  min-height: 230px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+
+  padding: 25px;
+  color: var(--text-light);
+  text-align: center;
+}
+
+.emptyState strong {
+  margin-top: 12px;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.emptyState span {
+  margin-top: 5px;
+  font-size: 10px;
+}
+
+@media (max-width: 500px) {
+  .alertItem {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .currentStock {
+    grid-column: 2;
+    text-align: left;
+  }
+}

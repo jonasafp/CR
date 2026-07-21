@@ -10,7 +10,11 @@ import {
 } from "lucide-react";
 
 import StatisticCard from "../../components/common/StatisticCard/StatisticCard";
-import SectionCard from "../../components/common/SectionCard/SectionCard";
+import FeaturedProductCard from "../../components/dashboard/FeaturedProductCard/FeaturedProductCard";
+import FinancialSummaryCard from "../../components/dashboard/FinancialSummaryCard/FinancialSummaryCard";
+import StockAlertsCard from "../../components/dashboard/StockAlertsCard/StockAlertsCard";
+import TopSellingProductsCard from "../../components/dashboard/TopSellingProductsCard/TopSellingProductsCard";
+
 import PeriodSelector from "../../components/dashboard/PeriodSelector/PeriodSelector";
 
 import { dashboardData } from "../../data/mock";
@@ -133,18 +137,24 @@ export default function Dashboard() {
         />
       </div>
 
-      <div className={styles.nextSection}>
-        <SectionCard
-          title="Análise detalhada do negócio"
-          description="Os próximos widgets utilizarão a nova biblioteca interna de componentes."
-          badge="Próxima etapa"
-        >
-          <p className={styles.sectionDescription}>
-            Esta área receberá o produto em destaque, o resumo
-            financeiro, os alertas de estoque e os produtos mais
-            vendidos.
-          </p>
-        </SectionCard>
+      <div className={styles.primaryWidgetsGrid}>
+        <FeaturedProductCard
+          product={dashboardData.featuredProduct}
+        />
+
+        <FinancialSummaryCard
+          data={dashboardData.financialSummary}
+        />
+      </div>
+
+      <div className={styles.secondaryWidgetsGrid}>
+        <StockAlertsCard
+          items={dashboardData.lowStockProducts}
+        />
+
+        <TopSellingProductsCard
+          items={dashboardData.topSellingProducts}
+        />
       </div>
     </section>
   );
