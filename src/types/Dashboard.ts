@@ -73,10 +73,39 @@ export interface TopSellingProduct {
   profit: number;
 }
 
+export interface SalesPerformancePoint {
+  label: string;
+  revenue: number;
+  cost: number;
+  profit: number;
+}
+
+export interface CategoryPerformanceItem {
+  category: string;
+  revenue: number;
+  profit: number;
+  percentage: number;
+}
+
+export interface DashboardVariations {
+  stock: number;
+  soldQuantity: number;
+  revenue: number;
+  profit: number;
+  margin: number;
+  stockAlerts: number;
+}
+
 export interface DashboardData {
   summary: DashboardSummary;
   financialSummary: FinancialSummary;
+
   featuredProduct: Product;
+
   lowStockProducts: StockAlertItem[];
   topSellingProducts: TopSellingProduct[];
+
+  salesPerformance?: SalesPerformancePoint[];
+  categoryPerformance?: CategoryPerformanceItem[];
+  variations?: DashboardVariations;
 }

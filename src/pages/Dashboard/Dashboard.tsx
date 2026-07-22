@@ -10,14 +10,16 @@ import {
 } from "lucide-react";
 
 import StatisticCard from "../../components/common/StatisticCard/StatisticCard";
+
+import CategoryPerformanceChart from "../../components/dashboard/CategoryPerformanceChart/CategoryPerformanceChart";
 import FeaturedProductCard from "../../components/dashboard/FeaturedProductCard/FeaturedProductCard";
 import FinancialSummaryCard from "../../components/dashboard/FinancialSummaryCard/FinancialSummaryCard";
+import PeriodSelector from "../../components/dashboard/PeriodSelector/PeriodSelector";
+import SalesPerformanceChart from "../../components/dashboard/SalesPerformanceChart/SalesPerformanceChart";
 import StockAlertsCard from "../../components/dashboard/StockAlertsCard/StockAlertsCard";
 import TopSellingProductsCard from "../../components/dashboard/TopSellingProductsCard/TopSellingProductsCard";
 
-import PeriodSelector from "../../components/dashboard/PeriodSelector/PeriodSelector";
-
-import { dashboardData } from "../../data/mock";
+import { getDashboardDataByPeriod } from "../../data/dashboardAnalytics";
 
 import type { DashboardPeriod } from "../../types/Dashboard";
 
@@ -34,7 +36,19 @@ export default function Dashboard() {
   const [selectedPeriod, setSelectedPeriod] =
     useState<DashboardPeriod>("month");
 
-  const { summary } = dashboardData;
+  const currentDashboardData =
+    getDashboardDataByPeriod(selectedPeriod);
+
+  const {
+    summary,
+    financialSummary,
+    featuredProduct,
+    lowStockProducts,
+    topSellingProducts,
+    salesPerformance = [],
+    categoryPerformance = [],
+    variations,
+  } = currentDashboardData;
 
   const unavailableProducts =
     summary.lowStockProductsCount +
@@ -51,8 +65,8 @@ export default function Dashboard() {
           <h2>Visão geral do negócio</h2>
 
           <p>
-            Acompanhe estoque, vendas e resultados em um único
-            lugar.
+            Acompanhe estoque, vendas e resultados em um
+            único lugar.
           </p>
         </div>
 
@@ -75,7 +89,7 @@ export default function Dashboard() {
           )} produtos cadastrados`}
           icon={Boxes}
           color="blue"
-          variation={5.8}
+          variation={variations?.stock}
           variationLabel="crescimento do estoque"
         />
 
@@ -88,7 +102,7 @@ export default function Dashboard() {
           description="Volume total vendido no período"
           icon={PackageCheck}
           color="purple"
-          variation={12.4}
+          variation={variations?.soldQuantity}
           variationLabel="comparado ao período anterior"
         />
 
@@ -98,7 +112,7 @@ export default function Dashboard() {
           description="Valor bruto das vendas registradas"
           icon={CircleDollarSign}
           color="green"
-          variation={8.7}
+          variation={variations?.revenue}
           variationLabel="crescimento do faturamento"
           highlighted
         />
@@ -109,7 +123,7 @@ export default function Dashboard() {
           description="Resultado após dedução dos custos"
           icon={BadgeDollarSign}
           color="green"
-          variation={10.2}
+          variation={variations?.profit}
           variationLabel="crescimento do resultado"
           highlighted
         />
@@ -122,7 +136,7 @@ export default function Dashboard() {
           description="Margem média sobre as vendas"
           icon={Percent}
           color="orange"
-          variation={1.6}
+          variation={variations?.margin}
           variationLabel="evolução da margem"
         />
 
@@ -132,28 +146,34 @@ export default function Dashboard() {
           description={`${summary.lowStockProductsCount} com estoque baixo e ${summary.outOfStockProductsCount} sem estoque`}
           icon={AlertTriangle}
           color="red"
-          variation={-2.3}
+          variation={variations?.stockAlerts}
           variationLabel="redução dos alertas"
         />
       </div>
 
       <div className={styles.primaryWidgetsGrid}>
-        <FeaturedProductCard
-          product={dashboardData.featuredProduct}
-        />
+        <FeaturedProductCard product={featuredProduct} />
 
-        <FinancialSummaryCard
-          data={dashboardData.financialSummary}
-        />
+        <FinancialSummaryCard data={financialSummary} />
       </div>
 
       <div className={styles.secondaryWidgetsGrid}>
-        <StockAlertsCard
-          items={dashboardData.lowStockProducts}
-        />
+        <StockAlertsCard items={lowStockProducts} />
 
         <TopSellingProductsCard
-          items={dashboardData.topSellingProducts}
+          items={topSellingProducts}
+        />
+      </div>
+
+      <div className={styles.analyticsGrid}>
+        <SalesPerformanceChart
+          data={salesPerformance}
+          period={selectedPeriod}
+        />
+
+        <CategoryPerformanceChart
+          data={categoryPerformance}
+          period={selectedPeriod}
         />
       </div>
     </section>

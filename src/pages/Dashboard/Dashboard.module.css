@@ -69,9 +69,19 @@
   margin-top: 18px;
 }
 
+.analyticsGrid {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1.6fr)
+    minmax(360px, 0.9fr);
+  gap: 18px;
+  margin-top: 18px;
+}
+
 @media (max-width: 1200px) {
   .primaryWidgetsGrid,
-  .secondaryWidgetsGrid {
+  .secondaryWidgetsGrid,
+  .analyticsGrid {
     grid-template-columns: 1fr;
   }
 }
