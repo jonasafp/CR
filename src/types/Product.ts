@@ -9,38 +9,60 @@ export type StockUnit =
 
 export type ProductStatus =
   | "active"
-  | "low_stock"
-  | "out_of_stock"
   | "inactive";
 
 export interface Product {
   id: number;
-  code: string;
-  name: string;
-  category: string;
-  description?: string;
-  image?: string;
 
+  code: string;
+  barcode?: string;
+
+  name: string;
+  description?: string;
+  category: string;
+
+  stockUnit: StockUnit;
   stockQuantity: number;
   minimumStock: number;
   soldQuantity: number;
-  stockUnit: StockUnit;
 
   purchasePrice: number;
   salePrice: number;
 
   status: ProductStatus;
-  createdAt: string;
-  updatedAt: string;
+  image?: string;
+
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ProductFinancialData {
   profitPerUnit: number;
   profitMarginPercentage: number;
-  totalStockCost: number;
-  totalStockSaleValue: number;
-  estimatedStockProfit: number;
+
+  stockCost: number;
+  estimatedRevenue: number;
+  estimatedProfit: number;
+
   realizedRevenue: number;
   realizedCost: number;
   realizedProfit: number;
+}
+
+export interface ProductFormData {
+  code: string;
+  barcode: string;
+
+  name: string;
+  description: string;
+  category: string;
+
+  stockUnit: StockUnit;
+  stockQuantity: number;
+  minimumStock: number;
+
+  purchasePrice: number;
+  salePrice: number;
+
+  status: ProductStatus;
 }

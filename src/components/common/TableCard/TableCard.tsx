@@ -11,6 +11,7 @@ interface TableCardProps {
   action?: ReactNode;
   children: ReactNode;
   className?: string;
+  noPadding?: boolean;
 }
 
 export default function TableCard({
@@ -21,6 +22,7 @@ export default function TableCard({
   action,
   children,
   className,
+  noPadding = true,
 }: TableCardProps) {
   return (
     <SectionCard
@@ -30,7 +32,7 @@ export default function TableCard({
       badge={badge}
       action={action}
       className={className}
-      noPadding
+      noPadding={noPadding}
     >
       {children}
     </SectionCard>

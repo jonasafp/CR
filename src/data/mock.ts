@@ -12,6 +12,11 @@ import type { Product } from "../types/Product";
 
 import { calculateProductFinancialData } from "../utils/productCalculations";
 
+import {
+  isProductLowStock,
+  isProductOutOfStock,
+} from "../utils/productFilters";
+
 export const products: Product[] = [
   {
     id: 1,
@@ -79,7 +84,7 @@ export const products: Product[] = [
     purchasePrice: 4.8,
     salePrice: 8.2,
 
-    status: "low_stock",
+    status: "active",
 
     createdAt: "2026-06-03T09:00:00",
     updatedAt: "2026-07-16T08:20:00",
@@ -103,7 +108,7 @@ export const products: Product[] = [
     purchasePrice: 3.6,
     salePrice: 6.4,
 
-    status: "low_stock",
+    status: "active",
 
     createdAt: "2026-06-04T09:00:00",
     updatedAt: "2026-07-16T09:00:00",
@@ -127,7 +132,7 @@ export const products: Product[] = [
     purchasePrice: 7.2,
     salePrice: 12.5,
 
-    status: "out_of_stock",
+    status: "inactive",
 
     createdAt: "2026-06-05T09:00:00",
     updatedAt: "2026-07-16T10:15:00",
@@ -159,25 +164,21 @@ export const products: Product[] = [
 ];
 
 function createDashboardSummary(): DashboardSummary {
-  const totalStockQuantity = products
-    .filter(
-      (product) =>
-        product.stockUnit ===
-        businessConfig.principalStockUnit,
-    )
-    .reduce(
+  const productsUsingPrincipalUnit = products.filter(
+    (product) =>
+      product.stockUnit ===
+      businessConfig.principalStockUnit,
+  );
+
+  const totalStockQuantity =
+    productsUsingPrincipalUnit.reduce(
       (total, product) =>
         total + product.stockQuantity,
       0,
     );
 
-  const totalSoldQuantity = products
-    .filter(
-      (product) =>
-        product.stockUnit ===
-        businessConfig.principalStockUnit,
-    )
-    .reduce(
+  const totalSoldQuantity =
+    productsUsingPrincipalUnit.reduce(
       (total, product) =>
         total + product.soldQuantity,
       0,
@@ -189,13 +190,13 @@ function createDashboardSummary(): DashboardSummary {
         calculateProductFinancialData(product);
 
       accumulator.totalStockCost +=
-        financialData.totalStockCost;
+        financialData.stockCost;
 
       accumulator.totalPotentialRevenue +=
-        financialData.totalStockSaleValue;
+        financialData.estimatedRevenue;
 
       accumulator.totalEstimatedProfit +=
-        financialData.estimatedStockProfit;
+        financialData.estimatedProfit;
 
       accumulator.realizedRevenue +=
         financialData.realizedRevenue;
@@ -212,6 +213,7 @@ function createDashboardSummary(): DashboardSummary {
       totalStockCost: 0,
       totalPotentialRevenue: 0,
       totalEstimatedProfit: 0,
+
       realizedRevenue: 0,
       realizedCost: 0,
       realizedProfit: 0,
@@ -224,6 +226,14 @@ function createDashboardSummary(): DashboardSummary {
           totals.realizedRevenue) *
         100
       : 0;
+
+  const lowStockProductsCount = products.filter(
+    (product) => isProductLowStock(product),
+  ).length;
+
+  const outOfStockProductsCount = products.filter(
+    (product) => isProductOutOfStock(product),
+  ).length;
 
   return {
     totalProducts: products.length,
@@ -248,14 +258,8 @@ function createDashboardSummary(): DashboardSummary {
 
     averageProfitMargin,
 
-    lowStockProductsCount: products.filter(
-      (product) => product.status === "low_stock",
-    ).length,
-
-    outOfStockProductsCount: products.filter(
-      (product) =>
-        product.status === "out_of_stock",
-    ).length,
+    lowStockProductsCount,
+    outOfStockProductsCount,
   };
 }
 
@@ -273,8 +277,8 @@ const financialSummary: FinancialSummary = {
 const lowStockProducts: StockAlertItem[] = products
   .filter(
     (product) =>
-      product.status === "low_stock" ||
-      product.status === "out_of_stock",
+      isProductLowStock(product) ||
+      isProductOutOfStock(product),
   )
   .map((product) => ({
     productId: product.id,
@@ -284,10 +288,9 @@ const lowStockProducts: StockAlertItem[] = products
     minimumStock: product.minimumStock,
     unit: product.stockUnit,
 
-    severity:
-      product.status === "out_of_stock"
-        ? "critical"
-        : "warning",
+    severity: isProductOutOfStock(product)
+      ? "critical"
+      : "warning",
   }));
 
 const topSellingProducts: TopSellingProduct[] = [
@@ -316,11 +319,24 @@ const topSellingProducts: TopSellingProduct[] = [
     };
   });
 
+const featuredProduct =
+  [...products].sort(
+    (firstProduct, secondProduct) =>
+      secondProduct.soldQuantity -
+      firstProduct.soldQuantity,
+  )[0] ?? products[0];
+
+if (!featuredProduct) {
+  throw new Error(
+    "Não foi possível gerar o Dashboard porque não existem produtos cadastrados.",
+  );
+}
+
 export const dashboardData: DashboardData = {
   summary: dashboardSummary,
   financialSummary,
 
-  featuredProduct: products[0],
+  featuredProduct,
 
   lowStockProducts,
   topSellingProducts,

@@ -1,0 +1,139 @@
+.overlay {
+  position: fixed;
+  z-index: 1200;
+  inset: 0;
+
+  display: grid;
+  place-items: center;
+  padding: 20px;
+
+  background: rgba(15, 23, 42, 0.48);
+  backdrop-filter: blur(4px);
+}
+
+.dialog {
+  position: relative;
+
+  width: min(100%, 430px);
+  padding: 27px;
+
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: var(--surface);
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.25);
+}
+
+.closeButton {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+
+  color: var(--text-light);
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.closeButton:hover {
+  color: var(--text);
+  background: #f1f5f9;
+}
+
+.icon {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border-radius: 16px;
+}
+
+.danger {
+  color: #b91c1c;
+  background: #fee2e2;
+}
+
+.warning {
+  color: #c2410c;
+  background: #ffedd5;
+}
+
+.dialog h3 {
+  margin-top: 18px;
+
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 750;
+  letter-spacing: -0.4px;
+}
+
+.dialog p {
+  margin-top: 9px;
+
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 25px;
+}
+
+.actions button {
+  min-height: 40px;
+  padding: 0 16px;
+
+  border-radius: 11px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cancelButton {
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.cancelButton:hover {
+  background: #f8fafc;
+}
+
+.confirmButton {
+  color: #ffffff;
+  border: 0;
+}
+
+.dangerButton {
+  background: #dc2626;
+}
+
+.dangerButton:hover {
+  background: #b91c1c;
+}
+
+.warningButton {
+  background: #ea580c;
+}
+
+.warningButton:hover {
+  background: #c2410c;
+}
+
+@media (max-width: 480px) {
+  .actions {
+    flex-direction: column-reverse;
+  }
+
+  .actions button {
+    width: 100%;
+  }
+}
