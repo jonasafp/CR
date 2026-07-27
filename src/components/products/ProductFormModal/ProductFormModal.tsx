@@ -1,9 +1,15 @@
 import {
   BadgeDollarSign,
   Boxes,
+  Box,
   Calculator,
+  CheckCircle2,
+  CircleOff,
+  Droplets,
   Package,
+  PackageOpen,
   Save,
+  Scale,
   X,
 } from "lucide-react";
 
@@ -12,6 +18,8 @@ import {
   useMemo,
   useState,
 } from "react";
+
+import type { ReactNode } from "react";
 
 import type {
   Product,
@@ -25,6 +33,8 @@ import {
 } from "../../../utils/formatters";
 
 import styles from "./ProductFormModal.module.css";
+
+import Select from "../../common/Select/Select";
 
 interface ProductFormModalProps {
   isOpen: boolean;
@@ -63,18 +73,77 @@ const initialFormData: ProductFormData = {
   status: "active",
 };
 
-const stockUnits: Array<{
+const stockUnitOptions = [
+  {
+    value: "kg",
+    label: "Quilograma (kg)",
+    description: "Produtos comercializados por peso",
+    icon: <Scale size={14} />,
+  },
+  {
+    value: "g",
+    label: "Grama (g)",
+    description: "Pesagens de menor quantidade",
+    icon: <Scale size={14} />,
+  },
+  {
+    value: "un",
+    label: "Unidade (un)",
+    description: "Produtos vendidos individualmente",
+    icon: <Box size={14} />,
+  },
+  {
+    value: "l",
+    label: "Litro (l)",
+    description: "Produtos líquidos por litro",
+    icon: <Droplets size={14} />,
+  },
+  {
+    value: "ml",
+    label: "Mililitro (ml)",
+    description: "Produtos líquidos em menor volume",
+    icon: <Droplets size={14} />,
+  },
+  {
+    value: "cx",
+    label: "Caixa (cx)",
+    description: "Produtos controlados por caixa",
+    icon: <Package size={14} />,
+  },
+  {
+    value: "pct",
+    label: "Pacote (pct)",
+    description: "Produtos comercializados por pacote",
+    icon: <PackageOpen size={14} />,
+  },
+] satisfies Array<{
   value: StockUnit;
   label: string;
-}> = [
-  { value: "kg", label: "Quilograma (kg)" },
-  { value: "g", label: "Grama (g)" },
-  { value: "un", label: "Unidade (un)" },
-  { value: "l", label: "Litro (l)" },
-  { value: "ml", label: "Mililitro (ml)" },
-  { value: "cx", label: "Caixa (cx)" },
-  { value: "pct", label: "Pacote (pct)" },
-];
+  description: string;
+  icon: ReactNode;
+}>;
+
+const productStatusOptions = [
+  {
+    value: "active",
+    label: "Ativo",
+    description:
+      "Disponível para vendas e movimentações",
+    icon: <CheckCircle2 size={14} />,
+  },
+  {
+    value: "inactive",
+    label: "Inativo",
+    description:
+      "Indisponível para novas operações",
+    icon: <CircleOff size={14} />,
+  },
+] satisfies Array<{
+  value: ProductFormData["status"];
+  label: string;
+  description: string;
+  icon: ReactNode;
+}>;
 
 export default function ProductFormModal({
   isOpen,
@@ -387,25 +456,16 @@ export default function ProductFormModal({
                   )}
                 </label>
 
-                <label className={styles.field}>
-                  <span>Situação</span>
-
-                  <select
+                <div className={styles.field}>
+                  <Select
+                    label="Situação"
                     value={formData.status}
-                    onChange={(event) =>
-                      updateField(
-                        "status",
-                        event.target.value as
-                          ProductFormData["status"],
-                      )
+                    options={productStatusOptions}
+                    onChange={(value) =>
+                      updateField("status", value)
                     }
-                  >
-                    <option value="active">Ativo</option>
-                    <option value="inactive">
-                      Inativo
-                    </option>
-                  </select>
-                </label>
+                  />
+                </div>
 
                 <label
                   className={`${styles.field} ${styles.fullWidth}`}
@@ -442,28 +502,17 @@ export default function ProductFormModal({
               <div
                 className={`${styles.grid} ${styles.threeColumns}`}
               >
-                <label className={styles.field}>
-                  <span>Unidade *</span>
-
-                  <select
+                <div className={styles.field}>
+                  <Select
+                    label="Unidade"
+                    required
                     value={formData.stockUnit}
-                    onChange={(event) =>
-                      updateField(
-                        "stockUnit",
-                        event.target.value as StockUnit,
-                      )
+                    options={stockUnitOptions}
+                    onChange={(value) =>
+                      updateField("stockUnit", value)
                     }
-                  >
-                    {stockUnits.map((unit) => (
-                      <option
-                        key={unit.value}
-                        value={unit.value}
-                      >
-                        {unit.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                  />
+                </div>
 
                 <label className={styles.field}>
                   <span>Estoque atual *</span>

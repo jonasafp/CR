@@ -159,7 +159,6 @@
 }
 
 .field input,
-.field select,
 .field textarea {
   width: 100%;
   padding: 0 12px;
@@ -178,8 +177,7 @@
     box-shadow var(--transition);
 }
 
-.field input,
-.field select {
+.field input {
   min-height: 42px;
 }
 
@@ -190,7 +188,6 @@
 }
 
 .field input:focus,
-.field select:focus,
 .field textarea:focus {
   border-color: #93c5fd;
   box-shadow: 0 0 0 3px #dbeafe;
