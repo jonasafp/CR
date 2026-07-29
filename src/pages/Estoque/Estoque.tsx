@@ -23,20 +23,17 @@ import InventoryMovementModal from "../../components/inventory/InventoryMovement
 import InventoryMovementsTable from "../../components/inventory/InventoryMovementsTable/InventoryMovementsTable";
 import InventoryProductsTable from "../../components/inventory/InventoryProductsTable/InventoryProductsTable";
 
-import { initialInventoryMovements } from "../../data/inventoryMock";
-import { products as initialProducts } from "../../data/mock";
+import { useInventory } from "../../hooks/useInventory";
+import { useProducts } from "../../hooks/useProducts";
 
 import type {
   InventoryFiltersState,
-  InventoryMovement,
   InventoryMovementFormData,
 } from "../../types/Inventory";
 
 import type { Product } from "../../types/Product";
 
 import {
-  applyInventoryMovementToProduct,
-  calculateStockAfterMovement,
   createInventorySummary,
 } from "../../utils/inventoryCalculations";
 
@@ -68,13 +65,12 @@ function normalizeText(value: string): string {
 }
 
 export default function Estoque() {
-  const [products, setProducts] =
-    useState<Product[]>(initialProducts);
+  const { products } = useProducts();
 
-  const [movements, setMovements] =
-    useState<InventoryMovement[]>(
-      initialInventoryMovements,
-    );
+  const {
+    movements,
+    createMovement,
+  } = useInventory();
 
   const [filters, setFilters] =
     useState<InventoryFiltersState>({
@@ -158,7 +154,7 @@ export default function Estoque() {
       const matchesType =
         filters.movementType === "all" ||
         movement.type ===
-          filters.movementType;
+        filters.movementType;
 
       return matchesSearch && matchesType;
     });
@@ -183,78 +179,12 @@ export default function Estoque() {
   function handleCreateMovement(
     data: InventoryMovementFormData,
   ) {
-    const product = products.find(
-      (item) => item.id === data.productId,
-    );
+    const createdMovement =
+      createMovement(data);
 
-    if (!product) {
+    if (!createdMovement) {
       return;
     }
-
-    const previousStock =
-      product.stockQuantity;
-
-    const currentStock =
-      calculateStockAfterMovement(
-        previousStock,
-        data.quantity,
-        data.type,
-      );
-
-    if (currentStock < 0) {
-      return;
-    }
-
-    const nextId =
-      movements.length > 0
-        ? Math.max(
-            ...movements.map(
-              (movement) => movement.id,
-            ),
-          ) + 1
-        : 1;
-
-    const newMovement: InventoryMovement = {
-      id: nextId,
-
-      productId: product.id,
-      productName: product.name,
-      productCode: product.code,
-
-      type: data.type,
-      reason: data.reason,
-
-      quantity: data.quantity,
-      unit: product.stockUnit,
-
-      previousStock,
-      currentStock,
-
-      unitCost: data.unitCost,
-      totalValue:
-        data.quantity * data.unitCost,
-
-      notes: data.notes,
-
-      createdAt: new Date().toISOString(),
-      createdBy: "Administrador",
-    };
-
-    setProducts((currentProducts) =>
-      currentProducts.map((currentProduct) =>
-        currentProduct.id === product.id
-          ? applyInventoryMovementToProduct(
-              currentProduct,
-              data,
-            )
-          : currentProduct,
-      ),
-    );
-
-    setMovements((currentMovements) => [
-      newMovement,
-      ...currentMovements,
-    ]);
 
     closeMovementModal();
   }

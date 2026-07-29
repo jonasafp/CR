@@ -21,7 +21,7 @@ import ProductFilters from "../../components/products/ProductFilters/ProductFilt
 import ProductFormModal from "../../components/products/ProductFormModal/ProductFormModal";
 import ProductsTable from "../../components/products/ProductsTable/ProductsTable";
 
-import { products as initialProducts } from "../../data/mock";
+import { useProducts } from "../../hooks/useProducts";
 
 import type {
   Product,
@@ -56,8 +56,13 @@ interface ProductConfirmation {
 }
 
 export default function Produtos() {
-  const [products, setProducts] =
-    useState<Product[]>(initialProducts);
+  const {
+    products,
+    createProduct,
+    updateProduct,
+    deleteProduct,
+    toggleProductStatus,
+  } = useProducts();
 
   const [filters, setFilters] =
     useState<ProductFiltersState>({
@@ -113,7 +118,7 @@ export default function Produtos() {
         (total, product) =>
           total +
           product.stockQuantity *
-            product.purchasePrice,
+          product.purchasePrice,
         0,
       ),
     [products],
@@ -138,40 +143,12 @@ export default function Produtos() {
     data: ProductFormData,
   ) {
     if (editingProduct) {
-      setProducts((currentProducts) =>
-        currentProducts.map((product) =>
-          product.id === editingProduct.id
-            ? {
-                ...product,
-                ...data,
-                updatedAt:
-                  new Date().toISOString(),
-              }
-            : product,
-        ),
+      updateProduct(
+        editingProduct.id,
+        data,
       );
     } else {
-      const nextId =
-        products.length > 0
-          ? Math.max(
-              ...products.map(
-                (product) => product.id,
-              ),
-            ) + 1
-          : 1;
-
-      const newProduct: Product = {
-        id: nextId,
-        ...data,
-        soldQuantity: 0,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      setProducts((currentProducts) => [
-        newProduct,
-        ...currentProducts,
-      ]);
+      createProduct(data);
     }
 
     closeForm();
@@ -197,33 +174,16 @@ export default function Produtos() {
     }
 
     if (confirmation.type === "delete") {
-      setProducts((currentProducts) =>
-        currentProducts.filter(
-          (product) =>
-            product.id !==
-            confirmation.product.id,
-        ),
+      deleteProduct(
+        confirmation.product.id,
       );
     }
 
     if (
       confirmation.type === "toggle-status"
     ) {
-      setProducts((currentProducts) =>
-        currentProducts.map((product) =>
-          product.id ===
-          confirmation.product.id
-            ? {
-                ...product,
-                status:
-                  product.status === "active"
-                    ? "inactive"
-                    : "active",
-                updatedAt:
-                  new Date().toISOString(),
-              }
-            : product,
-        ),
+      toggleProductStatus(
+        confirmation.product.id,
       );
     }
 
@@ -241,11 +201,10 @@ export default function Produtos() {
     confirmation?.type === "delete"
       ? `O produto “${confirmation.product.name}” será removido da listagem. Esta operação não poderá ser desfeita nesta simulação.`
       : confirmation
-        ? `O produto “${confirmation.product.name}” será ${
-            confirmation.product.status === "active"
-              ? "desativado e deixará de estar disponível para novas operações"
-              : "ativado novamente para uso no sistema"
-          }.`
+        ? `O produto “${confirmation.product.name}” será ${confirmation.product.status === "active"
+          ? "desativado e deixará de estar disponível para novas operações"
+          : "ativado novamente para uso no sistema"
+        }.`
         : "";
 
   return (
@@ -359,6 +318,7 @@ export default function Produtos() {
         isOpen={isFormOpen}
         product={editingProduct}
         categories={categories}
+        existingProducts={products}
         onClose={closeForm}
         onSubmit={handleSaveProduct}
       />

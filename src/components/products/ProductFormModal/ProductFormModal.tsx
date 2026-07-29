@@ -40,6 +40,7 @@ interface ProductFormModalProps {
   isOpen: boolean;
   product: Product | null;
   categories: string[];
+  existingProducts: Product[];
 
   onClose: () => void;
   onSubmit: (data: ProductFormData) => void;
@@ -149,6 +150,7 @@ export default function ProductFormModal({
   isOpen,
   product,
   categories,
+  existingProducts,
   onClose,
   onSubmit,
 }: ProductFormModalProps) {
@@ -233,6 +235,23 @@ export default function ProductFormModal({
     if (!formData.code.trim()) {
       nextErrors.code =
         "Informe o código do produto.";
+    }
+
+    const normalizedCode =
+      formData.code.trim().toLowerCase();
+
+    const duplicatedCode =
+      existingProducts.some(
+        (existingProduct) =>
+          existingProduct.id !== product?.id &&
+          existingProduct.code
+            .trim()
+            .toLowerCase() === normalizedCode,
+      );
+
+    if (duplicatedCode) {
+      nextErrors.code =
+        "Já existe um produto com este código.";
     }
 
     if (!formData.name.trim()) {
