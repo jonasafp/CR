@@ -1,0 +1,287 @@
+.overlay {
+  position: fixed;
+  z-index: 1100;
+  inset: 0;
+
+  display: grid;
+  place-items: center;
+  padding: 20px;
+
+  background: rgba(15, 23, 42, 0.52);
+  backdrop-filter: blur(5px);
+}
+
+.modal {
+  display: flex;
+  width: min(100%, 760px);
+  max-height: calc(100vh - 40px);
+  flex-direction: column;
+  overflow: hidden;
+
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  background: var(--surface);
+  box-shadow: 0 25px 80px rgba(15, 23, 42, 0.3);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 21px 23px;
+
+  border-bottom: 1px solid var(--border);
+}
+
+.headerContent {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.headerIcon {
+  display: grid;
+  width: 45px;
+  height: 45px;
+  place-items: center;
+
+  color: var(--primary);
+  border: 1px solid #dbeafe;
+  border-radius: 14px;
+  background: var(--primary-light);
+}
+
+.header h2 {
+  color: var(--text);
+  font-size: 17px;
+  font-weight: 760;
+}
+
+.header p {
+  margin-top: 4px;
+  color: var(--text-light);
+  font-size: 10px;
+}
+
+.closeButton {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+
+  color: var(--text-light);
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.form {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 23px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 15px;
+}
+
+.field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.fullWidth {
+  grid-column: 1 / -1;
+}
+
+.field > span {
+  color: var(--text-secondary);
+  font-size: 9px;
+  font-weight: 690;
+}
+
+.field input,
+.field textarea {
+  width: 100%;
+  padding: 0 12px;
+
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  outline: 0;
+  background: var(--surface);
+
+  font-family: inherit;
+  font-size: 10px;
+}
+
+.field input {
+  min-height: 42px;
+}
+
+.field textarea {
+  padding-top: 11px;
+  padding-bottom: 11px;
+  resize: vertical;
+}
+
+.field input:focus,
+.field textarea:focus {
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 3px #dbeafe;
+}
+
+.error {
+  color: #dc2626;
+  font-size: 8px;
+}
+
+.preview {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr)
+    auto
+    minmax(0, 1fr)
+    minmax(210px, 1fr);
+  align-items: center;
+  gap: 14px;
+  margin-top: 20px;
+  padding: 16px;
+
+  border: 1px solid #dbeafe;
+  border-radius: 16px;
+  background: #f8fbff;
+}
+
+.previewItem span,
+.valuePreview span {
+  display: block;
+  color: var(--text-light);
+  font-size: 9px;
+}
+
+.previewItem strong,
+.valuePreview strong {
+  display: block;
+  margin-top: 5px;
+
+  color: var(--text);
+  font-size: 14px;
+}
+
+.arrow {
+  color: var(--text-light);
+}
+
+.valuePreview {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-left: 15px;
+  border-left: 1px solid #dbeafe;
+
+  color: var(--primary);
+}
+
+.valuePreview strong {
+  color: var(--primary);
+}
+
+.negative {
+  color: #dc2626 !important;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 17px 23px;
+
+  border-top: 1px solid var(--border);
+  background: #f8fafc;
+}
+
+.footer button {
+  min-height: 42px;
+  padding: 0 17px;
+
+  border-radius: 11px;
+  font-size: 10px;
+  font-weight: 720;
+  cursor: pointer;
+}
+
+.cancelButton {
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.saveButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+
+  color: #ffffff;
+  border: 0;
+  background: var(--primary);
+}
+
+@media (max-width: 760px) {
+  .overlay {
+    padding: 0;
+  }
+
+  .modal {
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    border-radius: 0;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .fullWidth {
+    grid-column: auto;
+  }
+
+  .preview {
+    grid-template-columns: 1fr;
+  }
+
+  .arrow {
+    transform: rotate(90deg);
+  }
+
+  .valuePreview {
+    padding-top: 14px;
+    padding-left: 0;
+    border-top: 1px solid #dbeafe;
+    border-left: 0;
+  }
+
+  .footer {
+    flex-direction: column-reverse;
+  }
+
+  .footer button {
+    width: 100%;
+    justify-content: center;
+  }
+}
