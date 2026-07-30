@@ -48,10 +48,8 @@
 
 .metricsGrid {
   display: grid;
-  grid-template-columns: repeat(
-    6,
-    minmax(190px, 1fr)
-  );
+  grid-template-columns: repeat(6,
+      minmax(190px, 1fr));
   gap: 17px;
 }
 
@@ -72,13 +70,50 @@
 .analyticsGrid {
   display: grid;
   grid-template-columns:
-    minmax(0, 1.6fr)
-    minmax(360px, 0.9fr);
+    minmax(0, 1.6fr) minmax(360px, 0.9fr);
   gap: 18px;
   margin-top: 18px;
 }
 
+.inventoryMetricsGrid {
+  display: grid;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+  gap: 15px;
+  margin-top: 18px;
+}
+
+.emptyDashboard {
+  margin-top: 24px;
+}
+
+.emptyAction {
+  display: inline-flex;
+  min-height: 41px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 15px;
+
+  color: #ffffff;
+  border-radius: 11px;
+  background: var(--primary);
+
+  font-size: 10px;
+  font-weight: 720;
+  text-decoration: none;
+
+  transition:
+    transform var(--transition),
+    filter var(--transition);
+}
+
+.emptyAction:hover {
+  filter: brightness(0.95);
+  transform: translateY(-2px);
+}
+
 @media (max-width: 1200px) {
+
   .primaryWidgetsGrid,
   .secondaryWidgetsGrid,
   .analyticsGrid {
@@ -88,19 +123,20 @@
 
 @media (max-width: 1650px) {
   .metricsGrid {
-    grid-template-columns: repeat(
-      3,
-      minmax(220px, 1fr)
-    );
+    grid-template-columns: repeat(3,
+        minmax(220px, 1fr));
   }
+}
+
+.inventoryMetricsGrid {
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
 }
 
 @media (max-width: 1000px) {
   .metricsGrid {
-    grid-template-columns: repeat(
-      2,
-      minmax(220px, 1fr)
-    );
+    grid-template-columns: repeat(2,
+        minmax(220px, 1fr));
   }
 }
 
@@ -118,4 +154,8 @@
   .nextSection {
     padding: 24px;
   }
+}
+
+.inventoryMetricsGrid {
+  grid-template-columns: 1fr;
 }

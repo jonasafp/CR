@@ -1,6 +1,7 @@
 import {
   ArrowRight,
   Medal,
+  PackageSearch,
   Trophy,
 } from "lucide-react";
 
@@ -17,6 +18,8 @@ import {
 
 import styles from "./TopSellingProductsCard.module.css";
 
+import EmptyState from "../../common/EmptyState/EmptyState";
+
 interface TopSellingProductsCardProps {
   items: TopSellingProduct[];
 }
@@ -24,6 +27,23 @@ interface TopSellingProductsCardProps {
 export default function TopSellingProductsCard({
   items,
 }: TopSellingProductsCardProps) {
+  if (items.length === 0) {
+    return (
+      <TableCard
+        title="Produtos mais vendidos"
+        description="Ranking por quantidade vendida no período."
+        icon={Trophy}
+        badge="Sem dados"
+        className={styles.card}
+      >
+        <EmptyState
+          icon={PackageSearch}
+          title="Nenhuma venda registrada"
+          description="O ranking será exibido quando existirem produtos com quantidade vendida."
+        />
+      </TableCard>
+    );
+  }
   return (
     <TableCard
       title="Produtos mais vendidos"
@@ -58,11 +78,10 @@ export default function TopSellingProductsCard({
               <tr key={item.productId}>
                 <td>
                   <div
-                    className={`${styles.position} ${
-                      index === 0
+                    className={`${styles.position} ${index === 0
                         ? styles.firstPosition
                         : ""
-                    }`}
+                      }`}
                   >
                     {index === 0 ? (
                       <Medal size={16} />

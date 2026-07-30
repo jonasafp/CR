@@ -35,6 +35,11 @@ export interface ProductsContextValue {
   ) => Product | undefined;
 
   resetProducts: () => void;
+
+  incrementProductSoldQuantity: (
+    productId: number,
+    quantity: number,
+  ) => void;
 }
 
 export const ProductsContext =

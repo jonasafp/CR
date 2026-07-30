@@ -108,4 +108,10 @@ export interface DashboardData {
   salesPerformance?: SalesPerformancePoint[];
   categoryPerformance?: CategoryPerformanceItem[];
   variations?: DashboardVariations;
+  inventorySummary?: DashboardInventorySummary;
+}
+
+export interface DashboardInventorySummary {
+  totalEntries: number;
+  totalExits: number;
 }

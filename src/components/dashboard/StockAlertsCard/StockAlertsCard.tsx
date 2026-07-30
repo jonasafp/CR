@@ -17,17 +17,20 @@ import styles from "./StockAlertsCard.module.css";
 
 interface StockAlertsCardProps {
   items: StockAlertItem[];
+  totalCount?: number;
 }
 
 export default function StockAlertsCard({
   items,
+  totalCount,
 }: StockAlertsCardProps) {
   return (
     <SectionCard
       title="Alertas de estoque"
       description="Produtos que precisam de reposição."
       icon={AlertTriangle}
-      badge={`${items.length} alertas`}
+      badge={`${totalCount ?? items.length
+        } alertas`}
       action={
         <Link
           to="/estoque"
@@ -62,11 +65,10 @@ export default function StockAlertsCard({
                 className={styles.alertItem}
               >
                 <div
-                  className={`${styles.alertIcon} ${
-                    isCritical
+                  className={`${styles.alertIcon} ${isCritical
                       ? styles.criticalIcon
                       : styles.warningIcon
-                  }`}
+                    }`}
                 >
                   {isCritical ? (
                     <PackageX size={19} />
@@ -88,11 +90,10 @@ export default function StockAlertsCard({
                 </div>
 
                 <div
-                  className={`${styles.currentStock} ${
-                    isCritical
+                  className={`${styles.currentStock} ${isCritical
                       ? styles.criticalStock
                       : styles.warningStock
-                  }`}
+                    }`}
                 >
                   <span>Atual</span>
 

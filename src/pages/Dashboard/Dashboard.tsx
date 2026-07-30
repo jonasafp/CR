@@ -7,6 +7,11 @@ import {
   CircleDollarSign,
   PackageCheck,
   Percent,
+  PackagePlus,
+  ArrowDownToLine,
+  ArrowUpFromLine,
+  TrendingUp,
+  WalletCards,
 } from "lucide-react";
 
 import StatisticCard from "../../components/common/StatisticCard/StatisticCard";
@@ -19,9 +24,19 @@ import SalesPerformanceChart from "../../components/dashboard/SalesPerformanceCh
 import StockAlertsCard from "../../components/dashboard/StockAlertsCard/StockAlertsCard";
 import TopSellingProductsCard from "../../components/dashboard/TopSellingProductsCard/TopSellingProductsCard";
 
-import { getDashboardDataByPeriod } from "../../data/dashboardAnalytics";
-
 import type { DashboardPeriod } from "../../types/Dashboard";
+
+import { Link } from "react-router-dom";
+
+import EmptyState from "../../components/common/EmptyState/EmptyState";
+import SectionCard from "../../components/common/SectionCard/SectionCard";
+
+import { useInventory } from "../../hooks/useInventory";
+import { useProducts } from "../../hooks/useProducts";
+
+import {
+  createDashboardData,
+} from "../../services/dashboard/dashboardService";
 
 import {
   formatCurrency,
@@ -36,8 +51,54 @@ export default function Dashboard() {
   const [selectedPeriod, setSelectedPeriod] =
     useState<DashboardPeriod>("month");
 
+  const { products } = useProducts();
+  const { movements } = useInventory();
+
   const currentDashboardData =
-    getDashboardDataByPeriod(selectedPeriod);
+    createDashboardData(
+      products,
+      movements,
+      selectedPeriod,
+    );
+
+  if (!currentDashboardData) {
+    return (
+      <section className={styles.page}>
+        <div className={styles.pageHeader}>
+          <div className={styles.pageIntroduction}>
+            <span className={styles.eyebrow}>
+              Controle interno
+            </span>
+
+            <h2>Visão geral do negócio</h2>
+
+            <p>
+              Cadastre produtos para começar a acompanhar
+              os resultados do negócio.
+            </p>
+          </div>
+        </div>
+
+        <div className={styles.emptyDashboard}>
+          <SectionCard>
+            <EmptyState
+              icon={PackagePlus}
+              title="Nenhum produto cadastrado"
+              description="O Dashboard será preenchido automaticamente após o cadastro do primeiro produto."
+              action={
+                <Link
+                  to="/produtos"
+                  className={styles.emptyAction}
+                >
+                  Cadastrar produto
+                </Link>
+              }
+            />
+          </SectionCard>
+        </div>
+      </section>
+    );
+  }
 
   const {
     summary,
@@ -48,6 +109,7 @@ export default function Dashboard() {
     salesPerformance = [],
     categoryPerformance = [],
     variations,
+    inventorySummary,
   } = currentDashboardData;
 
   const unavailableProducts =
@@ -86,7 +148,7 @@ export default function Dashboard() {
           description={`${formatNumber(
             summary.totalProducts,
             0,
-          )} produtos cadastrados`}
+          )} produtos cadastrados · unidade principal`}
           icon={Boxes}
           color="blue"
           variation={variations?.stock}
@@ -151,6 +213,50 @@ export default function Dashboard() {
         />
       </div>
 
+      <div className={styles.inventoryMetricsGrid}>
+        <StatisticCard
+          title="Entradas acumuladas"
+          value={formatNumber(
+            inventorySummary?.totalEntries ?? 0,
+            2,
+          )}
+          description="Entradas e ajustes positivos registrados"
+          icon={ArrowDownToLine}
+          color="blue"
+        />
+
+        <StatisticCard
+          title="Saídas acumuladas"
+          value={formatNumber(
+            inventorySummary?.totalExits ?? 0,
+            2,
+          )}
+          description="Saídas e ajustes negativos registrados"
+          icon={ArrowUpFromLine}
+          color="orange"
+        />
+
+        <StatisticCard
+          title="Custo atual do estoque"
+          value={formatCurrency(
+            summary.totalStockCost,
+          )}
+          description="Capital investido nos produtos atuais"
+          icon={WalletCards}
+          color="purple"
+        />
+
+        <StatisticCard
+          title="Receita potencial"
+          value={formatCurrency(
+            summary.totalPotentialRevenue,
+          )}
+          description="Valor estimado de venda do estoque"
+          icon={TrendingUp}
+          color="green"
+        />
+      </div>
+
       <div className={styles.primaryWidgetsGrid}>
         <FeaturedProductCard product={featuredProduct} />
 
@@ -158,7 +264,10 @@ export default function Dashboard() {
       </div>
 
       <div className={styles.secondaryWidgetsGrid}>
-        <StockAlertsCard items={lowStockProducts} />
+        <StockAlertsCard
+          items={lowStockProducts.slice(0, 5)}
+          totalCount={lowStockProducts.length}
+        />
 
         <TopSellingProductsCard
           items={topSellingProducts}

@@ -60,6 +60,7 @@ export default function InventoryProvider({
   const {
     products,
     updateProductStock,
+    incrementProductSoldQuantity,
   } = useProducts();
 
   const [movements, setMovements] =
@@ -152,6 +153,16 @@ export default function InventoryProvider({
         product.id,
         currentStock,
       );
+
+      if (
+        data.type === "exit" &&
+        data.reason === "sale"
+      ) {
+        incrementProductSoldQuantity(
+          product.id,
+          data.quantity,
+        );
+      }
 
       setMovements(
         (currentMovements) => [

@@ -100,11 +100,11 @@ export default function ProductsProvider({
         currentProducts.map((product) =>
           product.id === productId
             ? {
-                ...product,
-                ...data,
-                updatedAt:
-                  new Date().toISOString(),
-              }
+              ...product,
+              ...data,
+              updatedAt:
+                new Date().toISOString(),
+            }
             : product,
         ),
       );
@@ -130,16 +130,16 @@ export default function ProductsProvider({
         currentProducts.map((product) =>
           product.id === productId
             ? {
-                ...product,
+              ...product,
 
-                status:
-                  product.status === "active"
-                    ? "inactive"
-                    : "active",
+              status:
+                product.status === "active"
+                  ? "inactive"
+                  : "active",
 
-                updatedAt:
-                  new Date().toISOString(),
-              }
+              updatedAt:
+                new Date().toISOString(),
+            }
             : product,
         ),
       );
@@ -156,20 +156,50 @@ export default function ProductsProvider({
         currentProducts.map((product) =>
           product.id === productId
             ? {
-                ...product,
+              ...product,
 
-                stockQuantity:
-                  Math.max(0, stockQuantity),
+              stockQuantity:
+                Math.max(0, stockQuantity),
 
-                updatedAt:
-                  new Date().toISOString(),
-              }
+              updatedAt:
+                new Date().toISOString(),
+            }
             : product,
         ),
       );
     },
     [],
   );
+
+  const incrementProductSoldQuantity =
+    useCallback(
+      (
+        productId: number,
+        quantity: number,
+      ) => {
+        if (quantity <= 0) {
+          return;
+        }
+
+        setProducts((currentProducts) =>
+          currentProducts.map((product) =>
+            product.id === productId
+              ? {
+                ...product,
+
+                soldQuantity:
+                  product.soldQuantity +
+                  quantity,
+
+                updatedAt:
+                  new Date().toISOString(),
+              }
+              : product,
+          ),
+        );
+      },
+      [],
+    );
 
   const findProductById = useCallback(
     (productId: number) =>
@@ -199,6 +229,7 @@ export default function ProductsProvider({
       updateProductStock,
       findProductById,
       resetProducts,
+      incrementProductSoldQuantity,
     }),
     [
       products,
@@ -209,6 +240,7 @@ export default function ProductsProvider({
       updateProductStock,
       findProductById,
       resetProducts,
+      incrementProductSoldQuantity,
     ],
   );
 

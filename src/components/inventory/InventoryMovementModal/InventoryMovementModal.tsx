@@ -104,46 +104,6 @@ const movementTypeOptions: SelectOption<InventoryMovementType>[] =
     },
   ];
 
-const reasonOptions: SelectOption<InventoryMovementReason>[] =
-  [
-    {
-      value: "purchase",
-      label: "Compra",
-    },
-    {
-      value: "sale",
-      label: "Venda",
-    },
-    {
-      value: "manual_adjustment",
-      label: "Ajuste manual",
-    },
-    {
-      value: "loss",
-      label: "Perda",
-    },
-    {
-      value: "damage",
-      label: "Avaria",
-    },
-    {
-      value: "expiration",
-      label: "Vencimento",
-    },
-    {
-      value: "return",
-      label: "Devolução",
-    },
-    {
-      value: "initial_balance",
-      label: "Saldo inicial",
-    },
-    {
-      value: "other",
-      label: "Outro",
-    },
-  ];
-
 export default function InventoryMovementModal({
   isOpen,
   products,
@@ -154,6 +114,11 @@ export default function InventoryMovementModal({
   const [formData, setFormData] =
     useState<InventoryMovementFormData>(
       initialFormData,
+    );
+
+  const availableReasonOptions =
+    getReasonOptionsByType(
+      formData.type,
     );
 
   const [errors, setErrors] =
@@ -316,6 +281,67 @@ export default function InventoryMovementModal({
     return null;
   }
 
+  function getReasonOptionsByType(
+    type: InventoryMovementType,
+  ): SelectOption<InventoryMovementReason>[] {
+    if (type === "entry") {
+      return [
+        {
+          value: "purchase",
+          label: "Compra",
+        },
+        {
+          value: "return",
+          label: "Devolução",
+        },
+        {
+          value: "initial_balance",
+          label: "Saldo inicial",
+        },
+        {
+          value: "other",
+          label: "Outro",
+        },
+      ];
+    }
+
+    if (type === "exit") {
+      return [
+        {
+          value: "sale",
+          label: "Venda",
+        },
+        {
+          value: "loss",
+          label: "Perda",
+        },
+        {
+          value: "damage",
+          label: "Avaria",
+        },
+        {
+          value: "expiration",
+          label: "Vencimento",
+        },
+        {
+          value: "other",
+          label: "Outro",
+        },
+      ];
+    }
+
+    return [
+      {
+        value: "manual_adjustment",
+        label: "Ajuste manual",
+      },
+      {
+        value: "other",
+        label: "Outro",
+      },
+    ];
+  }
+
   return (
     <div
       className={styles.overlay}
@@ -388,9 +414,18 @@ export default function InventoryMovementModal({
                   required
                   value={formData.type}
                   options={movementTypeOptions}
-                  onChange={(value) =>
-                    updateField("type", value)
-                  }
+                  onChange={(value) => {
+                    const nextReasons =
+                      getReasonOptionsByType(value);
+
+                    setFormData((current) => ({
+                      ...current,
+                      type: value,
+                      reason:
+                        nextReasons[0]?.value ??
+                        "other",
+                    }));
+                  }}
                 />
               </div>
 
@@ -399,7 +434,7 @@ export default function InventoryMovementModal({
                   label="Motivo"
                   required
                   value={formData.reason}
-                  options={reasonOptions}
+                  options={availableReasonOptions}
                   onChange={(value) =>
                     updateField("reason", value)
                   }
