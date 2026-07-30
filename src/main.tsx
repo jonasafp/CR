@@ -12,16 +12,26 @@ import "./styles/variables.css";
 import "./styles/globals.css";
 import "./styles/animations.css";
 
+import {
+  QueryClientProvider,
+} from "@tanstack/react-query";
+
+import { queryClient } from "./application/query/queryClient";
+
 createRoot(
   document.getElementById("root")!,
 ).render(
   <StrictMode>
     <BrowserRouter>
-      <ProductsProvider>
-        <InventoryProvider>
-          <App />
-        </InventoryProvider>
-      </ProductsProvider>
+      <QueryClientProvider
+        client={queryClient}
+      >
+        <ProductsProvider>
+          <InventoryProvider>
+            <App />
+          </InventoryProvider>
+        </ProductsProvider>
+      </QueryClientProvider>
     </BrowserRouter>
   </StrictMode>,
 );
