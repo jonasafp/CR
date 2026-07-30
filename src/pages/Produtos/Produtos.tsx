@@ -22,6 +22,7 @@ import ProductFormModal from "../../components/products/ProductFormModal/Product
 import ProductsTable from "../../components/products/ProductsTable/ProductsTable";
 
 import { useProducts } from "../../hooks/useProducts";
+import { useInventory } from "../../hooks/useInventory";
 
 import type {
   Product,
@@ -124,6 +125,8 @@ export default function Produtos() {
     [products],
   );
 
+  const { movements } = useInventory();
+
   function openCreateForm() {
     setEditingProduct(null);
     setIsFormOpen(true);
@@ -161,7 +164,23 @@ export default function Produtos() {
     });
   }
 
-  function requestDelete(product: Product) {
+  function requestDelete(
+    product: Product,
+  ) {
+    const hasMovements = movements.some(
+      (movement) =>
+        movement.productId === product.id,
+    );
+
+    if (hasMovements) {
+      setConfirmation({
+        type: "toggle-status",
+        product,
+      });
+
+      return;
+    }
+
     setConfirmation({
       type: "delete",
       product,

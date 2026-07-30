@@ -97,6 +97,10 @@ export default function InventoryProvider({
         return null;
       }
 
+      if (product.status === "inactive") {
+        return null;
+      }
+
       if (data.quantity <= 0) {
         return null;
       }

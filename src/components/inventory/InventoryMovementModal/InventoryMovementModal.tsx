@@ -60,17 +60,17 @@ interface FormErrors {
 }
 
 const initialFormData: InventoryMovementFormData =
-  {
-    productId: null,
+{
+  productId: null,
 
-    type: "entry",
-    reason: "purchase",
+  type: "entry",
+  reason: "purchase",
 
-    quantity: 0,
-    unitCost: 0,
+  quantity: 0,
+  unitCost: 0,
 
-    notes: "",
-  };
+  notes: "",
+};
 
 const movementTypeOptions: SelectOption<InventoryMovementType>[] =
   [
@@ -181,11 +181,19 @@ export default function InventoryMovementModal({
     products.map((product) => ({
       value: String(product.id),
       label: product.name,
-      description: `${product.code} · ${formatStockQuantity(
-        product.stockQuantity,
-        product.stockUnit,
-      )}`,
+
+      description:
+        product.status === "inactive"
+          ? `${product.code} · Produto inativo`
+          : `${product.code} · ${formatStockQuantity(
+            product.stockQuantity,
+            product.stockUnit,
+          )}`,
+
       icon: <Package size={14} />,
+
+      disabled:
+        product.status === "inactive",
     }));
 
   const selectedProduct = useMemo(
@@ -278,7 +286,7 @@ export default function InventoryMovementModal({
       selectedProduct &&
       isOutgoingMovement(formData.type) &&
       formData.quantity >
-        selectedProduct.stockQuantity
+      selectedProduct.stockQuantity
     ) {
       nextErrors.quantity =
         "A quantidade informada é maior que o estoque disponível.";
