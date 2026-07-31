@@ -1,0 +1,30 @@
+.badge {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 9px;
+
+  border-radius: 999px;
+
+  font-size: 9px;
+  font-weight: 720;
+}
+
+.completed {
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+  background: #f0fdf4;
+}
+
+.pending {
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+  background: #fff7ed;
+}
+
+.cancelled {
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+}

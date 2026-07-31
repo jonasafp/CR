@@ -66,6 +66,37 @@ export default function ProductsProvider({
     );
   }, [products]);
 
+  useEffect(() => {
+    function handleProductsUpdated(
+      event: Event,
+    ) {
+      const customEvent =
+        event as CustomEvent<Product[]>;
+
+      if (
+        Array.isArray(
+          customEvent.detail,
+        )
+      ) {
+        setProducts(
+          customEvent.detail,
+        );
+      }
+    }
+
+    window.addEventListener(
+      "gestor-facil:products-updated",
+      handleProductsUpdated,
+    );
+
+    return () => {
+      window.removeEventListener(
+        "gestor-facil:products-updated",
+        handleProductsUpdated,
+      );
+    };
+  }, []);
+
   const createProduct = useCallback(
     (data: ProductFormData): Product => {
       const now = new Date().toISOString();

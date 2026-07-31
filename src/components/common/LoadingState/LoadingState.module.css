@@ -1,0 +1,33 @@
+.container {
+  display: flex;
+  min-height: 280px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 30px;
+
+  color: var(--text-light);
+  text-align: center;
+}
+
+.spinner {
+  color: var(--primary);
+  animation: loadingSpin 0.8s linear infinite;
+}
+
+.container strong {
+  margin-top: 14px;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.container span {
+  margin-top: 6px;
+  font-size: 10px;
+}
+
+@keyframes loadingSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
