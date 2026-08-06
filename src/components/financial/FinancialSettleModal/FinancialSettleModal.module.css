@@ -1,0 +1,291 @@
+.overlay {
+  position: fixed;
+  z-index: 1250;
+  inset: 0;
+
+  display: grid;
+  place-items: center;
+  padding: 20px;
+
+  background:
+    rgba(15, 23, 42, 0.54);
+  backdrop-filter: blur(5px);
+}
+
+.modal {
+  display: flex;
+  width: min(100%, 610px);
+  max-height:
+    calc(100vh - 40px);
+  flex-direction: column;
+  overflow: hidden;
+
+  border: 1px solid var(--border);
+  border-radius: 21px;
+  background: var(--surface);
+  box-shadow:
+    0 25px 80px
+    rgba(15, 23, 42, 0.3);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 20px;
+
+  border-bottom:
+    1px solid var(--border);
+}
+
+.header > div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.headerIcon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  place-items: center;
+
+  border: 1px solid;
+  border-radius: 13px;
+}
+
+.incomeIcon {
+  color: #15803d;
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+}
+
+.expenseIcon {
+  color: #0369a1;
+  border-color: #bae6fd;
+  background: #f0f9ff;
+}
+
+.header span {
+  color: var(--primary);
+
+  font-size: 8px;
+  font-weight: 760;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.header h2 {
+  margin-top: 3px;
+
+  color: var(--text);
+
+  font-size: 16px;
+}
+
+.header p {
+  margin-top: 4px;
+
+  color: var(--text-light);
+
+  font-size: 9px;
+}
+
+.closeButton {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+
+  color: var(--text-light);
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+
+  cursor: pointer;
+}
+
+.content {
+  overflow-y: auto;
+  padding: 19px;
+}
+
+.transactionSummary {
+  display: grid;
+  grid-template-columns:
+    0.65fr 1.4fr 0.8fr;
+  gap: 12px;
+  padding: 15px;
+
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.transactionSummary span {
+  display: block;
+
+  color: var(--text-light);
+
+  font-size: 8px;
+}
+
+.transactionSummary strong {
+  display: block;
+  overflow: hidden;
+  margin-top: 5px;
+
+  color: var(--text);
+
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.amount {
+  text-align: right;
+}
+
+.amount strong {
+  color: var(--primary);
+
+  font-size: 14px;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 13px;
+  margin-top: 17px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.field > span {
+  color: var(--text-secondary);
+
+  font-size: 9px;
+  font-weight: 690;
+}
+
+.field b {
+  margin-left: 3px;
+
+  color: #dc2626;
+}
+
+.inputWithIcon {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+
+  color: var(--text-light);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: var(--surface);
+}
+
+.inputWithIcon:focus-within {
+  color: var(--primary);
+  border-color: #93c5fd;
+  box-shadow:
+    0 0 0 3px
+    #dbeafe;
+}
+
+.inputWithIcon input {
+  min-width: 0;
+  width: 100%;
+
+  color: var(--text);
+  border: 0;
+  outline: 0;
+  background: transparent;
+
+  font-family: inherit;
+  font-size: 10px;
+}
+
+.error {
+  margin-top: 14px;
+  padding: 11px;
+
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  background: #fef2f2;
+
+  font-size: 9px;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  padding: 16px 20px;
+
+  border-top:
+    1px solid var(--border);
+  background: #f8fafc;
+}
+
+.footer button {
+  min-height: 41px;
+  padding: 0 15px;
+
+  border-radius: 10px;
+
+  font-size: 9px;
+  font-weight: 720;
+  cursor: pointer;
+}
+
+.cancelButton {
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.submitButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+
+  color: #ffffff;
+  border: 0;
+  background: var(--primary);
+}
+
+.footer button:disabled,
+.closeButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+@media (max-width: 600px) {
+  .transactionSummary,
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .amount {
+    text-align: left;
+  }
+
+  .footer {
+    flex-direction: column-reverse;
+  }
+
+  .footer button {
+    width: 100%;
+    justify-content: center;
+  }
+}

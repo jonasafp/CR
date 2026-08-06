@@ -1,0 +1,300 @@
+.overlay {
+  position: fixed;
+  z-index: 1300;
+  inset: 0;
+
+  display: grid;
+  place-items: center;
+  padding: 20px;
+
+  background:
+    rgba(15, 23, 42, 0.54);
+  backdrop-filter: blur(5px);
+}
+
+.modal {
+  display: flex;
+  width: min(100%, 700px);
+  max-height:
+    calc(100vh - 40px);
+  flex-direction: column;
+  overflow: hidden;
+
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: var(--surface);
+  box-shadow:
+    0 25px 80px
+    rgba(15, 23, 42, 0.3);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 20px;
+
+  border-bottom:
+    1px solid var(--border);
+}
+
+.header > div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.headerIcon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  place-items: center;
+
+  color: var(--primary);
+  border-radius: 13px;
+  background: var(--primary-light);
+}
+
+.header span {
+  color: var(--primary);
+
+  font-size: 8px;
+  font-weight: 760;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.header h2 {
+  margin-top: 3px;
+
+  color: var(--text);
+
+  font-size: 16px;
+}
+
+.header p {
+  margin-top: 4px;
+
+  color: var(--text-light);
+
+  font-size: 9px;
+}
+
+.header > button {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+
+  color: var(--text-light);
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+
+  cursor: pointer;
+}
+
+.header > button:hover {
+  color: var(--primary);
+  background: var(--primary-light);
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 19px;
+}
+
+.highlight {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 17px;
+
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  background: #f8fafc;
+}
+
+.highlight span {
+  color: var(--text-light);
+
+  font-size: 8px;
+}
+
+.highlight > div > strong {
+  display: block;
+  margin-top: 5px;
+
+  font-size: 22px;
+  font-weight: 790;
+}
+
+.incomeValue {
+  color: #15803d;
+}
+
+.expenseValue {
+  color: #dc2626;
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.informationGrid {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.informationGrid article {
+  min-width: 0;
+  padding: 13px;
+
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.informationGrid article > div {
+  display: grid;
+  width: 31px;
+  height: 31px;
+  place-items: center;
+
+  color: var(--primary);
+  border-radius: 9px;
+  background: var(--primary-light);
+}
+
+.informationGrid span {
+  display: block;
+  margin-top: 9px;
+
+  color: var(--text-light);
+
+  font-size: 8px;
+}
+
+.informationGrid strong {
+  display: block;
+  overflow: hidden;
+  margin-top: 4px;
+
+  color: var(--text);
+
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.notes {
+  margin-top: 14px;
+  padding: 14px;
+
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: #fbfdff;
+}
+
+.notes > div {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  color: var(--primary);
+}
+
+.notes strong {
+  color: var(--text);
+
+  font-size: 9px;
+}
+
+.notes p {
+  margin-top: 9px;
+
+  color: var(--text-secondary);
+
+  font-size: 9px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.audit {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+  padding: 13px;
+
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.audit span {
+  display: block;
+
+  color: var(--text-light);
+
+  font-size: 7px;
+}
+
+.audit strong {
+  display: block;
+  margin-top: 4px;
+
+  color: var(--text-secondary);
+
+  font-size: 8px;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 15px 20px;
+
+  border-top:
+    1px solid var(--border);
+  background: #f8fafc;
+}
+
+.footer button {
+  min-height: 39px;
+  padding: 0 15px;
+
+  color: #ffffff;
+  border: 0;
+  border-radius: 10px;
+  background: var(--primary);
+
+  font-size: 9px;
+  font-weight: 720;
+  cursor: pointer;
+}
+
+@media (max-width: 650px) {
+  .highlight {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .badges {
+    justify-content: flex-start;
+  }
+
+  .informationGrid,
+  .audit {
+    grid-template-columns: 1fr;
+  }
+}
