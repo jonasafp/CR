@@ -1,6 +1,7 @@
 import {
   ArrowDownAZ,
   ArrowDownUp,
+  ArrowUp,
   CalendarDays,
   CircleDollarSign,
   Filter,
@@ -20,6 +21,7 @@ import type {
 
 import type {
   FinancialFilters as FinancialFiltersState,
+  FinancialSortDirection,
   FinancialSortField,
   FinancialTransactionSourceFilter,
   FinancialTransactionStatusFilter,
@@ -47,12 +49,14 @@ const typeOptions: SelectOption<
 >[] = [
   {
     value: "all",
-    label: "Receitas e despesas",
+    label:
+      "Receitas e despesas",
     icon: <Layers3 size={14} />,
   },
   {
     value: "income",
-    label: "Somente receitas",
+    label:
+      "Somente receitas",
     icon: (
       <CircleDollarSign
         size={14}
@@ -61,8 +65,11 @@ const typeOptions: SelectOption<
   },
   {
     value: "expense",
-    label: "Somente despesas",
-    icon: <WalletCards size={14} />,
+    label:
+      "Somente despesas",
+    icon: (
+      <WalletCards size={14} />
+    ),
   },
 ];
 
@@ -71,18 +78,23 @@ const statusOptions: SelectOption<
 >[] = [
   {
     value: "all",
-    label: "Todas as situações",
+    label:
+      "Todas as situações",
     icon: <Layers3 size={14} />,
   },
   {
     value: "pending",
     label: "Pendentes",
-    icon: <CalendarDays size={14} />,
+    icon: (
+      <CalendarDays size={14} />
+    ),
   },
   {
     value: "overdue",
     label: "Vencidos",
-    icon: <CalendarDays size={14} />,
+    icon: (
+      <CalendarDays size={14} />
+    ),
   },
   {
     value: "received",
@@ -96,7 +108,9 @@ const statusOptions: SelectOption<
   {
     value: "paid",
     label: "Pagos",
-    icon: <WalletCards size={14} />,
+    icon: (
+      <WalletCards size={14} />
+    ),
   },
   {
     value: "cancelled",
@@ -110,18 +124,22 @@ const sourceOptions: SelectOption<
 >[] = [
   {
     value: "all",
-    label: "Todas as origens",
+    label:
+      "Todas as origens",
     icon: <Layers3 size={14} />,
   },
   {
     value: "manual",
-    label: "Lançamento manual",
+    label:
+      "Lançamento manual",
     icon: <Receipt size={14} />,
   },
   {
     value: "sale",
     label: "Venda",
-    icon: <ShoppingCart size={14} />,
+    icon: (
+      <ShoppingCart size={14} />
+    ),
   },
   {
     value: "inventory",
@@ -140,25 +158,57 @@ const sortOptions: SelectOption<
 >[] = [
   {
     value: "dueDate",
-    label: "Data de vencimento",
-    icon: <CalendarDays size={14} />,
+    label:
+      "Data de vencimento",
+    icon: (
+      <CalendarDays size={14} />
+    ),
   },
   {
     value: "createdAt",
-    label: "Data de cadastro",
-    icon: <CalendarDays size={14} />,
+    label:
+      "Data de cadastro",
+    icon: (
+      <CalendarDays size={14} />
+    ),
   },
   {
     value: "amount",
     label: "Valor",
-    icon: <ArrowDownUp size={14} />,
+    icon: (
+      <ArrowDownUp size={14} />
+    ),
   },
   {
     value: "description",
     label: "Descrição",
-    icon: <ArrowDownAZ size={14} />,
+    icon: (
+      <ArrowDownAZ size={14} />
+    ),
   },
 ];
+
+const directionOptions:
+  SelectOption<
+    FinancialSortDirection
+  >[] = [
+    {
+      value: "desc",
+      label: "Decrescente",
+      description:
+        "Exibe os maiores ou mais recentes primeiro",
+      icon: (
+        <ArrowDownUp size={14} />
+      ),
+    },
+    {
+      value: "asc",
+      label: "Crescente",
+      description:
+        "Exibe os menores ou mais antigos primeiro",
+      icon: <ArrowUp size={14} />,
+    },
+  ];
 
 export default function FinancialFilters({
   filters,
@@ -189,8 +239,11 @@ export default function FinancialFilters({
     SelectOption<string>[] = [
       {
         value: "all",
-        label: "Todas as categorias",
-        icon: <Layers3 size={14} />,
+        label:
+          "Todas as categorias",
+        icon: (
+          <Layers3 size={14} />
+        ),
       },
 
       ...categories.map(
@@ -212,8 +265,10 @@ export default function FinancialFilters({
     filters.category !== "all" ||
     filters.dateFrom !== "" ||
     filters.dateTo !== "" ||
-    filters.sortBy !== "dueDate" ||
-    filters.sortDirection !== "desc";
+    filters.sortBy !==
+      "dueDate" ||
+    filters.sortDirection !==
+      "desc";
 
   return (
     <div
@@ -285,7 +340,9 @@ export default function FinancialFilters({
         <Select
           label="Categoria"
           value={filters.category}
-          options={categoryOptions}
+          options={
+            categoryOptions
+          }
           onChange={(value) =>
             updateFilter(
               "category",
@@ -309,7 +366,9 @@ export default function FinancialFilters({
 
           <input
             type="date"
-            value={filters.dateFrom}
+            value={
+              filters.dateFrom
+            }
             onChange={(event) =>
               updateFilter(
                 "dateFrom",
@@ -328,7 +387,9 @@ export default function FinancialFilters({
 
           <input
             type="date"
-            value={filters.dateTo}
+            value={
+              filters.dateTo
+            }
             onChange={(event) =>
               updateFilter(
                 "dateTo",
@@ -350,34 +411,21 @@ export default function FinancialFilters({
           }
         />
 
-        <label
-          className={styles.field}
-        >
-          <span>
-            Direção
-          </span>
-
-          <select
-            value={
-              filters.sortDirection
-            }
-            onChange={(event) =>
-              updateFilter(
-                "sortDirection",
-                event.target.value as
-                  FinancialFiltersState["sortDirection"],
-              )
-            }
-          >
-            <option value="desc">
-              Decrescente
-            </option>
-
-            <option value="asc">
-              Crescente
-            </option>
-          </select>
-        </label>
+        <Select
+          label="Direção"
+          value={
+            filters.sortDirection
+          }
+          options={
+            directionOptions
+          }
+          onChange={(value) =>
+            updateFilter(
+              "sortDirection",
+              value,
+            )
+          }
+        />
       </div>
 
       <footer
@@ -385,6 +433,7 @@ export default function FinancialFilters({
       >
         <div>
           <Filter size={15} />
+
           Filtros da listagem
         </div>
 
