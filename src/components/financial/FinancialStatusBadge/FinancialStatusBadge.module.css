@@ -1,0 +1,44 @@
+.badge {
+  display: inline-flex;
+  min-height: 27px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 9px;
+
+  border: 1px solid;
+  border-radius: 999px;
+
+  font-size: 8px;
+  font-weight: 730;
+  white-space: nowrap;
+}
+
+.received {
+  color: #15803d;
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+}
+
+.paid {
+  color: #0369a1;
+  border-color: #bae6fd;
+  background: #f0f9ff;
+}
+
+.pending {
+  color: #a16207;
+  border-color: #fde68a;
+  background: #fffbeb;
+}
+
+.overdue {
+  color: #dc2626;
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+
+.cancelled {
+  color: #64748b;
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
