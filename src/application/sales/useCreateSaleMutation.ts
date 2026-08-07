@@ -16,6 +16,10 @@ import {
 } from "../../services/sales/salesService";
 
 import {
+  reportQueryKeys,
+} from "../reports/useReportQuery";
+
+import {
   salesQueryKeys,
 } from "./useSalesQuery";
 
@@ -27,7 +31,9 @@ export function useCreateSaleMutation() {
     mutationFn: (
       input: CreateSaleInput,
     ) =>
-      salesService.create(input),
+      salesService.create(
+        input,
+      ),
 
     onSuccess: async (sale) => {
       synchronizeSaleWithFinancial(
@@ -41,7 +47,14 @@ export function useCreateSaleMutation() {
         }),
 
         queryClient.invalidateQueries({
-          queryKey: ["financial"],
+          queryKey: [
+            "financial",
+          ],
+        }),
+
+        queryClient.invalidateQueries({
+          queryKey:
+            reportQueryKeys.all,
         }),
       ]);
     },

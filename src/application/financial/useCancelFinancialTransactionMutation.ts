@@ -12,6 +12,10 @@ import {
 } from "../../services/financial/financialService";
 
 import {
+  reportQueryKeys,
+} from "../reports/useReportQuery";
+
+import {
   financialQueryKeys,
 } from "./useFinancialQuery";
 
@@ -35,15 +39,20 @@ export function useCancelFinancialTransactionMutation() {
         financialQueryKeys.detail(
           transaction.id,
         ),
-
         transaction,
       );
 
-      await queryClient
-        .invalidateQueries({
+      await Promise.all([
+        queryClient.invalidateQueries({
           queryKey:
             financialQueryKeys.all,
-        });
+        }),
+
+        queryClient.invalidateQueries({
+          queryKey:
+            reportQueryKeys.all,
+        }),
+      ]);
     },
   });
 }
