@@ -8,6 +8,10 @@ import type {
 } from "../../domain/sales/Sale";
 
 import {
+  synchronizeSaleWithFinancial,
+} from "../../services/financial/financialSalesSyncService";
+
+import {
   salesService,
 } from "../../services/sales/salesService";
 
@@ -25,11 +29,21 @@ export function useCreateSaleMutation() {
     ) =>
       salesService.create(input),
 
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey:
-          salesQueryKeys.all,
-      });
+    onSuccess: async (sale) => {
+      synchronizeSaleWithFinancial(
+        sale,
+      );
+
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey:
+            salesQueryKeys.all,
+        }),
+
+        queryClient.invalidateQueries({
+          queryKey: ["financial"],
+        }),
+      ]);
     },
   });
 }

@@ -1,10 +1,3 @@
-import {
-  cancelFinancialTransactionDtoSchema,
-  createFinancialTransactionDtoSchema,
-  settleFinancialTransactionDtoSchema,
-  updateFinancialTransactionDtoSchema,
-} from "../../dtos/financial/FinancialTransactionDto";
-
 import type {
   CancelFinancialTransactionInput,
   CreateFinancialTransactionInput,
@@ -21,27 +14,20 @@ import {
   financialRepository,
 } from "../../repositories/financial/financialRepositoryFactory";
 
-function validateTransactionId(
-  transactionId: number,
-): number {
-  if (
-    !Number.isInteger(
-      transactionId,
-    ) ||
-    transactionId <= 0
-  ) {
-    throw new Error(
-      "O identificador do lançamento financeiro é inválido.",
-    );
-  }
+import {
+  synchronizeExistingSalesWithFinancial,
+} from "./financialSalesSyncService";
 
-  return transactionId;
+function ensureSalesSynchronization() {
+  synchronizeExistingSalesWithFinancial();
 }
 
 export const financialService = {
   list(
     filters: FinancialFilters,
   ) {
+    ensureSalesSynchronization();
+
     return financialRepository.list(
       filters,
     );
@@ -50,95 +36,70 @@ export const financialService = {
   getById(
     transactionId: number,
   ) {
+    ensureSalesSynchronization();
+
     return financialRepository.getById(
-      validateTransactionId(
-        transactionId,
-      ),
+      transactionId,
     );
   },
 
   create(
-    input:
-      CreateFinancialTransactionInput,
+    input: CreateFinancialTransactionInput,
   ) {
-    const parsedInput =
-      createFinancialTransactionDtoSchema.parse(
-        input,
-      );
-
     return financialRepository.create(
-      parsedInput,
+      input,
     );
   },
 
   update(
-    input:
-      UpdateFinancialTransactionInput,
+    input: UpdateFinancialTransactionInput,
   ) {
-    const parsedInput =
-      updateFinancialTransactionDtoSchema.parse(
-        input,
-      );
-
     return financialRepository.update(
-      parsedInput,
+      input,
     );
   },
 
   settle(
-    input:
-      SettleFinancialTransactionInput,
+    input: SettleFinancialTransactionInput,
   ) {
-    const parsedInput =
-      settleFinancialTransactionDtoSchema.parse(
-        input,
-      );
-
     return financialRepository.settle(
-      parsedInput,
+      input,
     );
   },
 
   cancel(
-    input:
-      CancelFinancialTransactionInput,
+    input: CancelFinancialTransactionInput,
   ) {
-    const parsedInput =
-      cancelFinancialTransactionDtoSchema.parse(
-        input,
-      );
-
     return financialRepository.cancel(
-      parsedInput,
+      input,
     );
   },
 
   getSummary(
-    filters?:
-      Partial<FinancialFilters>,
+    filters?: Partial<FinancialFilters>,
   ) {
+    ensureSalesSynchronization();
+
     return financialRepository.getSummary(
       filters,
     );
   },
 
   getCategorySummary(
-    filters?:
-      Partial<FinancialFilters>,
+    filters?: Partial<FinancialFilters>,
   ) {
-    return financialRepository
-      .getCategorySummary(
-        filters,
-      );
+    ensureSalesSynchronization();
+
+    return financialRepository.getCategorySummary(
+      filters,
+    );
   },
 
   listCategories(
-    type?:
-      FinancialTransactionType,
+    type?: FinancialTransactionType,
   ) {
-    return financialRepository
-      .listCategories(
-        type,
-      );
+    return financialRepository.listCategories(
+      type,
+    );
   },
 };
