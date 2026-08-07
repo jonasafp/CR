@@ -1,19 +1,33 @@
-import { useState } from "react";
+import {
+  useState,
+} from "react";
 
 import {
   AlertTriangle,
-  BadgeDollarSign,
-  Boxes,
-  CircleDollarSign,
-  PackageCheck,
-  Percent,
-  PackagePlus,
   ArrowDownToLine,
   ArrowUpFromLine,
+  Boxes,
+  CalendarClock,
+  CircleDollarSign,
+  HandCoins,
+  Landmark,
+  PackageCheck,
+  PackagePlus,
+  Percent,
   TrendingUp,
   WalletCards,
 } from "lucide-react";
 
+import {
+  Link,
+} from "react-router-dom";
+
+import {
+  useDashboardFinancialQuery,
+} from "../../application/dashboard/useDashboardFinancialQuery";
+
+import EmptyState from "../../components/common/EmptyState/EmptyState";
+import SectionCard from "../../components/common/SectionCard/SectionCard";
 import StatisticCard from "../../components/common/StatisticCard/StatisticCard";
 
 import CategoryPerformanceChart from "../../components/dashboard/CategoryPerformanceChart/CategoryPerformanceChart";
@@ -24,19 +38,21 @@ import SalesPerformanceChart from "../../components/dashboard/SalesPerformanceCh
 import StockAlertsCard from "../../components/dashboard/StockAlertsCard/StockAlertsCard";
 import TopSellingProductsCard from "../../components/dashboard/TopSellingProductsCard/TopSellingProductsCard";
 
-import type { DashboardPeriod } from "../../types/Dashboard";
+import {
+  useInventory,
+} from "../../hooks/useInventory";
 
-import { Link } from "react-router-dom";
-
-import EmptyState from "../../components/common/EmptyState/EmptyState";
-import SectionCard from "../../components/common/SectionCard/SectionCard";
-
-import { useInventory } from "../../hooks/useInventory";
-import { useProducts } from "../../hooks/useProducts";
+import {
+  useProducts,
+} from "../../hooks/useProducts";
 
 import {
   createDashboardData,
 } from "../../services/dashboard/dashboardService";
+
+import type {
+  DashboardPeriod,
+} from "../../types/Dashboard";
 
 import {
   formatCurrency,
@@ -48,11 +64,25 @@ import {
 import styles from "./Dashboard.module.css";
 
 export default function Dashboard() {
-  const [selectedPeriod, setSelectedPeriod] =
-    useState<DashboardPeriod>("month");
+  const [
+    selectedPeriod,
+    setSelectedPeriod,
+  ] = useState<DashboardPeriod>(
+    "month",
+  );
 
-  const { products } = useProducts();
-  const { movements } = useInventory();
+  const {
+    products,
+  } = useProducts();
+
+  const {
+    movements,
+  } = useInventory();
+
+  const financialSummaryQuery =
+    useDashboardFinancialQuery(
+      selectedPeriod,
+    );
 
   const currentDashboardData =
     createDashboardData(
@@ -70,7 +100,9 @@ export default function Dashboard() {
               Controle interno
             </span>
 
-            <h2>Visão geral do negócio</h2>
+            <h2>
+              Visão geral do negócio
+            </h2>
 
             <p>
               Cadastre produtos para começar a acompanhar
@@ -88,7 +120,9 @@ export default function Dashboard() {
               action={
                 <Link
                   to="/produtos"
-                  className={styles.emptyAction}
+                  className={
+                    styles.emptyAction
+                  }
                 >
                   Cadastrar produto
                 </Link>
@@ -102,7 +136,6 @@ export default function Dashboard() {
 
   const {
     summary,
-    financialSummary,
     featuredProduct,
     lowStockProducts,
     topSellingProducts,
@@ -116,6 +149,21 @@ export default function Dashboard() {
     summary.lowStockProductsCount +
     summary.outOfStockProductsCount;
 
+  const financialSummary =
+    financialSummaryQuery.data;
+
+  const overdueAmount =
+    (
+      financialSummary
+        ?.overdueReceivable ??
+      0
+    ) +
+    (
+      financialSummary
+        ?.overduePayable ??
+      0
+    );
+
   return (
     <section className={styles.page}>
       <div className={styles.pageHeader}>
@@ -124,7 +172,9 @@ export default function Dashboard() {
             Controle interno
           </span>
 
-          <h2>Visão geral do negócio</h2>
+          <h2>
+            Visão geral do negócio
+          </h2>
 
           <p>
             Acompanhe estoque, vendas e resultados em um
@@ -134,7 +184,9 @@ export default function Dashboard() {
 
         <PeriodSelector
           value={selectedPeriod}
-          onChange={setSelectedPeriod}
+          onChange={
+            setSelectedPeriod
+          }
         />
       </div>
 
@@ -151,7 +203,9 @@ export default function Dashboard() {
           )} produtos cadastrados · unidade principal`}
           icon={Boxes}
           color="blue"
-          variation={variations?.stock}
+          variation={
+            variations?.stock
+          }
           variationLabel="crescimento do estoque"
         />
 
@@ -164,29 +218,35 @@ export default function Dashboard() {
           description="Volume total vendido no período"
           icon={PackageCheck}
           color="purple"
-          variation={variations?.soldQuantity}
+          variation={
+            variations?.soldQuantity
+          }
           variationLabel="comparado ao período anterior"
         />
 
         <StatisticCard
-          title="Faturamento realizado"
-          value={formatCurrency(summary.realizedRevenue)}
-          description="Valor bruto das vendas registradas"
+          title="Receitas recebidas"
+          value={formatCurrency(
+            financialSummary
+              ?.totalIncome ??
+              0,
+          )}
+          description="Entradas financeiras realizadas no período"
           icon={CircleDollarSign}
           color="green"
-          variation={variations?.revenue}
-          variationLabel="crescimento do faturamento"
           highlighted
         />
 
         <StatisticCard
-          title="Lucro realizado"
-          value={formatCurrency(summary.realizedProfit)}
-          description="Resultado após dedução dos custos"
-          icon={BadgeDollarSign}
+          title="Saldo financeiro"
+          value={formatCurrency(
+            financialSummary
+              ?.balance ??
+              0,
+          )}
+          description="Receitas recebidas menos despesas pagas"
+          icon={WalletCards}
           color="green"
-          variation={variations?.profit}
-          variationLabel="crescimento do resultado"
           highlighted
         />
 
@@ -198,26 +258,96 @@ export default function Dashboard() {
           description="Margem média sobre as vendas"
           icon={Percent}
           color="orange"
-          variation={variations?.margin}
+          variation={
+            variations?.margin
+          }
           variationLabel="evolução da margem"
         />
 
         <StatisticCard
           title="Atenção no estoque"
-          value={formatNumber(unavailableProducts, 0)}
+          value={formatNumber(
+            unavailableProducts,
+            0,
+          )}
           description={`${summary.lowStockProductsCount} com estoque baixo e ${summary.outOfStockProductsCount} sem estoque`}
           icon={AlertTriangle}
           color="red"
-          variation={variations?.stockAlerts}
+          variation={
+            variations?.stockAlerts
+          }
           variationLabel="redução dos alertas"
         />
       </div>
 
-      <div className={styles.inventoryMetricsGrid}>
+      <div
+        className={
+          styles.financialMetricsGrid
+        }
+      >
+        <StatisticCard
+          title="Despesas pagas"
+          value={formatCurrency(
+            financialSummary
+              ?.totalExpense ??
+              0,
+          )}
+          description="Saídas financeiras realizadas no período"
+          icon={ArrowDownToLine}
+          color="red"
+        />
+
+        <StatisticCard
+          title="Contas a receber"
+          value={formatCurrency(
+            financialSummary
+              ?.accountsReceivable ??
+              0,
+          )}
+          description="Receitas que ainda aguardam recebimento"
+          icon={HandCoins}
+          color="green"
+        />
+
+        <StatisticCard
+          title="Contas a pagar"
+          value={formatCurrency(
+            financialSummary
+              ?.accountsPayable ??
+              0,
+          )}
+          description="Despesas que ainda aguardam pagamento"
+          icon={Landmark}
+          color="orange"
+        />
+
+        <StatisticCard
+          title="Lançamentos vencidos"
+          value={formatNumber(
+            financialSummary
+              ?.overdueTransactions ??
+              0,
+            0,
+          )}
+          description={`${formatCurrency(
+            overdueAmount,
+          )} em valores vencidos`}
+          icon={CalendarClock}
+          color="red"
+        />
+      </div>
+
+      <div
+        className={
+          styles.inventoryMetricsGrid
+        }
+      >
         <StatisticCard
           title="Entradas acumuladas"
           value={formatNumber(
-            inventorySummary?.totalEntries ?? 0,
+            inventorySummary
+              ?.totalEntries ??
+              0,
             2,
           )}
           description="Entradas e ajustes positivos registrados"
@@ -228,7 +358,9 @@ export default function Dashboard() {
         <StatisticCard
           title="Saídas acumuladas"
           value={formatNumber(
-            inventorySummary?.totalExits ?? 0,
+            inventorySummary
+              ?.totalExits ??
+              0,
             2,
           )}
           description="Saídas e ajustes negativos registrados"
@@ -257,31 +389,71 @@ export default function Dashboard() {
         />
       </div>
 
-      <div className={styles.primaryWidgetsGrid}>
-        <FeaturedProductCard product={featuredProduct} />
+      <div
+        className={
+          styles.primaryWidgetsGrid
+        }
+      >
+        <FeaturedProductCard
+          product={featuredProduct}
+        />
 
-        <FinancialSummaryCard data={financialSummary} />
+        <FinancialSummaryCard
+          data={financialSummary}
+          period={selectedPeriod}
+          isLoading={
+            financialSummaryQuery
+              .isLoading
+          }
+          isError={
+            financialSummaryQuery
+              .isError
+          }
+          onRetry={() =>
+            void financialSummaryQuery
+              .refetch()
+          }
+        />
       </div>
 
-      <div className={styles.secondaryWidgetsGrid}>
+      <div
+        className={
+          styles.secondaryWidgetsGrid
+        }
+      >
         <StockAlertsCard
-          items={lowStockProducts.slice(0, 5)}
-          totalCount={lowStockProducts.length}
+          items={
+            lowStockProducts.slice(
+              0,
+              5,
+            )
+          }
+          totalCount={
+            lowStockProducts.length
+          }
         />
 
         <TopSellingProductsCard
-          items={topSellingProducts}
+          items={
+            topSellingProducts
+          }
         />
       </div>
 
-      <div className={styles.analyticsGrid}>
+      <div
+        className={
+          styles.analyticsGrid
+        }
+      >
         <SalesPerformanceChart
           data={salesPerformance}
           period={selectedPeriod}
         />
 
         <CategoryPerformanceChart
-          data={categoryPerformance}
+          data={
+            categoryPerformance
+          }
           period={selectedPeriod}
         />
       </div>

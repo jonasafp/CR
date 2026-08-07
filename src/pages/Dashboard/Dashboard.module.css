@@ -48,21 +48,34 @@
 
 .metricsGrid {
   display: grid;
-  grid-template-columns: repeat(6,
-      minmax(190px, 1fr));
+  grid-template-columns:
+    repeat(6, minmax(190px, 1fr));
   gap: 17px;
+}
+
+.financialMetricsGrid,
+.inventoryMetricsGrid {
+  display: grid;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+  gap: 15px;
+  margin-top: 18px;
 }
 
 .primaryWidgetsGrid {
   display: grid;
-  grid-template-columns: minmax(0, 1.6fr) minmax(310px, 0.8fr);
+  grid-template-columns:
+    minmax(0, 1.6fr)
+    minmax(310px, 0.8fr);
   gap: 18px;
   margin-top: 22px;
 }
 
 .secondaryWidgetsGrid {
   display: grid;
-  grid-template-columns: minmax(320px, 0.8fr) minmax(0, 1.6fr);
+  grid-template-columns:
+    minmax(320px, 0.8fr)
+    minmax(0, 1.6fr);
   gap: 18px;
   margin-top: 18px;
 }
@@ -70,16 +83,9 @@
 .analyticsGrid {
   display: grid;
   grid-template-columns:
-    minmax(0, 1.6fr) minmax(360px, 0.9fr);
+    minmax(0, 1.6fr)
+    minmax(360px, 0.9fr);
   gap: 18px;
-  margin-top: 18px;
-}
-
-.inventoryMetricsGrid {
-  display: grid;
-  grid-template-columns:
-    repeat(4, minmax(0, 1fr));
-  gap: 15px;
   margin-top: 18px;
 }
 
@@ -112,31 +118,31 @@
   transform: translateY(-2px);
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1650px) {
+  .metricsGrid {
+    grid-template-columns:
+      repeat(3, minmax(220px, 1fr));
+  }
+}
 
+@media (max-width: 1200px) {
   .primaryWidgetsGrid,
   .secondaryWidgetsGrid,
   .analyticsGrid {
     grid-template-columns: 1fr;
   }
-}
 
-@media (max-width: 1650px) {
-  .metricsGrid {
-    grid-template-columns: repeat(3,
-        minmax(220px, 1fr));
+  .financialMetricsGrid,
+  .inventoryMetricsGrid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
   }
-}
-
-.inventoryMetricsGrid {
-  grid-template-columns:
-    repeat(2, minmax(0, 1fr));
 }
 
 @media (max-width: 1000px) {
   .metricsGrid {
-    grid-template-columns: repeat(2,
-        minmax(220px, 1fr));
+    grid-template-columns:
+      repeat(2, minmax(220px, 1fr));
   }
 }
 
@@ -147,15 +153,9 @@
     gap: 18px;
   }
 
-  .metricsGrid {
+  .metricsGrid,
+  .financialMetricsGrid,
+  .inventoryMetricsGrid {
     grid-template-columns: 1fr;
   }
-
-  .nextSection {
-    padding: 24px;
-  }
-}
-
-.inventoryMetricsGrid {
-  grid-template-columns: 1fr;
 }

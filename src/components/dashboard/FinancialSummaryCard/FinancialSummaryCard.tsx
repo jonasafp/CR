@@ -2,33 +2,105 @@ import {
   ArrowDownCircle,
   ArrowUpCircle,
   CircleDollarSign,
-  TrendingUp,
+  Clock3,
+  RefreshCw,
+  WalletCards,
 } from "lucide-react";
 
 import SectionCard from "../../common/SectionCard/SectionCard";
 
-import type { FinancialSummary } from "../../../types/Dashboard";
+import type {
+  FinancialSummary,
+} from "../../../domain/financial/FinancialTransaction";
+
+import type {
+  DashboardPeriod,
+} from "../../../types/Dashboard";
 
 import {
   formatCurrency,
-  formatPercentage,
 } from "../../../utils/formatters";
 
 import styles from "./FinancialSummaryCard.module.css";
 
 interface FinancialSummaryCardProps {
-  data: FinancialSummary;
+  data?: FinancialSummary;
+  period: DashboardPeriod;
+
+  isLoading?: boolean;
+  isError?: boolean;
+
+  onRetry?: () => void;
 }
+
+const periodLabels: Record<
+  DashboardPeriod,
+  string
+> = {
+  today: "Hoje",
+  week: "Semana atual",
+  month: "Mês atual",
+  year: "Ano atual",
+};
 
 export default function FinancialSummaryCard({
   data,
+  period,
+  isLoading = false,
+  isError = false,
+  onRetry,
 }: FinancialSummaryCardProps) {
+  if (isError) {
+    return (
+      <SectionCard
+        title="Resumo financeiro"
+        description="Movimentação financeira real do período."
+        icon={CircleDollarSign}
+        badge={periodLabels[period]}
+        className={styles.card}
+      >
+        <div className={styles.feedback}>
+          <CircleDollarSign size={29} />
+
+          <strong>
+            Não foi possível carregar o resumo
+          </strong>
+
+          <span>
+            Tente consultar novamente os dados financeiros.
+          </span>
+
+          <button
+            type="button"
+            onClick={onRetry}
+          >
+            <RefreshCw size={15} />
+            Tentar novamente
+          </button>
+        </div>
+      </SectionCard>
+    );
+  }
+
+  const totalIncome =
+    data?.totalIncome ?? 0;
+
+  const totalExpense =
+    data?.totalExpense ?? 0;
+
+  const balance =
+    data?.balance ?? 0;
+
+  const pendingTotal =
+    (data?.accountsReceivable ?? 0) +
+    (data?.accountsPayable ?? 0);
+
   return (
     <SectionCard
       title="Resumo financeiro"
-      description="Resultado consolidado das vendas registradas."
+      description="Movimentação financeira real do período."
       icon={CircleDollarSign}
-      badge="Financeiro"
+      badge={periodLabels[period]}
       className={styles.card}
     >
       <div className={styles.summary}>
@@ -40,10 +112,16 @@ export default function FinancialSummaryCard({
           </div>
 
           <div>
-            <span>Faturamento</span>
+            <span>
+              Receitas recebidas
+            </span>
 
             <strong>
-              {formatCurrency(data.revenue)}
+              {isLoading
+                ? "Carregando..."
+                : formatCurrency(
+                    totalIncome,
+                  )}
             </strong>
           </div>
         </div>
@@ -56,9 +134,17 @@ export default function FinancialSummaryCard({
           </div>
 
           <div>
-            <span>Custos</span>
+            <span>
+              Despesas pagas
+            </span>
 
-            <strong>{formatCurrency(data.cost)}</strong>
+            <strong>
+              {isLoading
+                ? "Carregando..."
+                : formatCurrency(
+                    totalExpense,
+                  )}
+            </strong>
           </div>
         </div>
 
@@ -67,23 +153,34 @@ export default function FinancialSummaryCard({
         <div className={styles.profitArea}>
           <div className={styles.profitHeader}>
             <div>
-              <span>Lucro realizado</span>
+              <span>
+                Saldo financeiro
+              </span>
 
               <strong>
-                {formatCurrency(data.profit)}
+                {isLoading
+                  ? "Carregando..."
+                  : formatCurrency(
+                      balance,
+                    )}
               </strong>
             </div>
 
             <div className={styles.profitIcon}>
-              <TrendingUp size={23} />
+              <WalletCards size={23} />
             </div>
           </div>
 
           <div className={styles.marginArea}>
-            <span>Margem sobre faturamento</span>
+            <span>
+              <Clock3 size={14} />
+              Total em aberto
+            </span>
 
             <strong>
-              {formatPercentage(data.profitMargin)}
+              {formatCurrency(
+                pendingTotal,
+              )}
             </strong>
           </div>
         </div>
