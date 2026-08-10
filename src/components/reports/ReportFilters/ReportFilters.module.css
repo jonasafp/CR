@@ -1,0 +1,151 @@
+.container {
+  padding: 19px 21px;
+
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: #fbfdff;
+  box-shadow: var(--shadow-sm);
+}
+
+.search {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 10px;
+  padding: 0 13px;
+
+  color: var(--text-light);
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: var(--surface);
+}
+
+.search:focus-within {
+  color: var(--primary);
+  border-color: #93c5fd;
+  box-shadow:
+    0 0 0 3px #dbeafe;
+}
+
+.search input {
+  width: 100%;
+
+  color: var(--text);
+  border: 0;
+  outline: 0;
+  background: transparent;
+
+  font-family: inherit;
+  font-size: 11px;
+}
+
+.commonGrid,
+.filterGrid {
+  display: grid;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 13px;
+}
+
+.orderGrid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 13px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.field > span {
+  color: var(--text-secondary);
+  font-size: 9px;
+  font-weight: 690;
+}
+
+.field input {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 11px;
+
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  outline: 0;
+  background: var(--surface);
+
+  font-family: inherit;
+  font-size: 10px;
+}
+
+.field input:focus {
+  border-color: #93c5fd;
+  box-shadow:
+    0 0 0 3px #dbeafe;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-top: 16px;
+  padding-top: 15px;
+
+  color: var(--text-light);
+  border-top: 1px solid var(--border);
+
+  font-size: 9px;
+}
+
+.footer > div,
+.footer button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.footer button {
+  min-height: 34px;
+  padding: 0 10px;
+
+  color: var(--primary);
+  border: 1px solid #dbeafe;
+  border-radius: 10px;
+  background: var(--primary-light);
+
+  font-family: inherit;
+  font-size: 9px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (max-width: 1150px) {
+  .commonGrid,
+  .filterGrid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 650px) {
+  .container {
+    padding: 15px;
+  }
+
+  .commonGrid,
+  .filterGrid,
+  .orderGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
