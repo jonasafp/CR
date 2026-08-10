@@ -1,0 +1,166 @@
+.navigation {
+  position: sticky;
+  top: 18px;
+
+  overflow: hidden;
+
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.header {
+  padding: 17px;
+
+  border-bottom: 1px solid var(--border);
+  background: #fbfdff;
+}
+
+.header strong,
+.header span {
+  display: block;
+}
+
+.header strong {
+  color: var(--text);
+
+  font-size: 11px;
+}
+
+.header span {
+  margin-top: 5px;
+
+  color: var(--text-light);
+
+  font-size: 8px;
+}
+
+.items {
+  padding: 8px;
+}
+
+.item {
+  position: relative;
+
+  display: flex;
+  width: 100%;
+  min-height: 56px;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 9px;
+
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+
+  font-family: inherit;
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    color var(--transition),
+    border-color var(--transition),
+    background var(--transition);
+}
+
+.item + .item {
+  margin-top: 3px;
+}
+
+.item:hover {
+  color: var(--text);
+  background: #f8fafc;
+}
+
+.icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  place-items: center;
+
+  color: var(--text-light);
+  border-radius: 10px;
+  background: #f1f5f9;
+}
+
+.information {
+  min-width: 0;
+}
+
+.information strong,
+.information span {
+  display: block;
+}
+
+.information strong {
+  color: inherit;
+
+  font-size: 9px;
+  font-weight: 710;
+}
+
+.information span {
+  overflow: hidden;
+  margin-top: 4px;
+
+  color: var(--text-light);
+
+  font-size: 7px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.active {
+  color: var(--primary);
+  border-color: #bfdbfe;
+  background: var(--primary-light);
+}
+
+.active:hover {
+  color: var(--primary);
+  background: var(--primary-light);
+}
+
+.active .icon {
+  color: var(--primary);
+  background: #dbeafe;
+}
+
+.changed {
+  position: absolute;
+  top: 10px;
+  right: 9px;
+
+  width: 7px;
+  height: 7px;
+
+  border: 2px solid var(--surface);
+  border-radius: 50%;
+  background: #f59e0b;
+}
+
+@media (max-width: 1000px) {
+  .navigation {
+    position: static;
+  }
+
+  .items {
+    display: grid;
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .item + .item {
+    margin-top: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .items {
+    grid-template-columns: 1fr;
+  }
+}

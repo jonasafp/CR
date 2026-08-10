@@ -1,0 +1,294 @@
+.card {
+  overflow: hidden;
+
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 17px 19px;
+
+  border-bottom: 1px solid var(--border);
+  background: #fbfdff;
+}
+
+.headerIcon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  place-items: center;
+
+  color: var(--primary);
+  border: 1px solid #dbeafe;
+  border-radius: 13px;
+  background: var(--primary-light);
+}
+
+.header h3 {
+  color: var(--text);
+
+  font-size: 13px;
+}
+
+.header p {
+  margin-top: 4px;
+
+  color: var(--text-light);
+
+  font-size: 8px;
+}
+
+.content {
+  padding: 20px;
+}
+
+.logoSection {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.logoPreview {
+  display: grid;
+  width: 82px;
+  height: 82px;
+  flex-shrink: 0;
+  overflow: hidden;
+  place-items: center;
+
+  color: var(--primary);
+  border: 1px dashed #93c5fd;
+  border-radius: 18px;
+  background: var(--primary-light);
+}
+
+.logoPreview img {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+.logoPreview strong {
+  font-size: 22px;
+  letter-spacing: -0.5px;
+}
+
+.logoInformation > strong,
+.logoInformation > span {
+  display: block;
+}
+
+.logoInformation > strong {
+  color: var(--text);
+
+  font-size: 10px;
+}
+
+.logoInformation > span {
+  margin-top: 4px;
+
+  color: var(--text-light);
+
+  font-size: 8px;
+}
+
+.logoActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.logoActions button {
+  display: inline-flex;
+  min-height: 35px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 11px;
+
+  color: var(--primary);
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  background: var(--primary-light);
+
+  font-family: inherit;
+  font-size: 8px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.logoActions .removeButton {
+  color: #dc2626;
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+
+.logoActions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.error {
+  display: block;
+  margin-top: 7px;
+
+  color: #dc2626;
+
+  font-size: 8px;
+}
+
+.divider {
+  height: 1px;
+  margin: 20px 0;
+
+  background: var(--border);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.twoColumns {
+  grid-column: span 2;
+}
+
+.field > span {
+  color: var(--text-secondary);
+
+  font-size: 8px;
+  font-weight: 690;
+}
+
+.field > input,
+.inputWithIcon {
+  width: 100%;
+  min-height: 42px;
+
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  outline: 0;
+  background: var(--surface);
+
+  font-family: inherit;
+  font-size: 9px;
+
+  transition:
+    border-color var(--transition),
+    box-shadow var(--transition);
+}
+
+.field > input {
+  padding: 0 11px;
+}
+
+.field > input:focus,
+.inputWithIcon:focus-within {
+  border-color: #93c5fd;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(59, 130, 246, 0.1);
+}
+
+.field > input:disabled,
+.inputWithIcon:has(input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.65;
+  background: #f8fafc;
+}
+
+.inputWithIcon {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 11px;
+
+  color: var(--text-light);
+}
+
+.inputWithIcon input {
+  min-width: 0;
+  flex: 1;
+
+  color: var(--text);
+  border: 0;
+  outline: 0;
+  background: transparent;
+
+  font-family: inherit;
+  font-size: 9px;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 23px 0 13px;
+  padding-bottom: 10px;
+
+  color: var(--primary);
+  border-bottom: 1px solid var(--border);
+}
+
+.sectionTitle strong,
+.sectionTitle span {
+  display: block;
+}
+
+.sectionTitle strong {
+  color: var(--text);
+
+  font-size: 10px;
+}
+
+.sectionTitle span {
+  margin-top: 3px;
+
+  color: var(--text-light);
+
+  font-size: 7px;
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .content {
+    padding: 16px;
+  }
+
+  .logoSection {
+    align-items: flex-start;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .twoColumns {
+    grid-column: auto;
+  }
+}
