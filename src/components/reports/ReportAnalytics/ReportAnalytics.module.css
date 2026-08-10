@@ -1,0 +1,146 @@
+.container {
+  width: 100%;
+}
+
+.chartsGrid {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1.55fr)
+    minmax(360px, 0.95fr);
+  gap: 18px;
+}
+
+.card,
+.paymentCard {
+  height: 100%;
+}
+
+.chart {
+  width: 100%;
+  height: 330px;
+  min-width: 0;
+}
+
+.empty {
+  min-height: 330px;
+}
+
+.paymentCard {
+  margin-top: 18px;
+}
+
+.paymentGrid {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+  gap: 11px;
+}
+
+.paymentItem {
+  position: relative;
+  padding: 13px;
+
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #fbfdff;
+}
+
+.paymentIcon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+
+  color: var(--primary);
+  border-radius: 10px;
+  background: var(--primary-light);
+}
+
+.paymentInformation {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 11px;
+}
+
+.paymentInformation strong,
+.paymentInformation span {
+  display: block;
+}
+
+.paymentInformation strong {
+  color: var(--text);
+  font-size: 10px;
+}
+
+.paymentInformation > strong {
+  flex-shrink: 0;
+
+  color: var(--primary);
+  font-size: 12px;
+}
+
+.paymentInformation span {
+  margin-top: 4px;
+
+  color: var(--text-light);
+  font-size: 8px;
+}
+
+.progress {
+  height: 5px;
+  margin-top: 12px;
+  overflow: hidden;
+
+  border-radius: 999px;
+  background: #e2e8f0;
+}
+
+.progress span {
+  display: block;
+  height: 100%;
+
+  border-radius: inherit;
+  background: var(--primary);
+}
+
+.paymentItem small {
+  display: block;
+  margin-top: 6px;
+
+  color: var(--text-light);
+
+  font-size: 8px;
+  text-align: right;
+}
+
+.paymentEmpty {
+  display: grid;
+  min-height: 140px;
+  place-items: center;
+
+  color: var(--text-light);
+  font-size: 9px;
+}
+
+@media (max-width: 1200px) {
+  .chartsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .paymentGrid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 650px) {
+  .chart {
+    height: 290px;
+  }
+
+  .paymentGrid {
+    grid-template-columns: 1fr;
+  }
+}
