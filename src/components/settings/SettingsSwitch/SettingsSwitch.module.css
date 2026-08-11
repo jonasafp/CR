@@ -1,0 +1,123 @@
+.option {
+  display: flex;
+  min-height: 68px;
+  align-items: center;
+  gap: 11px;
+  padding: 12px;
+
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: var(--surface);
+
+  cursor: pointer;
+
+  transition:
+    border-color var(--transition),
+    background var(--transition);
+}
+
+.option:hover {
+  border-color: #bfdbfe;
+  background: #fbfdff;
+}
+
+.option input {
+  position: absolute;
+
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+
+  opacity: 0;
+}
+
+.icon {
+  display: grid;
+  width: 35px;
+  height: 35px;
+  flex-shrink: 0;
+  place-items: center;
+
+  color: var(--primary);
+  border-radius: 10px;
+  background: var(--primary-light);
+}
+
+.information {
+  min-width: 0;
+  flex: 1;
+}
+
+.information strong,
+.information small {
+  display: block;
+}
+
+.information strong {
+  color: var(--text);
+
+  font-size: 9px;
+  font-weight: 710;
+}
+
+.information small {
+  margin-top: 4px;
+
+  color: var(--text-light);
+
+  font-size: 7px;
+  line-height: 1.45;
+}
+
+.switch {
+  position: relative;
+
+  width: 38px;
+  height: 22px;
+  flex-shrink: 0;
+
+  border-radius: 999px;
+  background: #cbd5e1;
+
+  transition:
+    background var(--transition);
+}
+
+.switch span {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+
+  width: 16px;
+  height: 16px;
+
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow:
+    0 2px 5px
+    rgba(15, 23, 42, 0.22);
+
+  transition:
+    transform var(--transition);
+}
+
+.option input:checked ~ .switch {
+  background: var(--primary);
+}
+
+.option input:checked ~ .switch span {
+  transform: translateX(16px);
+}
+
+.option:has(input:focus-visible) {
+  border-color: #60a5fa;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(59, 130, 246, 0.12);
+}
+
+.disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
