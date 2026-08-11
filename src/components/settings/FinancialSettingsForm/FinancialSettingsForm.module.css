@@ -1,0 +1,232 @@
+.card {
+  overflow: hidden;
+
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 17px 19px;
+
+  border-bottom: 1px solid var(--border);
+  background: #fbfdff;
+}
+
+.headerIcon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  place-items: center;
+
+  color: var(--primary);
+  border: 1px solid #dbeafe;
+  border-radius: 13px;
+  background: var(--primary-light);
+}
+
+.header h3 {
+  color: var(--text);
+
+  font-size: 13px;
+}
+
+.header p {
+  margin-top: 4px;
+
+  color: var(--text-light);
+
+  font-size: 8px;
+}
+
+.content {
+  padding: 20px;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 13px;
+  padding-bottom: 10px;
+
+  color: var(--primary);
+  border-bottom: 1px solid var(--border);
+}
+
+.sectionTitle:not(:first-child) {
+  margin-top: 23px;
+}
+
+.sectionTitle strong,
+.sectionTitle span {
+  display: block;
+}
+
+.sectionTitle strong {
+  color: var(--text);
+
+  font-size: 10px;
+}
+
+.sectionTitle span {
+  margin-top: 3px;
+
+  color: var(--text-light);
+
+  font-size: 7px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.field > span {
+  color: var(--text-secondary);
+
+  font-size: 8px;
+  font-weight: 690;
+}
+
+.field > small {
+  color: var(--text-light);
+
+  font-size: 7px;
+  line-height: 1.4;
+}
+
+.field > input,
+.daysInput {
+  width: 100%;
+  min-height: 42px;
+
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  outline: 0;
+  background: var(--surface);
+
+  font-family: inherit;
+  font-size: 9px;
+}
+
+.field > input {
+  padding: 0 11px;
+}
+
+.field > input:focus,
+.daysInput:focus-within {
+  border-color: #93c5fd;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(59, 130, 246, 0.1);
+}
+
+.daysInput {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.daysInput input {
+  min-width: 0;
+  height: 40px;
+  flex: 1;
+  padding: 0 11px;
+
+  color: var(--text);
+  border: 0;
+  outline: 0;
+  background: transparent;
+
+  font-family: inherit;
+  font-size: 9px;
+}
+
+.daysInput > span {
+  display: grid;
+  min-width: 51px;
+  align-self: stretch;
+  place-items: center;
+
+  color: var(--text-secondary);
+  border-left: 1px solid var(--border);
+  background: #f8fafc;
+
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.daysInput:has(input:disabled),
+.field > input:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+  background: #f8fafc;
+}
+
+.switchGrid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.integrationNote {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 13px;
+
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  border-radius: 11px;
+  background: #eff6ff;
+}
+
+.integrationNote svg {
+  flex-shrink: 0;
+}
+
+.integrationNote strong,
+.integrationNote span {
+  display: block;
+}
+
+.integrationNote strong {
+  font-size: 8px;
+}
+
+.integrationNote span {
+  margin-top: 4px;
+
+  font-size: 7px;
+  line-height: 1.5;
+}
+
+@media (max-width: 750px) {
+  .content {
+    padding: 16px;
+  }
+
+  .grid,
+  .switchGrid {
+    grid-template-columns: 1fr;
+  }
+}
