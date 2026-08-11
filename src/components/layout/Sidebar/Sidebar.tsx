@@ -9,6 +9,7 @@ import {
 import { NavLink } from "react-router-dom";
 
 import { businessConfig } from "../../../config/businessConfig";
+import { useSettings, } from "../../../hooks/useSettings";
 import { mainNavigationItems } from "../../../constants/navigation";
 
 import styles from "./Sidebar.module.css";
@@ -22,6 +23,13 @@ export default function Sidebar({
   isOpen,
   onClose,
 }: SidebarProps) {
+  const {
+    settings,
+  } = useSettings();
+
+  const business =
+    settings.business;
+
   const enabledNavigationItems =
     mainNavigationItems.filter(
       (item) => businessConfig.modules[item.module],
@@ -33,9 +41,8 @@ export default function Sidebar({
 
   return (
     <aside
-      className={`${styles.sidebar} ${
-        isOpen ? styles.sidebarOpen : ""
-      }`}
+      className={`${styles.sidebar} ${isOpen ? styles.sidebarOpen : ""
+        }`}
     >
       <div className={styles.brandArea}>
         <div className={styles.brandIcon}>
@@ -59,11 +66,22 @@ export default function Sidebar({
 
       <div className={styles.businessCard}>
         <div className={styles.businessAvatar}>
-          {businessConfig.shortName}
+          {business.logo ? (
+            <img
+              src={business.logo}
+              alt={`Logotipo de ${business.tradeName}`}
+            />
+          ) : (
+            business.shortName ||
+            businessConfig.shortName
+          )}
         </div>
 
         <div className={styles.businessInfo}>
-          <strong>{businessConfig.tradeName}</strong>
+          <strong>
+            {business.tradeName ||
+              businessConfig.tradeName}
+          </strong>
           <span>Unidade principal</span>
         </div>
 
@@ -92,8 +110,7 @@ export default function Sidebar({
                   end={item.end}
                   onClick={onClose}
                   className={({ isActive }) =>
-                    `${styles.menuLink} ${
-                      isActive ? styles.menuLinkActive : ""
+                    `${styles.menuLink} ${isActive ? styles.menuLinkActive : ""
                     }`
                   }
                 >
@@ -122,8 +139,7 @@ export default function Sidebar({
               to="/configuracoes"
               onClick={onClose}
               className={({ isActive }) =>
-                `${styles.menuLink} ${
-                  isActive ? styles.menuLinkActive : ""
+                `${styles.menuLink} ${isActive ? styles.menuLinkActive : ""
                 }`
               }
             >

@@ -35,6 +35,10 @@ import type {
 } from "../../domain/settings/SystemSettings";
 
 import {
+  applicationIdentityService,
+} from "../../services/desktop/applicationIdentityService";
+
+import {
   SETTINGS_UPDATED_EVENT,
 } from "../../services/settings/settingsStorageService";
 
@@ -61,18 +65,24 @@ export default function SettingsProvider({
   const resetMutation =
     useResetSettingsMutation();
 
+  const currentSettings =
+    settingsQuery.data ??
+    defaultSystemSettings;
+
+  useEffect(() => {
+    applicationIdentityService.apply(
+      currentSettings.business,
+    );
+  }, [currentSettings.business]);
+
   useEffect(() => {
     function handleSettingsUpdated(
       event: Event,
     ) {
       const customEvent =
-        event as CustomEvent<
-          SystemSettings
-        >;
+        event as CustomEvent<SystemSettings>;
 
-      if (
-        !customEvent.detail
-      ) {
+      if (!customEvent.detail) {
         return;
       }
 
@@ -101,72 +111,63 @@ export default function SettingsProvider({
         input:
           UpdateSystemSettingsInput,
       ) =>
-        updateMutation
-          .mutateAsync(input),
+        updateMutation.mutateAsync(
+          input,
+        ),
       [updateMutation],
     );
 
   const resetSettings =
     useCallback(
       () =>
-        resetMutation
-          .mutateAsync(),
+        resetMutation.mutateAsync(),
       [resetMutation],
     );
 
   const refetchSettings =
     useCallback(
       async () => {
-        await settingsQuery
-          .refetch();
+        await settingsQuery.refetch();
       },
       [settingsQuery],
     );
 
-  const value =
-    useMemo(
-      () => ({
-        settings:
-          settingsQuery.data ??
-          defaultSystemSettings,
+  const value = useMemo(
+    () => ({
+      settings:
+        currentSettings,
 
-        isLoading:
-          settingsQuery
-            .isLoading,
-
-        isSaving:
-          updateMutation
-            .isPending,
-
-        isResetting:
-          resetMutation
-            .isPending,
-
-        error:
-          settingsQuery.error ??
-          updateMutation.error ??
-          resetMutation.error,
-
-        saveSettings,
-        resetSettings,
-        refetchSettings,
-      }),
-      [
-        settingsQuery.data,
+      isLoading:
         settingsQuery.isLoading,
-        settingsQuery.error,
 
+      isSaving:
         updateMutation.isPending,
-        updateMutation.error,
 
+      isResetting:
         resetMutation.isPending,
+
+      error:
+        settingsQuery.error ??
+        updateMutation.error ??
         resetMutation.error,
 
-        saveSettings,
-        resetSettings,
-        refetchSettings,
-      ],
-    );
+      saveSettings,
+      resetSettings,
+      refetchSettings,
+    }),
+    [
+      settingsQuery.data,
+      settingsQuery.isLoading,
+      settingsQuery.error,
+      updateMutation.isPending,
+      updateMutation.error,
+      resetMutation.isPending,
+      resetMutation.error,
+      saveSettings,
+      resetSettings,
+      refetchSettings,
+    ],
+  );
 
   return (
     <SettingsContext.Provider

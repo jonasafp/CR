@@ -10,6 +10,10 @@ import styles from "./Header.module.css";
 
 import { businessConfig } from "../../../config/businessConfig";
 
+import {
+  useSettings,
+} from "../../../hooks/useSettings";
+
 interface HeaderProps {
   onToggleSidebar: () => void;
 }
@@ -70,6 +74,10 @@ export default function Header({
 }: HeaderProps) {
   const location = useLocation();
 
+  const {
+    settings,
+  } = useSettings();
+
   const currentPage =
     pageInformation[location.pathname] ?? pageInformation["/"];
 
@@ -123,7 +131,10 @@ export default function Header({
 
             <div className={styles.profileText}>
               <strong>Administrador</strong>
-              <span>{businessConfig.tradeName}</span>
+              <span>
+                {settings.business.tradeName ||
+                  businessConfig.tradeName}
+              </span>
             </div>
           </div>
         </div>
