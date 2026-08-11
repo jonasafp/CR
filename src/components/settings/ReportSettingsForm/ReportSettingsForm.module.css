@@ -1,0 +1,108 @@
+.card {
+  overflow: hidden;
+
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 17px 19px;
+
+  border-bottom: 1px solid var(--border);
+  background: #fbfdff;
+}
+
+.headerIcon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  place-items: center;
+
+  color: var(--primary);
+  border: 1px solid #dbeafe;
+  border-radius: 13px;
+  background: var(--primary-light);
+}
+
+.header h3 {
+  color: var(--text);
+
+  font-size: 13px;
+}
+
+.header p {
+  margin-top: 4px;
+
+  color: var(--text-light);
+
+  font-size: 8px;
+}
+
+.content {
+  padding: 20px;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 13px;
+  padding-bottom: 10px;
+
+  color: var(--primary);
+  border-bottom: 1px solid var(--border);
+}
+
+.sectionTitle:not(:first-child) {
+  margin-top: 23px;
+}
+
+.sectionTitle strong,
+.sectionTitle span {
+  display: block;
+}
+
+.sectionTitle strong {
+  color: var(--text);
+
+  font-size: 10px;
+}
+
+.sectionTitle span {
+  margin-top: 3px;
+
+  color: var(--text-light);
+
+  font-size: 7px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.switchGrid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 750px) {
+  .content {
+    padding: 16px;
+  }
+
+  .grid,
+  .switchGrid {
+    grid-template-columns: 1fr;
+  }
+}

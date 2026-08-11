@@ -1,0 +1,276 @@
+.card {
+  overflow: hidden;
+
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 17px 19px;
+
+  border-bottom: 1px solid var(--border);
+  background: #fbfdff;
+}
+
+.headerIcon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  place-items: center;
+
+  color: var(--primary);
+  border: 1px solid #dbeafe;
+  border-radius: 13px;
+  background: var(--primary-light);
+}
+
+.header h3 {
+  color: var(--text);
+
+  font-size: 13px;
+}
+
+.header p {
+  margin-top: 4px;
+
+  color: var(--text-light);
+
+  font-size: 8px;
+}
+
+.content {
+  padding: 20px;
+}
+
+.actionsGrid {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.actionCard {
+  display: flex;
+  min-width: 0;
+  min-height: 185px;
+  align-items: flex-start;
+  flex-direction: column;
+  padding: 16px;
+
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #fbfdff;
+}
+
+.actionIcon {
+  display: grid;
+  width: 39px;
+  height: 39px;
+  place-items: center;
+
+  color: var(--primary);
+  border-radius: 11px;
+  background: var(--primary-light);
+}
+
+.actionInformation {
+  flex: 1;
+  margin-top: 12px;
+}
+
+.actionInformation strong,
+.actionInformation span {
+  display: block;
+}
+
+.actionInformation strong {
+  color: var(--text);
+
+  font-size: 10px;
+}
+
+.actionInformation span {
+  margin-top: 5px;
+
+  color: var(--text-light);
+
+  font-size: 7px;
+  line-height: 1.5;
+}
+
+.actionCard > button {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 11px;
+
+  color: var(--primary);
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  background: var(--primary-light);
+
+  font-family: inherit;
+  font-size: 8px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.actionCard > button:disabled,
+.confirmationActions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.dangerCard {
+  border-color: #fecaca;
+  background: #fffafa;
+}
+
+.dangerIcon {
+  color: #dc2626;
+  background: #fef2f2;
+}
+
+.actionCard > .dangerButton {
+  color: #dc2626;
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+
+.confirmation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 16px;
+  padding: 14px;
+
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  background: #eff6ff;
+}
+
+.confirmation strong,
+.confirmation span {
+  display: block;
+}
+
+.confirmation strong {
+  font-size: 9px;
+}
+
+.confirmation span {
+  margin-top: 4px;
+
+  font-size: 7px;
+  line-height: 1.45;
+}
+
+.dangerConfirmation {
+  color: #b91c1c;
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+
+.confirmationActions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 7px;
+}
+
+.confirmationActions button {
+  min-height: 35px;
+  padding: 0 11px;
+
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface);
+
+  font-family: inherit;
+  font-size: 8px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.confirmationActions .primaryButton {
+  color: #ffffff;
+  border-color: var(--primary);
+  background: var(--primary);
+}
+
+.confirmationActions .confirmDangerButton {
+  color: #ffffff;
+  border-color: #dc2626;
+  background: #dc2626;
+}
+
+.success,
+.error,
+.notice {
+  margin-top: 14px;
+  padding: 11px 12px;
+
+  border-radius: 10px;
+
+  font-size: 8px;
+  line-height: 1.5;
+}
+
+.success {
+  color: #166534;
+  border: 1px solid #bbf7d0;
+  background: #f0fdf4;
+}
+
+.error {
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+}
+
+.notice {
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  background: #f8fafc;
+}
+
+@media (max-width: 950px) {
+  .actionsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .actionCard {
+    min-height: 150px;
+  }
+}
+
+@media (max-width: 650px) {
+  .content {
+    padding: 16px;
+  }
+
+  .confirmation {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .confirmationActions {
+    width: 100%;
+  }
+
+  .confirmationActions button {
+    flex: 1;
+  }
+}
