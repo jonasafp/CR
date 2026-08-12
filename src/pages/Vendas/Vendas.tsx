@@ -31,6 +31,12 @@ import SaleFilters from "../../components/sales/SaleFilters/SaleFilters";
 import SalesTable from "../../components/sales/SalesTable/SalesTable";
 
 import {
+  getMaximumDiscount,
+  limitDiscount,
+  notifySaleCompleted,
+} from "../../services/sales/salesSettingsRules";
+
+import {
   useCancelSaleMutation,
 } from "../../application/sales/useCancelSaleMutation";
 
@@ -60,6 +66,10 @@ import {
   useProducts,
 } from "../../hooks/useProducts";
 
+import {
+  useSettings,
+} from "../../hooks/useSettings";
+
 import type {
   Product,
 } from "../../types/Product";
@@ -83,37 +93,37 @@ const paymentMethods: Array<{
   label: string;
   icon: typeof Banknote;
 }> = [
-  {
-    value: "pix",
-    label: "Pix",
-    icon: QrCode,
-  },
-  {
-    value: "cash",
-    label: "Dinheiro",
-    icon: Banknote,
-  },
-  {
-    value: "debit_card",
-    label: "Débito",
-    icon: WalletCards,
-  },
-  {
-    value: "credit_card",
-    label: "Crédito",
-    icon: CreditCard,
-  },
-  {
-    value: "bank_transfer",
-    label: "Transferência",
-    icon: CircleDollarSign,
-  },
-  {
-    value: "other",
-    label: "Outro",
-    icon: ReceiptText,
-  },
-];
+    {
+      value: "pix",
+      label: "Pix",
+      icon: QrCode,
+    },
+    {
+      value: "cash",
+      label: "Dinheiro",
+      icon: Banknote,
+    },
+    {
+      value: "debit_card",
+      label: "Débito",
+      icon: WalletCards,
+    },
+    {
+      value: "credit_card",
+      label: "Crédito",
+      icon: CreditCard,
+    },
+    {
+      value: "bank_transfer",
+      label: "Transferência",
+      icon: CircleDollarSign,
+    },
+    {
+      value: "other",
+      label: "Outro",
+      icon: ReceiptText,
+    },
+  ];
 
 function roundValue(
   value: number,
@@ -131,7 +141,7 @@ function roundQuantity(
   return (
     Math.round(
       (value + Number.EPSILON) *
-        1_000_000,
+      1_000_000,
     ) / 1_000_000
   );
 }
@@ -160,6 +170,13 @@ export default function Vendas() {
   const { products } =
     useProducts();
 
+  const {
+    settings,
+  } = useSettings();
+
+  const salesSettings =
+    settings.sales;
+
   const searchRef =
     useRef<HTMLInputElement>(null);
 
@@ -176,13 +193,19 @@ export default function Vendas() {
     paymentMethod,
     setPaymentMethod,
   ] = useState<PaymentMethod>(
-    "pix",
+    salesSettings.defaultPaymentMethod,
   );
 
   const [
     customerName,
     setCustomerName,
-  ] = useState("");
+  ] = useState(
+    salesSettings
+      .requireCustomerIdentification
+      ? ""
+      : salesSettings
+        .defaultCustomerName,
+  );
 
   const [
     generalDiscount,
@@ -242,7 +265,7 @@ export default function Vendas() {
         products.filter(
           (product) =>
             product.status ===
-              "active" &&
+            "active" &&
             product.stockQuantity > 0,
         ),
       [products],
@@ -277,19 +300,15 @@ export default function Vendas() {
           const matchesCategory =
             category === "Todos" ||
             product.category ===
-              category;
+            category;
 
           const searchable =
             normalize(
-              `${
-                product.code
-              } ${
-                product.barcode ??
-                ""
-              } ${
-                product.name
-              } ${
-                product.category
+              `${product.code
+              } ${product.barcode ??
+              ""
+              } ${product.name
+              } ${product.category
               }`,
             );
 
@@ -316,25 +335,32 @@ export default function Vendas() {
         (total, item) =>
           total +
           item.quantity *
-            item.unitPrice -
+          item.unitPrice -
           item.discount,
         0,
       ),
     );
 
   const validDiscount =
-    Math.min(
-      Math.max(
+    salesSettings
+      .allowGeneralDiscount
+      ? limitDiscount(
         generalDiscount,
-        0,
-      ),
+        subtotal,
+        salesSettings,
+      )
+      : 0;
+
+  const maximumGeneralDiscount =
+    getMaximumDiscount(
       subtotal,
+      salesSettings,
     );
 
   const total =
     roundValue(
       subtotal -
-        validDiscount,
+      validDiscount,
     );
 
   const totalUnits =
@@ -348,6 +374,33 @@ export default function Vendas() {
   useEffect(() => {
     searchRef.current?.focus();
   }, []);
+
+  useEffect(() => {
+    if (cart.length > 0) {
+      return;
+    }
+
+    setPaymentMethod(
+      salesSettings
+        .defaultPaymentMethod,
+    );
+
+    setCustomerName(
+      salesSettings
+        .requireCustomerIdentification
+        ? ""
+        : salesSettings
+          .defaultCustomerName,
+    );
+  }, [
+    cart.length,
+    salesSettings
+      .defaultCustomerName,
+    salesSettings
+      .defaultPaymentMethod,
+    salesSettings
+      .requireCustomerIdentification,
+  ]);
 
   function addProduct(
     product: Product,
@@ -380,15 +433,15 @@ export default function Vendas() {
           return currentCart.map(
             (item) =>
               item.product.id ===
-              product.id
+                product.id
                 ? {
-                    ...item,
+                  ...item,
 
-                    quantity:
-                      roundQuantity(
-                        nextQuantity,
-                      ),
-                  }
+                  quantity:
+                    roundQuantity(
+                      nextQuantity,
+                    ),
+                }
                 : item,
           );
         }
@@ -440,11 +493,29 @@ export default function Vendas() {
                 ? quantity
                 : 0.01;
 
+            const normalizedQuantity =
+              item.product.stockUnit ===
+                "kg" &&
+                !salesSettings
+                  .allowFractionalKgSales
+                ? Math.trunc(
+                  safeQuantity,
+                )
+                : safeQuantity;
+
+            const minimumQuantity =
+              item.product.stockUnit ===
+                "kg" &&
+                salesSettings
+                  .allowFractionalKgSales
+                ? 0.001
+                : 1;
+
             const limitedQuantity =
               Math.min(
                 Math.max(
-                  safeQuantity,
-                  0.01,
+                  normalizedQuantity,
+                  minimumQuantity,
                 ),
                 item.product
                   .stockQuantity,
@@ -467,6 +538,16 @@ export default function Vendas() {
                 roundQuantity(
                   limitedQuantity,
                 ),
+
+              discount:
+                limitDiscount(
+                  item.discount,
+
+                  limitedQuantity *
+                  item.unitPrice,
+
+                  salesSettings,
+                ),
             };
           },
         ),
@@ -485,10 +566,10 @@ export default function Vendas() {
           (item) => {
             if (
               item.product.id !==
-                productId ||
+              productId ||
               item.product
                 .stockUnit !==
-                "kg"
+              "kg"
             ) {
               return item;
             }
@@ -498,9 +579,9 @@ export default function Vendas() {
                 requestedValue,
               )
                 ? Math.max(
-                    requestedValue,
-                    0.01,
-                  )
+                  requestedValue,
+                  0.01,
+                )
                 : 0.01;
 
             const requestedQuantity =
@@ -534,10 +615,115 @@ export default function Vendas() {
                 roundQuantity(
                   requestedQuantity,
                 ),
+
+              discount:
+                limitDiscount(
+                  item.discount,
+
+                  requestedQuantity *
+                  item.unitPrice,
+
+                  salesSettings,
+                ),
             };
           },
         ),
     );
+  }
+
+  function updateItemPrice(
+    productId: number,
+    unitPrice: number,
+  ) {
+    if (
+      !salesSettings
+        .allowPriceChange
+    ) {
+      return;
+    }
+
+    const safePrice =
+      Number.isFinite(
+        unitPrice,
+      )
+        ? Math.max(
+          unitPrice,
+          0.01,
+        )
+        : 0.01;
+
+    setCart(
+      (currentCart) =>
+        currentCart.map(
+          (item) => {
+            if (
+              item.product.id !==
+              productId
+            ) {
+              return item;
+            }
+
+            const grossTotal =
+              item.quantity *
+              safePrice;
+
+            return {
+              ...item,
+
+              unitPrice:
+                roundValue(
+                  safePrice,
+                ),
+
+              discount:
+                limitDiscount(
+                  item.discount,
+                  grossTotal,
+                  salesSettings,
+                ),
+            };
+          },
+        ),
+    );
+
+    setLocalError("");
+  }
+
+  function updateItemDiscount(
+    productId: number,
+    discount: number,
+  ) {
+    if (
+      !salesSettings
+        .allowItemDiscount
+    ) {
+      return;
+    }
+
+    setCart(
+      (currentCart) =>
+        currentCart.map(
+          (item) =>
+            item.product.id ===
+              productId
+              ? {
+                ...item,
+
+                discount:
+                  limitDiscount(
+                    discount,
+
+                    item.quantity *
+                    item.unitPrice,
+
+                    salesSettings,
+                  ),
+              }
+              : item,
+        ),
+    );
+
+    setLocalError("");
   }
 
   function removeProduct(
@@ -555,10 +741,26 @@ export default function Vendas() {
     setLocalError("");
   }
 
-  function resetSale() {
-    setCart([]);
-    setPaymentMethod("pix");
-    setCustomerName("");
+  function resetSale(
+    clearCart = true,
+  ) {
+    if (clearCart) {
+      setCart([]);
+    }
+
+    setPaymentMethod(
+      salesSettings
+        .defaultPaymentMethod,
+    );
+
+    setCustomerName(
+      salesSettings
+        .requireCustomerIdentification
+        ? ""
+        : salesSettings
+          .defaultCustomerName,
+    );
+
     setGeneralDiscount(0);
     setNotes("");
     setLocalError("");
@@ -584,8 +786,8 @@ export default function Vendas() {
         (item) =>
           item.quantity <= 0 ||
           item.quantity >
-            item.product
-              .stockQuantity,
+          item.product
+            .stockQuantity,
       );
 
     if (hasInvalidItem) {
@@ -596,36 +798,50 @@ export default function Vendas() {
       return;
     }
 
+    if (
+      salesSettings
+        .requireCustomerIdentification &&
+      !customerName.trim()
+    ) {
+      setLocalError(
+        "Identifique o cliente antes de finalizar a venda.",
+      );
+
+      return;
+    }
+
     const input:
       CreateSaleInput = {
-        paymentMethod,
+      paymentMethod,
 
-        customerName:
-          customerName.trim() ||
-          "Cliente balcão",
+      customerName:
+        customerName.trim() ||
+        salesSettings
+          .defaultCustomerName ||
+        "Cliente balcão",
 
-        items: cart.map(
-          (item) => ({
-            productId:
-              item.product.id,
+      items: cart.map(
+        (item) => ({
+          productId:
+            item.product.id,
 
-            quantity:
-              item.quantity,
+          quantity:
+            item.quantity,
 
-            unitPrice:
-              item.unitPrice,
+          unitPrice:
+            item.unitPrice,
 
-            discount:
-              item.discount,
-          }),
-        ),
+          discount:
+            item.discount,
+        }),
+      ),
 
-        discount:
-          validDiscount,
+      discount:
+        validDiscount,
 
-        notes:
-          notes.trim(),
-      };
+      notes:
+        notes.trim(),
+    };
 
     createSaleMutation.mutate(
       input,
@@ -633,7 +849,17 @@ export default function Vendas() {
         onSuccess: (
           sale,
         ) => {
-          resetSale();
+          notifySaleCompleted(
+            sale.id,
+
+            salesSettings
+              .autoPrintReceipt,
+          );
+
+          resetSale(
+            salesSettings
+              .clearCartAfterSale,
+          );
 
           setSuccessMessage(
             `Venda ${sale.number} finalizada com sucesso.`,
@@ -792,9 +1018,9 @@ export default function Vendas() {
                 ) => {
                   if (
                     event.key ===
-                      "Enter" &&
+                    "Enter" &&
                     filteredProducts.length ===
-                      1
+                    1
                   ) {
                     addProduct(
                       filteredProducts[0],
@@ -816,7 +1042,7 @@ export default function Vendas() {
                     type="button"
                     className={
                       category ===
-                      item
+                        item
                         ? styles.categoryActive
                         : ""
                     }
@@ -858,7 +1084,7 @@ export default function Vendas() {
           </div>
 
           {filteredProducts.length ===
-          0 ? (
+            0 ? (
             <div
               className={
                 styles.emptyProducts
@@ -1037,11 +1263,16 @@ export default function Vendas() {
                     .stockUnit ===
                   "kg";
 
+                const allowsFractionalSale =
+                  isKilogram &&
+                  salesSettings
+                    .allowFractionalKgSales;
+
                 const itemTotal =
                   roundValue(
                     item.quantity *
-                      item.unitPrice -
-                      item.discount,
+                    item.unitPrice -
+                    item.discount,
                   );
 
                 return (
@@ -1115,7 +1346,7 @@ export default function Vendas() {
                           }
                         >
                           <span>
-                            {isKilogram
+                            {allowsFractionalSale
                               ? "Quantidade (kg)"
                               : "Quantidade"}
                           </span>
@@ -1134,7 +1365,7 @@ export default function Vendas() {
                                     .product
                                     .id,
                                   item.quantity -
-                                    1,
+                                  1,
                                 )
                               }
                             >
@@ -1147,7 +1378,7 @@ export default function Vendas() {
                               type="number"
                               min="0.01"
                               step={
-                                isKilogram
+                                allowsFractionalSale
                                   ? "0.001"
                                   : "1"
                               }
@@ -1155,7 +1386,7 @@ export default function Vendas() {
                                 item.quantity
                               }
                               aria-label={
-                                isKilogram
+                                allowsFractionalSale
                                   ? "Quantidade em quilos"
                                   : "Quantidade"
                               }
@@ -1184,7 +1415,7 @@ export default function Vendas() {
                                     .product
                                     .id,
                                   item.quantity +
-                                    1,
+                                  1,
                                 )
                               }
                             >
@@ -1195,7 +1426,7 @@ export default function Vendas() {
                           </div>
                         </label>
 
-                        {isKilogram && (
+                        {allowsFractionalSale && (
                           <label
                             className={
                               styles.valueField
@@ -1220,7 +1451,7 @@ export default function Vendas() {
                                 step="0.01"
                                 value={roundValue(
                                   item.quantity *
-                                    item.unitPrice,
+                                  item.unitPrice,
                                 )}
                                 aria-label="Valor desejado em reais"
                                 onChange={(
@@ -1241,6 +1472,94 @@ export default function Vendas() {
                             </div>
                           </label>
                         )}
+
+                        {salesSettings
+                          .allowPriceChange && (
+                            <label
+                              className={
+                                styles.valueField
+                              }
+                            >
+                              <span>
+                                Preço unitário
+                              </span>
+
+                              <div
+                                className={
+                                  styles.standardMoneyInput
+                                }
+                              >
+                                <span>R$</span>
+
+                                <input
+                                  type="number"
+                                  min="0.01"
+                                  step="0.01"
+                                  value={
+                                    item.unitPrice
+                                  }
+                                  aria-label="Preço unitário"
+                                  onChange={(event) =>
+                                    updateItemPrice(
+                                      item.product.id,
+
+                                      Number(
+                                        event.target.value,
+                                      ),
+                                    )
+                                  }
+                                />
+                              </div>
+                            </label>
+                          )}
+
+                        {salesSettings
+                          .allowItemDiscount && (
+                            <label
+                              className={
+                                styles.valueField
+                              }
+                            >
+                              <span>
+                                Desconto do item
+                              </span>
+
+                              <div
+                                className={
+                                  styles.standardMoneyInput
+                                }
+                              >
+                                <span>R$</span>
+
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max={
+                                    getMaximumDiscount(
+                                      item.quantity *
+                                      item.unitPrice,
+
+                                      salesSettings,
+                                    )
+                                  }
+                                  step="0.01"
+                                  value={
+                                    item.discount
+                                  }
+                                  aria-label="Desconto do item"
+                                  onChange={(event) =>
+                                    updateItemDiscount(
+                                      item.product.id,
+
+                                      Number(
+                                        event.target.value,
+                                      ),
+                                    )
+                                  }
+                                />
+                              </div>
+                            </label>
+                          )}
                       </div>
 
                       <strong>
@@ -1269,7 +1588,14 @@ export default function Vendas() {
 
               <input
                 value={customerName}
-                placeholder="Cliente balcão"
+                placeholder={
+                  salesSettings
+                    .requireCustomerIdentification
+                    ? "Identificação obrigatória"
+                    : salesSettings
+                      .defaultCustomerName ||
+                    "Cliente balcão"
+                }
                 onChange={(
                   event,
                 ) =>
@@ -1306,7 +1632,7 @@ export default function Vendas() {
                       type="button"
                       className={
                         paymentMethod ===
-                        value
+                          value
                           ? styles.paymentActive
                           : ""
                       }
@@ -1326,10 +1652,10 @@ export default function Vendas() {
 
                       {paymentMethod ===
                         value && (
-                        <Check
-                          size={12}
-                        />
-                      )}
+                          <Check
+                            size={12}
+                          />
+                        )}
                     </button>
                   ),
                 )}
@@ -1341,42 +1667,62 @@ export default function Vendas() {
                 styles.secondaryFields
               }
             >
-              <label
-                className={
-                  styles.field
-                }
-              >
-                <span>
-                  Desconto
-                </span>
-
-                <div
-                  className={
-                    styles.moneyInput
-                  }
-                >
-                  <span>R$</span>
-
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={
-                      generalDiscount
+              {salesSettings
+                .allowGeneralDiscount && (
+                  <label
+                    className={
+                      styles.field
                     }
-                    onChange={(
-                      event,
-                    ) =>
-                      setGeneralDiscount(
-                        Number(
-                          event.target
-                            .value,
-                        ),
-                      )
-                    }
-                  />
-                </div>
-              </label>
+                  >
+                    <span>
+                      Desconto
+                    </span>
+
+                    <div
+                      className={
+                        styles.moneyInput
+                      }
+                    >
+                      <span>R$</span>
+
+                      <input
+                        type="number"
+                        min="0"
+                        max={
+                          maximumGeneralDiscount
+                        }
+                        step="0.01"
+                        value={
+                          generalDiscount
+                        }
+                        onChange={(event) =>
+                          setGeneralDiscount(
+                            Number(
+                              event.target.value,
+                            ),
+                          )
+                        }
+                      />
+                    </div>
+
+                    <small
+                      className={
+                        styles.fieldHelper
+                      }
+                    >
+                      Máximo:{" "}
+                      {formatCurrency(
+                        maximumGeneralDiscount,
+                      )}{" "}
+                      (
+                      {
+                        salesSettings
+                          .maximumDiscountPercentage
+                      }
+                      %)
+                    </small>
+                  </label>
+                )}
 
               <label
                 className={
@@ -1461,17 +1807,17 @@ export default function Vendas() {
 
           {(localError ||
             createSaleMutation.isError) && (
-            <div
-              className={
-                styles.errorMessage
-              }
-            >
-              {localError ||
-                getErrorMessage(
-                  createSaleMutation.error,
-                )}
-            </div>
-          )}
+              <div
+                className={
+                  styles.errorMessage
+                }
+              >
+                {localError ||
+                  getErrorMessage(
+                    createSaleMutation.error,
+                  )}
+              </div>
+            )}
 
           <div
             className={
@@ -1487,8 +1833,8 @@ export default function Vendas() {
                 cart.length === 0 ||
                 createSaleMutation.isPending
               }
-              onClick={
-                resetSale
+              onClick={() =>
+                resetSale()
               }
             >
               Limpar

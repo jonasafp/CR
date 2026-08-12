@@ -21,6 +21,14 @@ import {
   writeLocalStorage,
 } from "../../../services/storage/localStorageService";
 
+import {
+  settingsStorageService,
+} from "../../../services/settings/settingsStorageService";
+
+import {
+  getMaximumDiscount,
+} from "../../../services/sales/salesSettingsRules";
+
 import type {
   PaginatedResult,
 } from "../../../types/Pagination";
@@ -213,16 +221,15 @@ function createSummary(
     averageTicket:
       completedSales.length > 0
         ? roundValue(
-            netRevenue /
-              completedSales.length,
-          )
+          netRevenue /
+          completedSales.length,
+        )
         : 0,
   };
 }
 
 export class MockSalesRepository
-  implements SalesRepository
-{
+  implements SalesRepository {
   async list(
     filters: SaleFilters,
   ): Promise<
@@ -257,13 +264,13 @@ export class MockSalesRepository
         const matchesStatus =
           filters.status === "all" ||
           sale.status ===
-            filters.status;
+          filters.status;
 
         const matchesPayment =
           filters.paymentMethod ===
-            "all" ||
+          "all" ||
           sale.paymentMethod ===
-            filters.paymentMethod;
+          filters.paymentMethod;
 
         const saleDate =
           sale.createdAt.slice(0, 10);
@@ -322,10 +329,10 @@ export class MockSalesRepository
 
         const comparison =
           firstValue <
-          secondValue
+            secondValue
             ? -1
             : firstValue >
-                secondValue
+              secondValue
               ? 1
               : 0;
 
@@ -343,7 +350,7 @@ export class MockSalesRepository
       1,
       Math.ceil(
         totalItems /
-          filters.pageSize,
+        filters.pageSize,
       ),
     );
 
@@ -359,7 +366,7 @@ export class MockSalesRepository
     const items = sales.slice(
       startIndex,
       startIndex +
-        filters.pageSize,
+      filters.pageSize,
     );
 
     return {
@@ -408,12 +415,40 @@ export class MockSalesRepository
 
     const sales = readSales();
     const products = readProducts();
+    const salesSettings =
+      settingsStorageService
+        .read()
+        .sales;
 
     if (input.items.length === 0) {
       throw new ApiError(
         "Adicione pelo menos um produto à venda.",
         400,
         "EMPTY_SALE",
+      );
+    }
+
+    if (
+      salesSettings
+        .requireCustomerIdentification &&
+      !input.customerName?.trim()
+    ) {
+      throw new ApiError(
+        "Identifique o cliente antes de finalizar a venda.",
+        400,
+        "CUSTOMER_REQUIRED",
+      );
+    }
+
+    if (
+      !salesSettings
+        .allowGeneralDiscount &&
+      input.discount > 0
+    ) {
+      throw new ApiError(
+        "O desconto geral não está permitido nas configurações.",
+        400,
+        "GENERAL_DISCOUNT_NOT_ALLOWED",
       );
     }
 
@@ -447,6 +482,50 @@ export class MockSalesRepository
           }
 
           if (
+            product.stockUnit === "kg" &&
+            !salesSettings
+              .allowFractionalKgSales &&
+            !Number.isInteger(
+              cartItem.quantity,
+            )
+          ) {
+            throw new ApiError(
+              `A venda fracionada de “${product.name}” não está permitida.`,
+              400,
+              "FRACTIONAL_SALE_NOT_ALLOWED",
+            );
+          }
+
+          if (
+            !salesSettings
+              .allowPriceChange &&
+            roundValue(
+              cartItem.unitPrice,
+            ) !==
+            roundValue(
+              product.salePrice,
+            )
+          ) {
+            throw new ApiError(
+              `A alteração do preço de “${product.name}” não está permitida.`,
+              400,
+              "PRICE_CHANGE_NOT_ALLOWED",
+            );
+          }
+
+          if (
+            !salesSettings
+              .allowItemDiscount &&
+            cartItem.discount > 0
+          ) {
+            throw new ApiError(
+              `O desconto no item “${product.name}” não está permitido.`,
+              400,
+              "ITEM_DISCOUNT_NOT_ALLOWED",
+            );
+          }
+
+          if (
             cartItem.quantity >
             product.stockQuantity
           ) {
@@ -460,25 +539,29 @@ export class MockSalesRepository
           const grossTotal =
             roundValue(
               cartItem.quantity *
-                cartItem.unitPrice,
+              cartItem.unitPrice,
             );
 
           const itemDiscount =
             Math.min(
               cartItem.discount,
-              grossTotal,
+
+              getMaximumDiscount(
+                grossTotal,
+                salesSettings,
+              ),
             );
 
           const total =
             roundValue(
               grossTotal -
-                itemDiscount,
+              itemDiscount,
             );
 
           const cost =
             roundValue(
               cartItem.quantity *
-                product.purchasePrice,
+              product.purchasePrice,
             );
 
           return {
@@ -539,19 +622,25 @@ export class MockSalesRepository
     const generalDiscount =
       Math.min(
         input.discount,
-        subtotal - itemDiscounts,
+
+        getMaximumDiscount(
+          subtotal -
+          itemDiscounts,
+
+          salesSettings,
+        ),
       );
 
     const totalDiscount =
       roundValue(
         itemDiscounts +
-          generalDiscount,
+        generalDiscount,
       );
 
     const total =
       roundValue(
         subtotal -
-          totalDiscount,
+        totalDiscount,
       );
 
     const cost =
@@ -560,7 +649,7 @@ export class MockSalesRepository
           (value, item) =>
             value +
             item.quantity *
-              item.unitCost,
+            item.unitCost,
           0,
         ),
       );
@@ -731,7 +820,7 @@ export class MockSalesRepository
             Math.max(
               0,
               product.soldQuantity -
-                saleItem.quantity,
+              saleItem.quantity,
             ),
 
           updatedAt: now,
@@ -756,7 +845,7 @@ export class MockSalesRepository
         (sale) =>
           filters.status === "all" ||
           sale.status ===
-            filters.status,
+          filters.status,
       );
     }
 
@@ -766,9 +855,9 @@ export class MockSalesRepository
       sales = sales.filter(
         (sale) =>
           filters.paymentMethod ===
-            "all" ||
+          "all" ||
           sale.paymentMethod ===
-            filters.paymentMethod,
+          filters.paymentMethod,
       );
     }
 
