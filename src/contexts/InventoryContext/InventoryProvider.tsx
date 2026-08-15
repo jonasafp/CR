@@ -16,6 +16,10 @@ import {
 import { useProducts } from "../../hooks/useProducts";
 
 import {
+  useSettings,
+} from "../../hooks/useSettings";
+
+import {
   readLocalStorage,
   removeLocalStorage,
   writeLocalStorage,
@@ -29,6 +33,11 @@ import type {
 import {
   calculateStockAfterMovement,
 } from "../../utils/inventoryCalculations";
+
+import {
+  shouldUpdatePurchasePrice,
+  validateInventoryMovementSettings,
+} from "../../services/inventory/inventorySettingsRules";
 
 import {
   InventoryContext,
@@ -60,8 +69,16 @@ export default function InventoryProvider({
   const {
     products,
     updateProductStock,
+    updateProductPurchasePrice,
     incrementProductSoldQuantity,
   } = useProducts();
+
+  const {
+    settings,
+  } = useSettings();
+
+  const inventorySettings =
+    settings.inventory;
 
   const [movements, setMovements] =
     useState<InventoryMovement[]>(() =>
@@ -109,6 +126,17 @@ export default function InventoryProvider({
       const previousStock =
         product.stockQuantity;
 
+      const settingsError =
+        validateInventoryMovementSettings(
+          data,
+          previousStock,
+          inventorySettings,
+        );
+
+      if (settingsError) {
+        return null;
+      }
+
       const currentStock =
         calculateStockAfterMovement(
           previousStock,
@@ -116,7 +144,11 @@ export default function InventoryProvider({
           data.type,
         );
 
-      if (currentStock < 0) {
+      if (
+        currentStock < 0 &&
+        !inventorySettings
+          .allowNegativeStock
+      ) {
         return null;
       }
 
@@ -153,6 +185,18 @@ export default function InventoryProvider({
         product.id,
         currentStock,
       );
+
+      if (
+        shouldUpdatePurchasePrice(
+          data,
+          inventorySettings,
+        )
+      ) {
+        updateProductPurchasePrice(
+          product.id,
+          data.unitCost,
+        );
+      }
 
       if (
         data.type === "exit" &&
@@ -198,8 +242,11 @@ export default function InventoryProvider({
     }),
     [
       movements,
-      createMovement,
-      resetMovements,
+      products,
+      updateProductStock,
+      updateProductPurchasePrice,
+      incrementProductSoldQuantity,
+      inventorySettings,
     ],
   );
 

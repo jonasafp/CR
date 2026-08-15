@@ -41,6 +41,9 @@ interface ProductFormModalProps {
   product: Product | null;
   categories: string[];
   existingProducts: Product[];
+  defaultStockUnit: StockUnit;
+  defaultMinimumStock: number;
+  allowNegativeStock: boolean;
 
   onClose: () => void;
   onSubmit: (data: ProductFormData) => void;
@@ -151,6 +154,9 @@ export default function ProductFormModal({
   product,
   categories,
   existingProducts,
+  defaultStockUnit,
+  defaultMinimumStock,
+  allowNegativeStock,
   onClose,
   onSubmit,
 }: ProductFormModalProps) {
@@ -184,11 +190,25 @@ export default function ProductFormModal({
         status: product.status,
       });
     } else {
-      setFormData(initialFormData);
+      setFormData({
+        ...initialFormData,
+
+        stockUnit:
+          defaultStockUnit,
+
+        minimumStock:
+          defaultMinimumStock,
+      });
     }
 
     setErrors({});
-  }, [isOpen, product]);
+  }, [
+    allowNegativeStock,
+    defaultMinimumStock,
+    defaultStockUnit,
+    isOpen,
+    product,
+  ]);
 
   const profitPerUnit = useMemo(
     () =>
@@ -264,7 +284,7 @@ export default function ProductFormModal({
         "Informe a categoria.";
     }
 
-    if (formData.stockQuantity < 0) {
+    if (formData.stockQuantity < 0 && !allowNegativeStock) {
       nextErrors.stockQuantity =
         "O estoque não pode ser negativo.";
     }
@@ -538,9 +558,15 @@ export default function ProductFormModal({
 
                   <input
                     type="number"
-                    min="0"
+                    min={
+                      allowNegativeStock
+                        ? undefined
+                        : "0"
+                    }
                     step="0.01"
-                    value={formData.stockQuantity}
+                    value={
+                      formData.stockQuantity
+                    }
                     onChange={(event) =>
                       updateField(
                         "stockQuantity",

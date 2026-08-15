@@ -30,6 +30,11 @@ export interface ProductsContextValue {
     stockQuantity: number,
   ) => void;
 
+  updateProductPurchasePrice: (
+    productId: number,
+    purchasePrice: number,
+  ) => void;
+
   findProductById: (
     productId: number,
   ) => Product | undefined;

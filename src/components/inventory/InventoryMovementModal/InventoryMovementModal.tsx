@@ -45,6 +45,8 @@ interface InventoryMovementModalProps {
   isOpen: boolean;
   products: Product[];
   initialProduct: Product | null;
+  allowNegativeStock: boolean;
+  requireMovementNotes: boolean;
 
   onClose: () => void;
 
@@ -57,6 +59,7 @@ interface FormErrors {
   productId?: string;
   quantity?: string;
   unitCost?: string;
+  notes?: string;
 }
 
 const initialFormData: InventoryMovementFormData =
@@ -108,6 +111,8 @@ export default function InventoryMovementModal({
   isOpen,
   products,
   initialProduct,
+  allowNegativeStock,
+  requireMovementNotes,
   onClose,
   onSubmit,
 }: InventoryMovementModalProps) {
@@ -249,12 +254,23 @@ export default function InventoryMovementModal({
 
     if (
       selectedProduct &&
-      isOutgoingMovement(formData.type) &&
+      isOutgoingMovement(
+        formData.type,
+      ) &&
+      !allowNegativeStock &&
       formData.quantity >
       selectedProduct.stockQuantity
     ) {
       nextErrors.quantity =
         "A quantidade informada é maior que o estoque disponível.";
+    }
+
+    if (
+      requireMovementNotes &&
+      !formData.notes.trim()
+    ) {
+      nextErrors.notes =
+        "Informe uma observação para registrar a movimentação.";
     }
 
     setErrors(nextErrors);
@@ -490,7 +506,12 @@ export default function InventoryMovementModal({
               <label
                 className={`${styles.field} ${styles.fullWidth}`}
               >
-                <span>Observações</span>
+                <span>
+                  Observações
+                  {requireMovementNotes
+                    ? " *"
+                    : ""}
+                </span>
 
                 <textarea
                   rows={3}
@@ -503,8 +524,18 @@ export default function InventoryMovementModal({
                     )
                   }
                 />
+
+                {errors.notes && (
+                  <small
+                    className={styles.error}
+                  >
+                    {errors.notes}
+                  </small>
+                )}
               </label>
             </div>
+
+
 
             {selectedProduct && (
               <div className={styles.preview}>

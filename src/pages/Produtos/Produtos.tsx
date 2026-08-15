@@ -23,6 +23,7 @@ import ProductsTable from "../../components/products/ProductsTable/ProductsTable
 
 import { useProducts } from "../../hooks/useProducts";
 import { useInventory } from "../../hooks/useInventory";
+import { useSettings, } from "../../hooks/useSettings";
 
 import type {
   Product,
@@ -57,6 +58,10 @@ interface ProductConfirmation {
 }
 
 export default function Produtos() {
+  const {
+  settings,
+} = useSettings();
+
   const {
     products,
     createProduct,
@@ -97,13 +102,25 @@ export default function Produtos() {
     [products],
   );
 
-  const lowStockProducts = useMemo(
-    () =>
-      products.filter((product) =>
-        isProductLowStock(product),
-      ).length,
-    [products],
-  );
+  const lowStockProducts =
+    useMemo(
+      () =>
+        settings.inventory
+          .lowStockAlertsEnabled
+          ? products.filter(
+            (product) =>
+              isProductLowStock(
+                product,
+              ),
+          ).length
+          : 0,
+      [
+        products,
+
+        settings.inventory
+          .lowStockAlertsEnabled,
+      ],
+    );
 
   const outOfStockProducts = useMemo(
     () =>
@@ -269,16 +286,19 @@ export default function Produtos() {
           color="green"
         />
 
-        <StatisticCard
-          title="Estoque baixo"
-          value={formatNumber(
-            lowStockProducts,
-            0,
+        {settings.inventory
+          .lowStockAlertsEnabled && (
+            <StatisticCard
+              title="Estoque baixo"
+              value={formatNumber(
+                lowStockProducts,
+                0,
+              )}
+              description="Produtos próximos do mínimo"
+              icon={TriangleAlert}
+              color="orange"
+            />
           )}
-          description="Produtos próximos do mínimo"
-          icon={TriangleAlert}
-          color="orange"
-        />
 
         <StatisticCard
           title="Sem estoque"
@@ -338,6 +358,18 @@ export default function Produtos() {
         product={editingProduct}
         categories={categories}
         existingProducts={products}
+        defaultStockUnit={
+          settings.general
+            .principalStockUnit
+        }
+        defaultMinimumStock={
+          settings.inventory
+            .defaultMinimumStock
+        }
+        allowNegativeStock={
+          settings.inventory
+            .allowNegativeStock
+        }
         onClose={closeForm}
         onSubmit={handleSaveProduct}
       />

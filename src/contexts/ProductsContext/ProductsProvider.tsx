@@ -28,6 +28,10 @@ import {
   ProductsContext,
 } from "./productsContext";
 
+import {
+  useSettings,
+} from "../../hooks/useSettings";
+
 interface ProductsProviderProps {
   children: ReactNode;
 }
@@ -51,6 +55,10 @@ function createProductId(
 export default function ProductsProvider({
   children,
 }: ProductsProviderProps) {
+  const {
+    settings,
+  } = useSettings();
+
   const [products, setProducts] =
     useState<Product[]>(() =>
       readLocalStorage<Product[]>(
@@ -190,7 +198,13 @@ export default function ProductsProvider({
               ...product,
 
               stockQuantity:
-                Math.max(0, stockQuantity),
+                settings.inventory
+                  .allowNegativeStock
+                  ? stockQuantity
+                  : Math.max(
+                    0,
+                    stockQuantity,
+                  ),
 
               updatedAt:
                 new Date().toISOString(),
@@ -199,8 +213,48 @@ export default function ProductsProvider({
         ),
       );
     },
-    [],
+    [
+      settings.inventory
+        .allowNegativeStock,
+    ],
   );
+
+  const updateProductPurchasePrice =
+    useCallback(
+      (
+        productId: number,
+        purchasePrice: number,
+      ) => {
+        if (
+          !Number.isFinite(
+            purchasePrice,
+          ) ||
+          purchasePrice < 0
+        ) {
+          return;
+        }
+
+        setProducts(
+          (currentProducts) =>
+            currentProducts.map(
+              (product) =>
+                product.id ===
+                  productId
+                  ? {
+                    ...product,
+
+                    purchasePrice,
+
+                    updatedAt:
+                      new Date()
+                        .toISOString(),
+                  }
+                  : product,
+            ),
+        );
+      },
+      [],
+    );
 
   const incrementProductSoldQuantity =
     useCallback(
@@ -258,6 +312,7 @@ export default function ProductsProvider({
       deleteProduct,
       toggleProductStatus,
       updateProductStock,
+      updateProductPurchasePrice,
       findProductById,
       resetProducts,
       incrementProductSoldQuantity,
@@ -269,6 +324,7 @@ export default function ProductsProvider({
       deleteProduct,
       toggleProductStatus,
       updateProductStock,
+      updateProductPurchasePrice,
       findProductById,
       resetProducts,
       incrementProductSoldQuantity,

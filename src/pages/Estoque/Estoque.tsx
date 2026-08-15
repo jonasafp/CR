@@ -25,6 +25,9 @@ import InventoryProductsTable from "../../components/inventory/InventoryProducts
 
 import { useInventory } from "../../hooks/useInventory";
 import { useProducts } from "../../hooks/useProducts";
+import {
+  useSettings,
+} from "../../hooks/useSettings";
 
 import type {
   InventoryFiltersState,
@@ -65,6 +68,10 @@ function normalizeText(value: string): string {
 }
 
 export default function Estoque() {
+  const {
+    settings,
+  } = useSettings();
+
   const { products } = useProducts();
 
   const {
@@ -229,16 +236,19 @@ export default function Estoque() {
           color="green"
         />
 
-        <StatisticCard
-          title="Estoque baixo"
-          value={formatNumber(
-            summary.lowStockProducts,
-            0,
+        {settings.inventory
+          .lowStockAlertsEnabled && (
+            <StatisticCard
+              title="Estoque baixo"
+              value={formatNumber(
+                summary.lowStockProducts,
+                0,
+              )}
+              description="Produtos que precisam de atenção"
+              icon={TriangleAlert}
+              color="orange"
+            />
           )}
-          description="Produtos que precisam de atenção"
-          icon={TriangleAlert}
-          color="orange"
-        />
 
         <StatisticCard
           title="Sem estoque"
@@ -331,11 +341,27 @@ export default function Estoque() {
       </div>
 
       <InventoryMovementModal
-        isOpen={isMovementModalOpen}
+        isOpen={
+          isMovementModalOpen
+        }
         products={products}
-        initialProduct={selectedProduct}
-        onClose={closeMovementModal}
-        onSubmit={handleCreateMovement}
+        initialProduct={
+          selectedProduct
+        }
+        allowNegativeStock={
+          settings.inventory
+            .allowNegativeStock
+        }
+        requireMovementNotes={
+          settings.inventory
+            .requireMovementNotes
+        }
+        onClose={
+          closeMovementModal
+        }
+        onSubmit={
+          handleCreateMovement
+        }
       />
     </section>
   );

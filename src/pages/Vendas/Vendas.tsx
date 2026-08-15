@@ -177,6 +177,10 @@ export default function Vendas() {
   const salesSettings =
     settings.sales;
 
+  const allowNegativeStock =
+    settings.inventory
+      .allowNegativeStock;
+
   const searchRef =
     useRef<HTMLInputElement>(null);
 
@@ -266,9 +270,15 @@ export default function Vendas() {
           (product) =>
             product.status ===
             "active" &&
-            product.stockQuantity > 0,
+            (
+              allowNegativeStock ||
+              product.stockQuantity > 0
+            ),
         ),
-      [products],
+      [
+        allowNegativeStock,
+        products,
+      ],
     );
 
   const categories =
@@ -420,6 +430,7 @@ export default function Vendas() {
             1;
 
           if (
+            !allowNegativeStock &&
             nextQuantity >
             product.stockQuantity
           ) {
@@ -512,19 +523,25 @@ export default function Vendas() {
                 : 1;
 
             const limitedQuantity =
-              Math.min(
-                Math.max(
+              allowNegativeStock
+                ? Math.max(
                   normalizedQuantity,
                   minimumQuantity,
-                ),
-                item.product
-                  .stockQuantity,
-              );
+                )
+                : Math.min(
+                  Math.max(
+                    normalizedQuantity,
+                    minimumQuantity,
+                  ),
+
+                  item.product
+                    .stockQuantity,
+                );
 
             if (
+              !allowNegativeStock &&
               safeQuantity >
-              item.product
-                .stockQuantity
+              item.product.stockQuantity
             ) {
               setLocalError(
                 `A quantidade informada ultrapassa o estoque disponível de “${item.product.name}”.`,
@@ -589,9 +606,9 @@ export default function Vendas() {
               item.unitPrice;
 
             if (
+              !allowNegativeStock &&
               requestedQuantity >
-              item.product
-                .stockQuantity
+              item.product.stockQuantity
             ) {
               setLocalError(
                 `O valor informado ultrapassa o estoque disponível de “${item.product.name}”.`,
@@ -785,9 +802,11 @@ export default function Vendas() {
       cart.some(
         (item) =>
           item.quantity <= 0 ||
-          item.quantity >
-          item.product
-            .stockQuantity,
+          (
+            !allowNegativeStock &&
+            item.quantity >
+            item.product.stockQuantity
+          )
       );
 
     if (hasInvalidItem) {

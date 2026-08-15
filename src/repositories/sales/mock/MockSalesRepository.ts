@@ -415,10 +415,14 @@ export class MockSalesRepository
 
     const sales = readSales();
     const products = readProducts();
+    const systemSettings =
+      settingsStorageService.read();
+
     const salesSettings =
-      settingsStorageService
-        .read()
-        .sales;
+      systemSettings.sales;
+
+    const inventorySettings =
+      systemSettings.inventory;
 
     if (input.items.length === 0) {
       throw new ApiError(
@@ -526,6 +530,8 @@ export class MockSalesRepository
           }
 
           if (
+            !inventorySettings
+              .allowNegativeStock &&
             cartItem.quantity >
             product.stockQuantity
           ) {
