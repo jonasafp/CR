@@ -41,12 +41,21 @@ interface FinancialTransactionModalProps {
   isOpen: boolean;
 
   transaction?:
-    FinancialTransaction | null;
+  FinancialTransaction | null;
 
   categoriesByType: {
     income: string[];
     expense: string[];
   };
+
+  defaultPaymentMethod:
+  FinancialPaymentMethod;
+
+  defaultIncomeCategory: string;
+
+  defaultExpenseCategory: string;
+
+  defaultDueDays: number;
 
   isSubmitting: boolean;
 
@@ -145,6 +154,31 @@ function getToday(): string {
     .slice(0, 10);
 }
 
+function addDaysToDate(
+  date: string,
+  days: number,
+): string {
+  const [year, month, day] =
+    date.split("-").map(Number);
+
+  const result = new Date(
+    year,
+    month - 1,
+    day,
+  );
+
+  result.setDate(
+    result.getDate() +
+    Math.max(0, days),
+  );
+
+  return `${result.getFullYear()}-${String(
+    result.getMonth() + 1,
+  ).padStart(2, "0")}-${String(
+    result.getDate(),
+  ).padStart(2, "0")}`;
+}
+
 function getInitialStatus(
   transaction:
     FinancialTransaction | null,
@@ -159,6 +193,10 @@ export default function FinancialTransactionModal({
   isOpen,
   transaction = null,
   categoriesByType,
+  defaultPaymentMethod,
+  defaultIncomeCategory,
+  defaultExpenseCategory,
+  defaultDueDays,
   isSubmitting,
   submitError,
   onClose,
@@ -249,53 +287,53 @@ export default function FinancialTransactionModal({
     >[] =
     type === "income"
       ? [
-          {
-            value: "pending",
-            label: "Pendente",
-            description:
-              "Receita ainda não recebida",
-            icon: (
-              <CalendarDays
-                size={14}
-              />
-            ),
-          },
-          {
-            value: "received",
-            label: "Recebida",
-            description:
-              "Receita já recebida",
-            icon: (
-              <CheckCircle2
-                size={14}
-              />
-            ),
-          },
-        ]
+        {
+          value: "pending",
+          label: "Pendente",
+          description:
+            "Receita ainda não recebida",
+          icon: (
+            <CalendarDays
+              size={14}
+            />
+          ),
+        },
+        {
+          value: "received",
+          label: "Recebida",
+          description:
+            "Receita já recebida",
+          icon: (
+            <CheckCircle2
+              size={14}
+            />
+          ),
+        },
+      ]
       : [
-          {
-            value: "pending",
-            label: "Pendente",
-            description:
-              "Despesa ainda não paga",
-            icon: (
-              <CalendarDays
-                size={14}
-              />
-            ),
-          },
-          {
-            value: "paid",
-            label: "Paga",
-            description:
-              "Despesa já paga",
-            icon: (
-              <CheckCircle2
-                size={14}
-              />
-            ),
-          },
-        ];
+        {
+          value: "pending",
+          label: "Pendente",
+          description:
+            "Despesa ainda não paga",
+          icon: (
+            <CalendarDays
+              size={14}
+            />
+          ),
+        },
+        {
+          value: "paid",
+          label: "Paga",
+          description:
+            "Despesa já paga",
+          icon: (
+            <CheckCircle2
+              size={14}
+            />
+          ),
+        },
+      ];
 
   useEffect(() => {
     if (!isOpen) {
@@ -310,12 +348,14 @@ export default function FinancialTransactionModal({
 
     setDescription(
       transaction?.description ??
-        "",
+      "",
     );
 
     setCategory(
       transaction?.category ??
-        "",
+      (initialType === "income"
+        ? defaultIncomeCategory
+        : defaultExpenseCategory),
     );
 
     setAmount(
@@ -324,7 +364,10 @@ export default function FinancialTransactionModal({
 
     setDueDate(
       transaction?.dueDate ??
+      addDaysToDate(
         getToday(),
+        defaultDueDays,
+      ),
     );
 
     setStatus(
@@ -335,18 +378,18 @@ export default function FinancialTransactionModal({
 
     setPaymentDate(
       transaction?.paymentDate ??
-        getToday(),
+      getToday(),
     );
 
     setPaymentMethod(
       transaction?.paymentMethod ??
-        "",
+      defaultPaymentMethod,
     );
 
     setCustomerOrSupplier(
       transaction
         ?.customerOrSupplier ??
-        "",
+      "",
     );
 
     setNotes(
@@ -357,6 +400,10 @@ export default function FinancialTransactionModal({
   }, [
     isOpen,
     transaction,
+    defaultPaymentMethod,
+    defaultIncomeCategory,
+    defaultExpenseCategory,
+    defaultDueDays,
   ]);
 
   function handleTypeChange(
@@ -365,11 +412,17 @@ export default function FinancialTransactionModal({
   ) {
     setType(nextType);
 
-    setCategory("");
+    setCategory(
+      nextType === "income"
+        ? defaultIncomeCategory
+        : defaultExpenseCategory,
+    );
 
     setStatus("pending");
 
-    setPaymentMethod("");
+    setPaymentMethod(
+      defaultPaymentMethod,
+    );
 
     setPaymentDate(
       getToday(),
@@ -462,53 +515,10 @@ export default function FinancialTransactionModal({
     ) {
       const updateInput:
         UpdateFinancialTransactionInput =
-        {
-          transactionId:
-            transaction.id,
-
-          type,
-
-          description:
-            safeDescription,
-
-          category:
-            safeCategory,
-
-          amount,
-
-          dueDate,
-
-          status,
-
-          paymentDate:
-            isSettled
-              ? paymentDate
-              : undefined,
-
-          paymentMethod:
-            isSettled &&
-            paymentMethod
-              ? paymentMethod
-              : undefined,
-
-          customerOrSupplier:
-            customerOrSupplier
-              .trim() ||
-            undefined,
-
-          notes:
-            notes.trim() ||
-            undefined,
-        };
-
-      onSubmit(updateInput);
-
-      return;
-    }
-
-    const createInput:
-      CreateFinancialTransactionInput =
       {
+        transactionId:
+          transaction.id,
+
         type,
 
         description:
@@ -530,7 +540,7 @@ export default function FinancialTransactionModal({
 
         paymentMethod:
           isSettled &&
-          paymentMethod
+            paymentMethod
             ? paymentMethod
             : undefined,
 
@@ -542,10 +552,53 @@ export default function FinancialTransactionModal({
         notes:
           notes.trim() ||
           undefined,
-
-        source:
-          "manual",
       };
+
+      onSubmit(updateInput);
+
+      return;
+    }
+
+    const createInput:
+      CreateFinancialTransactionInput =
+    {
+      type,
+
+      description:
+        safeDescription,
+
+      category:
+        safeCategory,
+
+      amount,
+
+      dueDate,
+
+      status,
+
+      paymentDate:
+        isSettled
+          ? paymentDate
+          : undefined,
+
+      paymentMethod:
+        isSettled &&
+          paymentMethod
+          ? paymentMethod
+          : undefined,
+
+      customerOrSupplier:
+        customerOrSupplier
+          .trim() ||
+        undefined,
+
+      notes:
+        notes.trim() ||
+        undefined,
+
+      source:
+        "manual",
+    };
 
     onSubmit(createInput);
   }
@@ -578,11 +631,10 @@ export default function FinancialTransactionModal({
             }
           >
             <div
-              className={`${styles.headerIcon} ${
-                type === "income"
-                  ? styles.incomeIcon
-                  : styles.expenseIcon
-              }`}
+              className={`${styles.headerIcon} ${type === "income"
+                ? styles.incomeIcon
+                : styles.expenseIcon
+                }`}
             >
               {type === "income" ? (
                 <ArrowDownLeft
@@ -960,15 +1012,15 @@ export default function FinancialTransactionModal({
 
           {(localError ||
             submitError) && (
-            <div
-              className={
-                styles.error
-              }
-            >
-              {localError ||
-                submitError}
-            </div>
-          )}
+              <div
+                className={
+                  styles.error
+                }
+              >
+                {localError ||
+                  submitError}
+              </div>
+            )}
         </div>
 
         <footer

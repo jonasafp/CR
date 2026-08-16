@@ -72,6 +72,10 @@ import {
   formatCurrency,
 } from "../../utils/formatters";
 
+import {
+  useSettings,
+} from "../../hooks/useSettings";
+
 import styles from "./Financeiro.module.css";
 
 function getErrorMessage(
@@ -87,6 +91,12 @@ function getErrorMessage(
 }
 
 export default function Financeiro() {
+  const { settings } =
+    useSettings();
+
+  const financialSettings =
+    settings.financial;
+
   const [
     filters,
     setFilters,
@@ -163,17 +173,25 @@ export default function Financeiro() {
   const categoriesByType =
     useMemo(
       () => ({
-        income:
-          incomeCategoriesQuery.data ??
-          [],
+        income: Array.from(
+          new Set([
+            financialSettings.defaultIncomeCategory,
+            ...(incomeCategoriesQuery.data ?? []),
+          ]),
+        ).filter(Boolean),
 
-        expense:
-          expenseCategoriesQuery.data ??
-          [],
+        expense: Array.from(
+          new Set([
+            financialSettings.defaultExpenseCategory,
+            ...(expenseCategoriesQuery.data ?? []),
+          ]),
+        ).filter(Boolean),
       }),
       [
         incomeCategoriesQuery.data,
         expenseCategoriesQuery.data,
+        financialSettings.defaultIncomeCategory,
+        financialSettings.defaultExpenseCategory,
       ],
     );
 
@@ -399,13 +417,13 @@ export default function Financeiro() {
 
     const input:
       CancelFinancialTransactionInput =
-      {
-        transactionId:
-          transactionToCancel.id,
+    {
+      transactionId:
+        transactionToCancel.id,
 
-        reason:
-          "Cancelamento manual realizado pelo administrador.",
-      };
+      reason:
+        "Cancelamento manual realizado pelo administrador.",
+    };
 
     cancelMutation.mutate(
       input,
@@ -489,7 +507,7 @@ export default function Financeiro() {
           title="Receitas recebidas"
           value={formatCurrency(
             summary?.totalIncome ??
-              0,
+            0,
           )}
           description="Entradas financeiras realizadas"
           icon={ArrowDownLeft}
@@ -500,7 +518,7 @@ export default function Financeiro() {
           title="Despesas pagas"
           value={formatCurrency(
             summary?.totalExpense ??
-              0,
+            0,
           )}
           description="Saídas financeiras realizadas"
           icon={ArrowUpRight}
@@ -512,7 +530,7 @@ export default function Financeiro() {
           value={formatCurrency(
             summary
               ?.accountsReceivable ??
-              0,
+            0,
           )}
           description="Receitas ainda pendentes"
           icon={HandCoins}
@@ -524,26 +542,27 @@ export default function Financeiro() {
           value={formatCurrency(
             summary
               ?.accountsPayable ??
-              0,
+            0,
           )}
           description="Despesas ainda pendentes"
           icon={ReceiptText}
           color="orange"
         />
 
-        <StatisticCard
-          title="Valores vencidos"
-          value={formatCurrency(
-            overdueTotal,
-          )}
-          description={`${
-            summary
+        {financialSettings.showOverdueAlerts && (
+          <StatisticCard
+            title="Valores vencidos"
+            value={formatCurrency(
+              overdueTotal,
+            )}
+            description={`${summary
               ?.overdueTransactions ??
-            0
-          } lançamentos vencidos`}
-          icon={TriangleAlert}
-          color="red"
-        />
+              0
+              } lançamentos vencidos`}
+            icon={TriangleAlert}
+            color="red"
+          />
+        )}
       </div>
 
       <div
@@ -601,7 +620,7 @@ export default function Financeiro() {
               >
                 {formatCurrency(
                   summary?.balance ??
-                    0,
+                  0,
                 )}
               </strong>
             </div>
@@ -619,7 +638,7 @@ export default function Financeiro() {
                 {formatCurrency(
                   summary
                     ?.accountsReceivable ??
-                    0,
+                  0,
                 )}
               </strong>
             </div>
@@ -637,7 +656,7 @@ export default function Financeiro() {
                 {formatCurrency(
                   summary
                     ?.accountsPayable ??
-                    0,
+                  0,
                 )}
               </strong>
             </div>
@@ -674,16 +693,16 @@ export default function Financeiro() {
                     summary?.balance ??
                     0
                   ) +
-                    (
-                      summary
-                        ?.accountsReceivable ??
-                      0
-                    ) -
-                    (
-                      summary
-                        ?.accountsPayable ??
-                      0
-                    ),
+                  (
+                    summary
+                      ?.accountsReceivable ??
+                    0
+                  ) -
+                  (
+                    summary
+                      ?.accountsPayable ??
+                    0
+                  ),
                 )}
               </strong>
             </div>
@@ -780,7 +799,7 @@ export default function Financeiro() {
                             category.transactionCount
                           }{" "}
                           {category.transactionCount ===
-                          1
+                            1
                             ? "lançamento"
                             : "lançamentos"}
                         </span>
@@ -822,10 +841,9 @@ export default function Financeiro() {
           title="Lançamentos financeiros"
           description="Consulte e gerencie receitas, despesas, pagamentos e recebimentos."
           icon={WalletCards}
-          badge={`${
-            transactionsQuery.data
-              ?.totalItems ?? 0
-          } registros`}
+          badge={`${transactionsQuery.data
+            ?.totalItems ?? 0
+            } registros`}
           noPadding
         >
           <FinancialFilters
@@ -850,7 +868,7 @@ export default function Financeiro() {
               description="Consultando as movimentações financeiras."
             />
           ) : transactionsQuery
-              .isError ? (
+            .isError ? (
             <ErrorState
               description={getErrorMessage(
                 transactionsQuery.error,
@@ -931,14 +949,26 @@ export default function Financeiro() {
         categoriesByType={
           categoriesByType
         }
+        defaultPaymentMethod={
+          financialSettings.defaultPaymentMethod
+        }
+        defaultIncomeCategory={
+          financialSettings.defaultIncomeCategory
+        }
+        defaultExpenseCategory={
+          financialSettings.defaultExpenseCategory
+        }
+        defaultDueDays={
+          financialSettings.defaultDueDays
+        }
         isSubmitting={
           formMutation.isPending
         }
         submitError={
           formMutation.isError
             ? getErrorMessage(
-                formMutation.error,
-              )
+              formMutation.error,
+            )
             : undefined
         }
         onClose={
@@ -957,14 +987,17 @@ export default function Financeiro() {
         transaction={
           settlementTransaction
         }
+        defaultPaymentMethod={
+          financialSettings.defaultPaymentMethod
+        }
         isSubmitting={
           settleMutation.isPending
         }
         submitError={
           settleMutation.isError
             ? getErrorMessage(
-                settleMutation.error,
-              )
+              settleMutation.error,
+            )
             : undefined
         }
         onClose={

@@ -24,6 +24,14 @@ import type {
   Sale,
 } from "../../domain/sales/Sale";
 
+import type {
+  FinancialSettings,
+} from "../../domain/settings/SystemSettings";
+
+import {
+  settingsStorageService,
+} from "../settings/settingsStorageService";
+
 import {
   readLocalStorage,
   writeLocalStorage,
@@ -153,10 +161,10 @@ function createSaleNotes(
 
   return messages.join(" ");
 }
-
 function createFinancialTransactionFromSale(
   sale: Sale,
   transactionId: number,
+  settings: FinancialSettings,
 ): FinancialTransaction {
   const transactionDate =
     getSaleDate(sale);
@@ -183,7 +191,8 @@ function createFinancialTransactionFromSale(
     description:
       `Venda ${sale.number}`,
 
-    category: "Vendas",
+    category:
+      settings.defaultIncomeCategory,
 
     amount: roundValue(
       sale.total,
@@ -195,9 +204,9 @@ function createFinancialTransactionFromSale(
     paymentDate: isCancelled
       ? undefined
       : transactionDate.slice(
-          0,
-          10,
-        ),
+        0,
+        10,
+      ),
 
     paymentMethod:
       mapPaymentMethod(
@@ -230,6 +239,7 @@ function createFinancialTransactionFromSale(
 function updateTransactionFromSale(
   transaction: FinancialTransaction,
   sale: Sale,
+  settings: FinancialSettings,
 ): FinancialTransaction {
   const transactionDate =
     getSaleDate(sale);
@@ -251,7 +261,8 @@ function updateTransactionFromSale(
     description:
       `Venda ${sale.number}`,
 
-    category: "Vendas",
+    category:
+      settings.defaultIncomeCategory,
 
     amount: roundValue(
       sale.total,
@@ -263,9 +274,9 @@ function updateTransactionFromSale(
     paymentDate: isCancelled
       ? undefined
       : transactionDate.slice(
-          0,
-          10,
-        ),
+        0,
+        10,
+      ),
 
     paymentMethod:
       mapPaymentMethod(
@@ -305,15 +316,16 @@ function findSaleTransactionIndex(
   return transactions.findIndex(
     (transaction) =>
       transaction.source ===
-        "sale" &&
+      "sale" &&
       transaction.saleId ===
-        sale.id,
+      sale.id,
   );
 }
 
 function synchronizeSaleInList(
   transactions: FinancialTransaction[],
   sale: Sale,
+  settings: FinancialSettings,
 ): {
   transactions: FinancialTransaction[];
   changed: boolean;
@@ -333,6 +345,33 @@ function synchronizeSaleInList(
       sale,
     );
 
+  if (!settings.generateIncomeFromSale) {
+    return {
+      transactions,
+      changed: false,
+    };
+  }
+
+  if (
+    sale.status === "cancelled" &&
+    existingIndex === -1
+  ) {
+    return {
+      transactions,
+      changed: false,
+    };
+  }
+
+  if (
+    sale.status === "cancelled" &&
+    !settings.cancelIncomeWithSale
+  ) {
+    return {
+      transactions,
+      changed: false,
+    };
+  }
+
   if (existingIndex === -1) {
     const transactionId =
       getNextTransactionId(
@@ -343,6 +382,7 @@ function synchronizeSaleInList(
       createFinancialTransactionFromSale(
         sale,
         transactionId,
+        settings,
       );
 
     return {
@@ -362,6 +402,7 @@ function synchronizeSaleInList(
     updateTransactionFromSale(
       existingTransaction,
       sale,
+      settings,
     );
 
   if (
@@ -416,10 +457,14 @@ export function synchronizeSaleWithFinancial(
   const currentTransactions =
     readFinancialTransactions();
 
+  const settings =
+    settingsStorageService.read().financial;
+
   const result =
     synchronizeSaleInList(
       currentTransactions,
       sale,
+      settings,
     );
 
   if (!result.changed) {
@@ -441,9 +486,11 @@ export function synchronizeExistingSalesWithFinancial(): void {
   const sales =
     readSales();
 
+  const settings =
+    settingsStorageService.read().financial;
+
   let transactions =
     readFinancialTransactions();
-
   let hasChanges = false;
 
   sales.forEach((sale) => {
@@ -451,6 +498,7 @@ export function synchronizeExistingSalesWithFinancial(): void {
       synchronizeSaleInList(
         transactions,
         sale,
+        settings,
       );
 
     transactions =

@@ -330,8 +330,8 @@ export const financialSettingsSchema =
           "O prazo não pode ser negativo.",
         )
         .max(
-          365,
-          "O prazo máximo permitido é de 365 dias.",
+          3650,
+          "O prazo máximo permitido é de 3650 dias."
         ),
 
     showOverdueAlerts:

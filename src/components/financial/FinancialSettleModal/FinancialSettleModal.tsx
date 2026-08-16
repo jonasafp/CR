@@ -36,7 +36,10 @@ interface FinancialSettleModalProps {
   isOpen: boolean;
 
   transaction:
-    FinancialTransaction | null;
+  FinancialTransaction | null;
+
+  defaultPaymentMethod:
+  FinancialPaymentMethod;
 
   isSubmitting: boolean;
 
@@ -109,6 +112,7 @@ function getToday(): string {
 export default function FinancialSettleModal({
   isOpen,
   transaction,
+  defaultPaymentMethod,
   isSubmitting,
   submitError,
   onClose,
@@ -140,12 +144,15 @@ export default function FinancialSettleModal({
       getToday(),
     );
 
-    setPaymentMethod("");
+    setPaymentMethod(
+      defaultPaymentMethod,
+    );
 
     setLocalError("");
   }, [
     isOpen,
     transaction,
+    defaultPaymentMethod,
   ]);
 
   function handleClose() {
@@ -222,11 +229,10 @@ export default function FinancialSettleModal({
         >
           <div>
             <div
-              className={`${styles.headerIcon} ${
-                isIncome
-                  ? styles.incomeIcon
-                  : styles.expenseIcon
-              }`}
+              className={`${styles.headerIcon} ${isIncome
+                ? styles.incomeIcon
+                : styles.expenseIcon
+                }`}
             >
               <CheckCircle2
                 size={22}
@@ -366,15 +372,15 @@ export default function FinancialSettleModal({
 
           {(localError ||
             submitError) && (
-            <div
-              className={
-                styles.error
-              }
-            >
-              {localError ||
-                submitError}
-            </div>
-          )}
+              <div
+                className={
+                  styles.error
+                }
+              >
+                {localError ||
+                  submitError}
+              </div>
+            )}
         </div>
 
         <footer
