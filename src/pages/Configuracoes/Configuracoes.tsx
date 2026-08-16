@@ -40,6 +40,10 @@ import {
   applicationIdentityService,
 } from "../../services/desktop/applicationIdentityService";
 
+import {
+  formatDateTime,
+} from "../../utils/formatters";
+
 import styles from "./Configuracoes.module.css";
 
 function createEditableSettings(
@@ -624,20 +628,18 @@ export default function Configuracoes() {
           <span>
             {hasChanges
               ? "Salve ou descarte as modificações antes de sair."
-              : `Última atualização: ${new Date(
-                  settings.updatedAt,
-                ).toLocaleString(
-                  "pt-BR",
-                )}`}
+              : `Última atualização: ${formatDateTime(
+                settings.updatedAt,
+              )
+              }`}
           </span>
         </div>
 
         <span
-          className={`${styles.statusBadge} ${
-            hasChanges
+          className={`${styles.statusBadge} ${hasChanges
               ? styles.pendingBadge
               : styles.savedBadge
-          }`}
+            }`}
         >
           {hasChanges ? (
             <>

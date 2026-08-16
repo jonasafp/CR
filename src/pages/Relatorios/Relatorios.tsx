@@ -50,6 +50,7 @@ import {
 } from "../../domain/reports/ReportPeriod";
 
 import {
+  formatDateTime,
   formatNumber,
 } from "../../utils/formatters";
 
@@ -75,29 +76,6 @@ function getErrorMessage(
   }
 
   return "Não foi possível gerar o relatório solicitado.";
-}
-
-function formatGeneratedAt(
-  value: string,
-): string {
-  const date =
-    new Date(value);
-
-  if (
-    Number.isNaN(
-      date.getTime(),
-    )
-  ) {
-    return value;
-  }
-
-  return new Intl.DateTimeFormat(
-    "pt-BR",
-    {
-      dateStyle: "short",
-      timeStyle: "short",
-    },
-  ).format(date);
 }
 
 export default function Relatorios() {
@@ -359,10 +337,11 @@ export default function Relatorios() {
               <span>
                 <Clock3 size={14} />
 
-                Atualizado em{" "}
-                {formatGeneratedAt(
-                  report.generatedAt,
-                )}
+                Atualizado em {
+                  formatDateTime(
+                    report.generatedAt,
+                  )
+                }
               </span>
             </div>
           </div>

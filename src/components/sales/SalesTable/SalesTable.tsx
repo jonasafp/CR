@@ -17,6 +17,7 @@ import type {
 
 import {
   formatCurrency,
+  formatDateTime,
 } from "../../../utils/formatters";
 
 import styles from "./SalesTable.module.css";
@@ -28,18 +29,6 @@ interface SalesTableProps {
   onPrint: (sale: Sale) => void;
   onCancel: (sale: Sale) => void;
   onCreate: () => void;
-}
-
-function formatDateTime(
-  value: string,
-): string {
-  return new Intl.DateTimeFormat(
-    "pt-BR",
-    {
-      dateStyle: "short",
-      timeStyle: "short",
-    },
-  ).format(new Date(value));
 }
 
 export default function SalesTable({

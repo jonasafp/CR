@@ -19,6 +19,8 @@ import type {
 
 import {
   formatCurrency,
+  formatDate,
+  formatDateTime,
 } from "../../../utils/formatters";
 
 import styles from "./FinancialDetailsModal.module.css";
@@ -27,7 +29,7 @@ interface FinancialDetailsModalProps {
   isOpen: boolean;
 
   transaction:
-    FinancialTransaction | null;
+  FinancialTransaction | null;
 
   onClose: () => void;
 }
@@ -57,36 +59,6 @@ const paymentLabels: Record<
   other:
     "Outro",
 };
-
-function formatDate(
-  value?: string,
-): string {
-  if (!value) {
-    return "Não informado";
-  }
-
-  return new Intl.DateTimeFormat(
-    "pt-BR",
-  ).format(
-    new Date(
-      `${value}T12:00:00`,
-    ),
-  );
-}
-
-function formatDateTime(
-  value: string,
-): string {
-  return new Intl.DateTimeFormat(
-    "pt-BR",
-    {
-      dateStyle: "short",
-      timeStyle: "short",
-    },
-  ).format(
-    new Date(value),
-  );
-}
 
 export default function FinancialDetailsModal({
   isOpen,
@@ -168,7 +140,7 @@ export default function FinancialDetailsModal({
               <strong
                 className={
                   transaction.type ===
-                  "income"
+                    "income"
                     ? styles.incomeValue
                     : styles.expenseValue
                 }
@@ -250,7 +222,7 @@ export default function FinancialDetailsModal({
 
               <span>
                 {transaction.type ===
-                "income"
+                  "income"
                   ? "Recebimento"
                   : "Pagamento"}
               </span>
@@ -258,6 +230,7 @@ export default function FinancialDetailsModal({
               <strong>
                 {formatDate(
                   transaction.paymentDate,
+                  "Não informado",
                 )}
               </strong>
             </article>
@@ -276,9 +249,9 @@ export default function FinancialDetailsModal({
               <strong>
                 {transaction.paymentMethod
                   ? paymentLabels[
-                      transaction
-                        .paymentMethod
-                    ]
+                  transaction
+                    .paymentMethod
+                  ]
                   : "Não informada"}
               </strong>
             </article>
@@ -292,7 +265,7 @@ export default function FinancialDetailsModal({
 
               <span>
                 {transaction.type ===
-                "income"
+                  "income"
                   ? "Cliente"
                   : "Fornecedor"}
               </span>
@@ -317,7 +290,7 @@ export default function FinancialDetailsModal({
                 {transaction.saleNumber
                   ? `Venda ${transaction.saleNumber}`
                   : transaction
-                        .inventoryMovementId
+                    .inventoryMovementId
                     ? `Movimentação ${transaction.inventoryMovementId}`
                     : "Sem referência"}
               </strong>

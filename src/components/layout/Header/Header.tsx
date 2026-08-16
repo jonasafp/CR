@@ -14,6 +14,10 @@ import {
   useSettings,
 } from "../../../hooks/useSettings";
 
+import {
+  formatLongDate,
+} from "../../../utils/formatters";
+
 interface HeaderProps {
   onToggleSidebar: () => void;
 }
@@ -61,14 +65,6 @@ const pageInformation: Record<string, PageInformation> = {
   },
 };
 
-function formatCurrentDate() {
-  return new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  }).format(new Date());
-}
-
 export default function Header({
   onToggleSidebar,
 }: HeaderProps) {
@@ -114,7 +110,7 @@ export default function Header({
           <div className={styles.dateBox}>
             <CalendarDays size={18} />
 
-            <span>{formatCurrentDate()}</span>
+            <span>{formatLongDate()}</span>
           </div>
 
           <button

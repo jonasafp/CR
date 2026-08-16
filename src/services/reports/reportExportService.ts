@@ -23,6 +23,8 @@ import {
 
 import {
   formatCurrency,
+  formatDate as formatSystemDate,
+  formatDateTime as formatSystemDateTime,
   formatNumber,
   formatPercentage,
   formatStockQuantity,
@@ -59,38 +61,17 @@ const reportFileNames = {
 } as const;
 
 function formatDate(
-  value?: string,
+  value: string | undefined,
 ): string {
-  if (!value) {
-    return "";
-  }
-
-  const date =
-    new Date(
-      value.includes("T")
-        ? value
-        : `${value}T00:00:00`,
-    );
-
-  if (
-    Number.isNaN(
-      date.getTime(),
-    )
-  ) {
-    return value;
-  }
-
-  return new Intl.DateTimeFormat(
-    "pt-BR",
-    {
-      dateStyle: "short",
-
-      timeStyle:
-        value.includes("T")
-          ? "short"
-          : undefined,
-    },
-  ).format(date);
+  return value?.includes("T")
+    ? formatSystemDateTime(
+        value,
+        "",
+      )
+    : formatSystemDate(
+        value,
+        "",
+      );
 }
 
 function escapeCsvValue(

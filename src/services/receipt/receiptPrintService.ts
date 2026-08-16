@@ -11,6 +11,7 @@ import type {
 
 import {
   formatCurrency,
+  formatDateTime,
   formatStockQuantity,
 } from "../../utils/formatters";
 
@@ -44,28 +45,6 @@ function escapeHtml(
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
-}
-
-function formatDateTime(
-  value: string,
-): string {
-  const date = new Date(value);
-
-  if (
-    Number.isNaN(
-      date.getTime(),
-    )
-  ) {
-    return value;
-  }
-
-  return new Intl.DateTimeFormat(
-    "pt-BR",
-    {
-      dateStyle: "short",
-      timeStyle: "short",
-    },
-  ).format(date);
 }
 
 function getAddress(

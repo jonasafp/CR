@@ -10,6 +10,7 @@ import type { InventoryMovement } from "../../../types/Inventory";
 
 import {
   formatCurrency,
+  formatDateTime,
   formatStockQuantity,
 } from "../../../utils/formatters";
 
@@ -33,13 +34,6 @@ const reasonLabels = {
   InventoryMovement["reason"],
   string
 >;
-
-function formatDateTime(value: string): string {
-  return new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(new Date(value));
-}
 
 export default function InventoryMovementsTable({
   movements,

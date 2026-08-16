@@ -1,4 +1,6 @@
-import { businessConfig } from "../../config/businessConfig";
+import {
+    settingsStorageService,
+} from "../settings/settingsStorageService";
 
 import type {
     DashboardData,
@@ -244,6 +246,12 @@ export function createDashboardData(
     movements: InventoryMovement[],
     period: DashboardPeriod,
 ): DashboardData | null {
+    const principalStockUnit =
+        settingsStorageService
+            .read()
+            .general
+            .principalStockUnit;
+
     const featuredProduct =
         getFeaturedProduct(products);
 
@@ -264,7 +272,7 @@ export function createDashboardData(
         products.filter(
             (product) =>
                 product.stockUnit ===
-                businessConfig.principalStockUnit,
+                principalStockUnit,
         );
 
     const totalStockQuantity =
@@ -362,7 +370,7 @@ export function createDashboardData(
                 ),
 
             principalStockUnit:
-                businessConfig.principalStockUnit,
+                principalStockUnit,
 
             totalSoldQuantity:
                 roundValue(

@@ -31,6 +31,7 @@ import type {
 
 import {
   formatCurrency,
+  formatDateTime,
   formatNumber,
   formatPercentage,
   formatStockQuantity,
@@ -68,59 +69,22 @@ const financialStatusLabels = {
 
 const inventoryReasonLabels:
   Record<string, string> = {
-    purchase: "Compra",
-    sale: "Venda",
+  purchase: "Compra",
+  sale: "Venda",
 
-    manual_adjustment:
-      "Ajuste manual",
+  manual_adjustment:
+    "Ajuste manual",
 
-    loss: "Perda",
-    damage: "Avaria",
-    expiration: "Validade",
-    return: "Devolução",
+  loss: "Perda",
+  damage: "Avaria",
+  expiration: "Validade",
+  return: "Devolução",
 
-    initial_balance:
-      "Saldo inicial",
+  initial_balance:
+    "Saldo inicial",
 
-    other: "Outro",
-  };
-
-function formatDateTime(
-  value:
-    | string
-    | undefined,
-): string {
-  if (!value) {
-    return "—";
-  }
-
-  const date =
-    new Date(
-      value.includes("T")
-        ? value
-        : `${value}T00:00:00`,
-    );
-
-  if (
-    Number.isNaN(
-      date.getTime(),
-    )
-  ) {
-    return value;
-  }
-
-  return new Intl.DateTimeFormat(
-    "pt-BR",
-    {
-      dateStyle: "short",
-
-      timeStyle:
-        value.includes("T")
-          ? "short"
-          : undefined,
-    },
-  ).format(date);
-}
+  other: "Outro",
+};
 
 function FinancialReportStatus({
   row,
@@ -142,7 +106,7 @@ function FinancialReportStatus({
       : isOverdue
         ? TriangleAlert
         : row.status ===
-            "pending"
+          "pending"
           ? Clock3
           : CheckCircle2;
 
@@ -150,8 +114,8 @@ function FinancialReportStatus({
     isOverdue
       ? "Vencido"
       : financialStatusLabels[
-          row.status
-        ];
+      row.status
+      ];
 
   const className =
     isOverdue
@@ -212,8 +176,8 @@ function SalesRows({
           <td>
             {formatDateTime(
               row.completedAt ??
-                row.cancelledAt ??
-                row.createdAt,
+              row.cancelledAt ??
+              row.createdAt,
             )}
           </td>
 
@@ -375,7 +339,7 @@ function FinancialRows({
             <strong
               className={
                 row.type ===
-                "income"
+                  "income"
                   ? styles.positive
                   : styles.negative
               }
@@ -652,122 +616,122 @@ export default function ReportTable({
         >
           {reportType ===
             "sales" && (
-            <>
-              <thead>
-                <tr>
-                  <th>Venda</th>
-                  <th>Cliente</th>
-                  <th>Data</th>
-                  <th>Pagamento</th>
-                  <th>Itens</th>
-                  <th>Subtotal</th>
-                  <th>Desconto</th>
-                  <th>Total</th>
-                  <th>Lucro</th>
-                  <th>Margem</th>
-                  <th>Situação</th>
-                </tr>
-              </thead>
+              <>
+                <thead>
+                  <tr>
+                    <th>Venda</th>
+                    <th>Cliente</th>
+                    <th>Data</th>
+                    <th>Pagamento</th>
+                    <th>Itens</th>
+                    <th>Subtotal</th>
+                    <th>Desconto</th>
+                    <th>Total</th>
+                    <th>Lucro</th>
+                    <th>Margem</th>
+                    <th>Situação</th>
+                  </tr>
+                </thead>
 
-              <tbody>
-                <SalesRows
-                  rows={
-                    rows as
+                <tbody>
+                  <SalesRows
+                    rows={
+                      rows as
                       SalesReportRow[]
-                  }
-                />
-              </tbody>
-            </>
-          )}
+                    }
+                  />
+                </tbody>
+              </>
+            )}
 
           {reportType ===
             "financial" && (
-            <>
-              <thead>
-                <tr>
-                  <th>Lançamento</th>
-                  <th>Descrição</th>
-                  <th>Categoria</th>
-                  <th>Tipo</th>
-                  <th>Origem</th>
-                  <th>Vencimento</th>
-                  <th>Pagamento</th>
-                  <th>Valor</th>
-                  <th>Situação</th>
-                </tr>
-              </thead>
+              <>
+                <thead>
+                  <tr>
+                    <th>Lançamento</th>
+                    <th>Descrição</th>
+                    <th>Categoria</th>
+                    <th>Tipo</th>
+                    <th>Origem</th>
+                    <th>Vencimento</th>
+                    <th>Pagamento</th>
+                    <th>Valor</th>
+                    <th>Situação</th>
+                  </tr>
+                </thead>
 
-              <tbody>
-                <FinancialRows
-                  rows={
-                    rows as
+                <tbody>
+                  <FinancialRows
+                    rows={
+                      rows as
                       FinancialReportRow[]
-                  }
-                />
-              </tbody>
-            </>
-          )}
+                    }
+                  />
+                </tbody>
+              </>
+            )}
 
           {reportType ===
             "products" && (
-            <>
-              <thead>
-                <tr>
-                  <th>Produto</th>
-                  <th>Categoria</th>
-                  <th>Situação</th>
-                  <th>Estoque</th>
-                  <th>Mínimo</th>
-                  <th>Vendido</th>
-                  <th>Compra</th>
-                  <th>Venda</th>
-                  <th>Custo estoque</th>
-                  <th>Receita potencial</th>
-                  <th>Lucro potencial</th>
-                  <th>Lucro realizado</th>
-                  <th>Margem</th>
-                </tr>
-              </thead>
+              <>
+                <thead>
+                  <tr>
+                    <th>Produto</th>
+                    <th>Categoria</th>
+                    <th>Situação</th>
+                    <th>Estoque</th>
+                    <th>Mínimo</th>
+                    <th>Vendido</th>
+                    <th>Compra</th>
+                    <th>Venda</th>
+                    <th>Custo estoque</th>
+                    <th>Receita potencial</th>
+                    <th>Lucro potencial</th>
+                    <th>Lucro realizado</th>
+                    <th>Margem</th>
+                  </tr>
+                </thead>
 
-              <tbody>
-                <ProductRows
-                  rows={
-                    rows as
+                <tbody>
+                  <ProductRows
+                    rows={
+                      rows as
                       ProductReportRow[]
-                  }
-                />
-              </tbody>
-            </>
-          )}
+                    }
+                  />
+                </tbody>
+              </>
+            )}
 
           {reportType ===
             "inventory" && (
-            <>
-              <thead>
-                <tr>
-                  <th>Produto</th>
-                  <th>Data</th>
-                  <th>Movimentação</th>
-                  <th>Motivo</th>
-                  <th>Quantidade</th>
-                  <th>Estoque anterior</th>
-                  <th>Estoque atual</th>
-                  <th>Custo unitário</th>
-                  <th>Valor total</th>
-                  <th>Responsável</th>
-                </tr>
-              </thead>
+              <>
+                <thead>
+                  <tr>
+                    <th>Produto</th>
+                    <th>Data</th>
+                    <th>Movimentação</th>
+                    <th>Motivo</th>
+                    <th>Quantidade</th>
+                    <th>Estoque anterior</th>
+                    <th>Estoque atual</th>
+                    <th>Custo unitário</th>
+                    <th>Valor total</th>
+                    <th>Responsável</th>
+                  </tr>
+                </thead>
 
-              <tbody>
-                <InventoryRows
-                  rows={
-                    rows as
+                <tbody>
+                  <InventoryRows
+                    rows={
+                      rows as
                       InventoryReportRow[]
-                  }
-                />
-              </tbody>
-            </>
-          )}
+                    }
+                  />
+                </tbody>
+              </>
+            )}
         </table>
       </div>
 

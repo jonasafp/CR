@@ -19,6 +19,7 @@ import type {
 
 import {
   formatCurrency,
+  formatDate,
 } from "../../../utils/formatters";
 
 import styles from "./FinancialTable.module.css";
@@ -48,18 +49,6 @@ interface FinancialTableProps {
     transaction:
       FinancialTransaction,
   ) => void;
-}
-
-function formatDate(
-  value: string,
-): string {
-  return new Intl.DateTimeFormat(
-    "pt-BR",
-  ).format(
-    new Date(
-      `${value}T12:00:00`,
-    ),
-  );
 }
 
 export default function FinancialTable({

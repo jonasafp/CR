@@ -14,6 +14,10 @@ import { mainNavigationItems } from "../../../constants/navigation";
 
 import styles from "./Sidebar.module.css";
 
+import {
+  getStockUnitLabel,
+} from "../../../utils/formatters";
+
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
@@ -82,7 +86,13 @@ export default function Sidebar({
             {business.tradeName ||
               businessConfig.tradeName}
           </strong>
-          <span>Unidade principal</span>
+          <span>
+            Unidade principal:{" "}
+            {getStockUnitLabel(
+              settings.general
+                .principalStockUnit,
+            )}
+          </span>
         </div>
 
         <ChevronRight

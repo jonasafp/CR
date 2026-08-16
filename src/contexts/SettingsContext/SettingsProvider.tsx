@@ -39,6 +39,10 @@ import {
 } from "../../services/desktop/applicationIdentityService";
 
 import {
+  applyFormattingSettings,
+} from "../../utils/formatters";
+
+import {
   SETTINGS_UPDATED_EVENT,
 } from "../../services/settings/settingsStorageService";
 
@@ -74,6 +78,12 @@ export default function SettingsProvider({
       currentSettings.business,
     );
   }, [currentSettings.business]);
+
+  useEffect(() => {
+    applyFormattingSettings(
+      currentSettings.general,
+    );
+  }, [currentSettings.general]);
 
   useEffect(() => {
     function handleSettingsUpdated(
