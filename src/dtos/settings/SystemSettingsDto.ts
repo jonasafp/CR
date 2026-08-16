@@ -405,8 +405,8 @@ export const receiptSettingsSchema =
         .string()
         .trim()
         .max(
-          200,
-          "A mensagem deve possuir no máximo 200 caracteres.",
+          240,
+          "A mensagem deve possuir no máximo 240 caracteres.",
         ),
   });
 

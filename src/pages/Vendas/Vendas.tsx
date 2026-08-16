@@ -33,8 +33,11 @@ import SalesTable from "../../components/sales/SalesTable/SalesTable";
 import {
   getMaximumDiscount,
   limitDiscount,
-  notifySaleCompleted,
 } from "../../services/sales/salesSettingsRules";
+
+import {
+  receiptPrintService,
+} from "../../services/receipt/receiptPrintService";
 
 import {
   useCancelSaleMutation,
@@ -862,18 +865,34 @@ export default function Vendas() {
         notes.trim(),
     };
 
+    const automaticReceiptWindow =
+      salesSettings
+        .autoPrintReceipt
+        ? receiptPrintService
+          .openWindow()
+        : null;
+
     createSaleMutation.mutate(
       input,
       {
         onSuccess: (
           sale,
         ) => {
-          notifySaleCompleted(
-            sale.id,
-
+          if (
             salesSettings
-              .autoPrintReceipt,
-          );
+              .autoPrintReceipt
+          ) {
+            try {
+              receiptPrintService.print(
+                sale,
+                automaticReceiptWindow,
+              );
+            } catch (error) {
+              setLocalError(
+                getErrorMessage(error),
+              );
+            }
+          }
 
           resetSale(
             salesSettings
@@ -892,6 +911,10 @@ export default function Vendas() {
             },
             4500,
           );
+        },
+        onError: () => {
+          automaticReceiptWindow
+            ?.close();
         },
       },
     );
@@ -1989,6 +2012,19 @@ export default function Vendas() {
                     onView={
                       setSelectedSale
                     }
+                    onPrint={(sale) => {
+                      try {
+                        receiptPrintService.print(
+                          sale,
+                        );
+                      } catch (error) {
+                        setLocalError(
+                          getErrorMessage(
+                            error,
+                          ),
+                        );
+                      }
+                    }}
                     onCancel={
                       setSaleToCancel
                     }

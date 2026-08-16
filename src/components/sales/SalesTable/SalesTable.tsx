@@ -1,6 +1,7 @@
 import {
   Ban,
   Eye,
+  Printer,
   ReceiptText,
   ShoppingCart,
 } from "lucide-react";
@@ -24,6 +25,7 @@ interface SalesTableProps {
   sales: Sale[];
 
   onView: (sale: Sale) => void;
+  onPrint: (sale: Sale) => void;
   onCancel: (sale: Sale) => void;
   onCreate: () => void;
 }
@@ -43,6 +45,7 @@ function formatDateTime(
 export default function SalesTable({
   sales,
   onView,
+  onPrint,
   onCancel,
   onCreate,
 }: SalesTableProps) {
@@ -170,6 +173,16 @@ export default function SalesTable({
                     }
                   >
                     <Eye size={16} />
+                  </button>
+
+                  <button
+                    type="button"
+                    title="Imprimir comprovante"
+                    onClick={() =>
+                      onPrint(sale)
+                    }
+                  >
+                    <Printer size={16} />
                   </button>
 
                   <button
