@@ -55,7 +55,7 @@ export interface ReportFilters {
   reportType: ReportType;
 
   periodPreset:
-    ReportPeriodPreset;
+  ReportPeriodPreset;
 
   dateFrom: string;
   dateTo: string;
@@ -67,57 +67,83 @@ export interface ReportFilters {
   productId: number | null;
 
   saleStatus:
-    | SaleStatus
-    | "all";
+  | SaleStatus
+  | "all";
 
   paymentMethod:
-    | PaymentMethod
-    | "all";
+  | PaymentMethod
+  | "all";
 
   financialType:
-    | FinancialTransactionType
-    | "all";
+  | FinancialTransactionType
+  | "all";
 
   financialStatus:
-    | FinancialTransactionStatus
-    | "overdue"
-    | "all";
+  | FinancialTransactionStatus
+  | "overdue"
+  | "all";
 
   financialSource:
-    | FinancialTransactionSource
-    | "all";
+  | FinancialTransactionSource
+  | "all";
 
   productStatus:
-    | ProductStatus
-    | "all";
+  | ProductStatus
+  | "all";
 
   stockCondition:
-    ReportStockCondition;
+  ReportStockCondition;
 
   inventoryMovementType:
-    | InventoryMovementType
-    | "all";
+  | InventoryMovementType
+  | "all";
 
   sortBy:
-    ReportSortField;
+  ReportSortField;
 
   sortDirection:
-    ReportSortDirection;
+  ReportSortDirection;
 
   page: number;
   pageSize: number;
+
+  includeCancelledRecords:
+  boolean;
 }
 
-export function createDefaultReportFilters(): ReportFilters {
+interface DefaultReportFilterOptions {
+  periodPreset?:
+  ReportPeriodPreset;
+
+  groupBy?:
+  ReportGroupBy;
+
+  pageSize?:
+  number;
+
+  includeCancelledRecords?:
+  boolean;
+}
+
+export function createDefaultReportFilters(
+  options:
+    DefaultReportFilterOptions = {},
+): ReportFilters {
+  const periodPreset =
+    options.periodPreset === "custom"
+      ? "month"
+      : options.periodPreset ??
+      "month";
+
   const period =
     getReportPresetPeriod(
-      "month",
+      periodPreset,
     );
 
   return {
     reportType: "sales",
 
-    periodPreset: "month",
+    periodPreset,
 
     dateFrom:
       period.dateFrom,
@@ -125,7 +151,9 @@ export function createDefaultReportFilters(): ReportFilters {
     dateTo:
       period.dateTo,
 
-    groupBy: "day",
+    groupBy:
+      options.groupBy ??
+      "day",
 
     search: "",
     category: "all",
@@ -148,7 +176,14 @@ export function createDefaultReportFilters(): ReportFilters {
     sortDirection: "desc",
 
     page: 1,
-    pageSize: 10,
+    pageSize:
+      options.pageSize ??
+      10,
+
+    includeCancelledRecords:
+      options
+        .includeCancelledRecords ??
+      false,
   };
 }
 

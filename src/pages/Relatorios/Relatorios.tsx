@@ -53,6 +53,10 @@ import {
   formatNumber,
 } from "../../utils/formatters";
 
+import {
+  useSettings,
+} from "../../hooks/useSettings";
+
 import styles from "./Relatorios.module.css";
 
 type ReportRow =
@@ -97,15 +101,32 @@ function formatGeneratedAt(
 }
 
 export default function Relatorios() {
-  const [
-    filters,
-    setFilters,
-  ] = useState<
-    ReportFiltersState
-  >(() =>
-    createDefaultReportFilters(),
-  );
+  const { settings } =
+    useSettings();
 
+  const reportSettings =
+    settings.reports;
+
+  const [filters, setFilters] =
+    useState<ReportFiltersState>(() =>
+      createDefaultReportFilters({
+        periodPreset:
+          reportSettings
+            .defaultPeriod,
+
+        groupBy:
+          reportSettings
+            .defaultGroupBy,
+
+        pageSize:
+          reportSettings
+            .defaultPageSize,
+
+        includeCancelledRecords:
+          reportSettings
+            .includeCancelledRecords,
+      }),
+    );
   const reportQuery =
     useReportQuery(filters);
 
@@ -123,7 +144,23 @@ export default function Relatorios() {
         currentFilters,
       ) => {
         const defaultFilters =
-          createDefaultReportFilters();
+          createDefaultReportFilters({
+            periodPreset:
+              reportSettings
+                .defaultPeriod,
+
+            groupBy:
+              reportSettings
+                .defaultGroupBy,
+
+            pageSize:
+              reportSettings
+                .defaultPageSize,
+
+            includeCancelledRecords:
+              reportSettings
+                .includeCancelledRecords,
+          });
 
         return {
           ...defaultFilters,
@@ -148,17 +185,28 @@ export default function Relatorios() {
   }
 
   function handleResetFilters() {
-    setFilters(
-      (
-        currentFilters,
-      ) => ({
-        ...createDefaultReportFilters(),
+    setFilters((currentFilters) => ({
+      ...createDefaultReportFilters({
+        periodPreset:
+          reportSettings
+            .defaultPeriod,
 
-        reportType:
-          currentFilters
-            .reportType,
+        groupBy:
+          reportSettings
+            .defaultGroupBy,
+
+        pageSize:
+          reportSettings
+            .defaultPageSize,
+
+        includeCancelledRecords:
+          reportSettings
+            .includeCancelledRecords,
       }),
-    );
+
+      reportType:
+        currentFilters.reportType,
+    }));
   }
 
   return (
@@ -378,7 +426,7 @@ export default function Relatorios() {
                 }
                 rows={
                   report.rows as
-                    ReportRow[]
+                  ReportRow[]
                 }
                 page={report.page}
                 pageSize={

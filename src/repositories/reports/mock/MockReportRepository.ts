@@ -92,7 +92,7 @@ function roundValue(
   return (
     Math.round(
       (value + Number.EPSILON) *
-        100,
+      100,
     ) / 100
   );
 }
@@ -165,8 +165,8 @@ function getSaleDate(
 ): string {
   return getDatePart(
     sale.completedAt ??
-      sale.cancelledAt ??
-      sale.createdAt,
+    sale.cancelledAt ??
+    sale.createdAt,
   );
 }
 
@@ -201,6 +201,14 @@ function filterSales(
 
   return sales.filter((sale) => {
     if (
+      !filters
+        .includeCancelledRecords &&
+      sale.status === "cancelled"
+    ) {
+      return false;
+    }
+
+    if (
       !isDateInPeriod(
         getSaleDate(sale),
         filters,
@@ -211,18 +219,18 @@ function filterSales(
 
     if (
       filters.saleStatus !==
-        "all" &&
+      "all" &&
       sale.status !==
-        filters.saleStatus
+      filters.saleStatus
     ) {
       return false;
     }
 
     if (
       filters.paymentMethod !==
-        "all" &&
+      "all" &&
       sale.paymentMethod !==
-        filters.paymentMethod
+      filters.paymentMethod
     ) {
       return false;
     }
@@ -240,7 +248,7 @@ function filterSales(
 
     if (
       filters.category !==
-        "all" &&
+      "all" &&
       !sale.items.some(
         (item) =>
           productCategoryById.get(
@@ -286,6 +294,15 @@ function filterFinancialTransactions(
   return transactions.filter(
     (transaction) => {
       if (
+        !filters
+          .includeCancelledRecords &&
+        transaction.status ===
+        "cancelled"
+      ) {
+        return false;
+      }
+
+      if (
         !isDateInPeriod(
           getFinancialDate(
             transaction,
@@ -298,27 +315,27 @@ function filterFinancialTransactions(
 
       if (
         filters.financialType !==
-          "all" &&
+        "all" &&
         transaction.type !==
-          filters.financialType
+        filters.financialType
       ) {
         return false;
       }
 
       if (
         filters.financialSource !==
-          "all" &&
+        "all" &&
         transaction.source !==
-          filters.financialSource
+        filters.financialSource
       ) {
         return false;
       }
 
       if (
         filters.category !==
-          "all" &&
+        "all" &&
         transaction.category !==
-          filters.category
+        filters.category
       ) {
         return false;
       }
@@ -336,9 +353,9 @@ function filterFinancialTransactions(
         }
       } else if (
         filters.financialStatus !==
-          "all" &&
+        "all" &&
         transaction.status !==
-          filters.financialStatus
+        filters.financialStatus
       ) {
         return false;
       }
@@ -355,10 +372,10 @@ function filterFinancialTransactions(
 
           transaction
             .customerOrSupplier ??
-            "",
+          "",
 
           transaction.saleNumber ??
-            "",
+          "",
         ].join(" "),
       ).includes(search);
     },
@@ -376,34 +393,34 @@ function filterProducts(
     (product) => {
       if (
         filters.productId !==
-          null &&
+        null &&
         product.id !==
-          filters.productId
+        filters.productId
       ) {
         return false;
       }
 
       if (
         filters.category !==
-          "all" &&
+        "all" &&
         product.category !==
-          filters.category
+        filters.category
       ) {
         return false;
       }
 
       if (
         filters.productStatus !==
-          "all" &&
+        "all" &&
         product.status !==
-          filters.productStatus
+        filters.productStatus
       ) {
         return false;
       }
 
       if (
         filters.stockCondition ===
-          "available" &&
+        "available" &&
         (
           isProductLowStock(
             product,
@@ -418,7 +435,7 @@ function filterProducts(
 
       if (
         filters.stockCondition ===
-          "low" &&
+        "low" &&
         !isProductLowStock(
           product,
         )
@@ -428,7 +445,7 @@ function filterProducts(
 
       if (
         filters.stockCondition ===
-          "out" &&
+        "out" &&
         !isProductOutOfStock(
           product,
         )
@@ -479,16 +496,16 @@ function filterInventoryMovements(
 
       if (
         filters.productId !==
-          null &&
+        null &&
         movement.productId !==
-          filters.productId
+        filters.productId
       ) {
         return false;
       }
 
       if (
         filters.category !==
-          "all" &&
+        "all" &&
         productCategoryById.get(
           movement.productId,
         ) !== filters.category
@@ -499,10 +516,10 @@ function filterInventoryMovements(
       if (
         filters
           .inventoryMovementType !==
-          "all" &&
+        "all" &&
         movement.type !==
-          filters
-            .inventoryMovementType
+        filters
+          .inventoryMovementType
       ) {
         return false;
       }
@@ -591,9 +608,9 @@ function createOverview(
         .filter(
           (transaction) =>
             transaction.type ===
-              "income" &&
+            "income" &&
             transaction.status ===
-              "received",
+            "received",
         )
         .reduce(
           (
@@ -612,9 +629,9 @@ function createOverview(
         .filter(
           (transaction) =>
             transaction.type ===
-              "expense" &&
+            "expense" &&
             transaction.status ===
-              "paid",
+            "paid",
         )
         .reduce(
           (
@@ -633,9 +650,9 @@ function createOverview(
         .filter(
           (transaction) =>
             transaction.type ===
-              "income" &&
+            "income" &&
             transaction.status ===
-              "pending",
+            "pending",
         )
         .reduce(
           (
@@ -654,9 +671,9 @@ function createOverview(
         .filter(
           (transaction) =>
             transaction.type ===
-              "expense" &&
+            "expense" &&
             transaction.status ===
-              "pending",
+            "pending",
         )
         .reduce(
           (
@@ -700,9 +717,9 @@ function createOverview(
         .filter(
           (movement) =>
             movement.type ===
-              "entry" ||
+            "entry" ||
             movement.type ===
-              "adjustment_positive",
+            "adjustment_positive",
         )
         .reduce(
           (total, movement) =>
@@ -718,9 +735,9 @@ function createOverview(
         .filter(
           (movement) =>
             movement.type ===
-              "exit" ||
+            "exit" ||
             movement.type ===
-              "adjustment_negative",
+            "adjustment_negative",
         )
         .reduce(
           (total, movement) =>
@@ -741,11 +758,11 @@ function createOverview(
     profitMargin:
       netRevenue > 0
         ? roundValue(
-            (
-              totalProfit /
-              netRevenue
-            ) * 100,
-          )
+          (
+            totalProfit /
+            netRevenue
+          ) * 100,
+        )
         : 0,
 
     totalExpense,
@@ -753,7 +770,7 @@ function createOverview(
     financialBalance:
       roundValue(
         totalIncome -
-          totalExpense,
+        totalExpense,
       ),
 
     accountsReceivable,
@@ -770,9 +787,9 @@ function createOverview(
     averageTicket:
       completedSales.length > 0
         ? roundValue(
-            netRevenue /
-              completedSales.length,
-          )
+          netRevenue /
+          completedSales.length,
+        )
         : 0,
 
     totalProducts:
@@ -842,11 +859,11 @@ function createSalesRows(
     profitMargin:
       sale.total > 0
         ? roundValue(
-            (
-              sale.profit /
-              sale.total
-            ) * 100,
-          )
+          (
+            sale.profit /
+            sale.total
+          ) * 100,
+        )
         : 0,
 
     createdAt:
@@ -1084,7 +1101,7 @@ function getSeriesBucket(
 
     startDate.setUTCDate(
       startDate.getUTCDate() -
-        daysSinceMonday,
+      daysSinceMonday,
     );
 
     endDate.setTime(
@@ -1185,7 +1202,7 @@ function createTimeSeries(
       ReturnType<
         typeof getSeriesBucket
       > &
-        SeriesValues
+      SeriesValues
     >();
 
   function addValue(
@@ -1278,17 +1295,17 @@ function createTimeSeries(
             {
               revenue:
                 transaction.type ===
-                    "income" &&
-                transaction.status ===
-                    "received"
+                  "income" &&
+                  transaction.status ===
+                  "received"
                   ? transaction.amount
                   : 0,
 
               expense:
                 transaction.type ===
-                    "expense" &&
-                transaction.status ===
-                    "paid"
+                  "expense" &&
+                  transaction.status ===
+                  "paid"
                   ? transaction.amount
                   : 0,
 
@@ -1329,7 +1346,7 @@ function createTimeSeries(
       balance:
         roundValue(
           item.revenue -
-            item.expense,
+          item.expense,
         ),
     }));
 }
@@ -1576,15 +1593,15 @@ function createCategorySummary(
       percentage:
         totalReference > 0
           ? roundValue(
-              (
-                Math.max(
-                  item.revenue,
-                  item.cost,
-                  0,
-                ) /
-                totalReference
-              ) * 100,
-            )
+            (
+              Math.max(
+                item.revenue,
+                item.cost,
+                0,
+              ) /
+              totalReference
+            ) * 100,
+          )
           : 0,
     }))
     .sort(
@@ -1659,9 +1676,9 @@ function createPaymentMethodSummary(
       .filter(
         (transaction) =>
           transaction.status ===
-            "received" ||
+          "received" ||
           transaction.status ===
-            "paid",
+          "paid",
       )
       .forEach(
         (transaction) => {
@@ -1694,9 +1711,9 @@ function createPaymentMethodSummary(
       ]) => ({
         paymentMethod:
           paymentMethod as
-            ReportPaymentMethodItem[
-              "paymentMethod"
-            ],
+          ReportPaymentMethodItem[
+          "paymentMethod"
+          ],
 
         transactionCount:
           item.count,
@@ -1709,11 +1726,11 @@ function createPaymentMethodSummary(
         percentage:
           totalAmount > 0
             ? roundValue(
-                (
-                  item.amount /
-                  totalAmount
-                ) * 100,
-              )
+              (
+                item.amount /
+                totalAmount
+              ) * 100,
+            )
             : 0,
       }),
     )
@@ -1743,8 +1760,8 @@ function getRowDate(
   if ("completedAt" in row) {
     return getDatePart(
       row.completedAt ??
-        row.cancelledAt ??
-        row.createdAt,
+      row.cancelledAt ??
+      row.createdAt,
     );
   }
 
@@ -1880,13 +1897,13 @@ function sortRows<
         firstValue < secondValue
           ? -1
           : firstValue >
-              secondValue
+            secondValue
             ? 1
             : 0;
 
       return (
         filters.sortDirection ===
-        "asc"
+          "asc"
           ? comparison
           : comparison * -1
       );
@@ -1958,7 +1975,7 @@ function createResult<
       1,
       Math.ceil(
         totalItems /
-          filters.pageSize,
+        filters.pageSize,
       ),
     );
 
@@ -1977,7 +1994,7 @@ function createResult<
 
   const metadata =
     reportMetadata[
-      filters.reportType
+    filters.reportType
     ];
 
   return {
@@ -2010,7 +2027,7 @@ function createResult<
       sortedRows.slice(
         startIndex,
         startIndex +
-          filters.pageSize,
+        filters.pageSize,
       ),
 
     page: safePage,
@@ -2023,8 +2040,7 @@ function createResult<
 }
 
 export class MockReportRepository
-  implements ReportRepository
-{
+  implements ReportRepository {
   async generate(
     filters: ReportFilters,
   ): Promise<AnyReportResult> {

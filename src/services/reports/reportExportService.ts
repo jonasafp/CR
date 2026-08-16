@@ -12,6 +12,11 @@ import type {
   ReportFilters,
 } from "../../domain/reports/ReportFilters";
 
+import type {
+  BusinessSettings,
+  ReportSettings,
+} from "../../domain/settings/SystemSettings";
+
 import {
   getReportPeriodLabel,
 } from "../../domain/reports/ReportPeriod";
@@ -26,6 +31,10 @@ import {
 import {
   reportService,
 } from "./reportService";
+
+import {
+  settingsStorageService,
+} from "../settings/settingsStorageService";
 
 interface ExportColumn<Row> {
   label: string;
@@ -202,8 +211,8 @@ function getSalesColumns():
       getValue: (row) =>
         formatDate(
           row.completedAt ??
-            row.cancelledAt ??
-            row.createdAt,
+          row.cancelledAt ??
+          row.createdAt,
         ),
     },
 
@@ -738,7 +747,7 @@ function getOverviewItems(
 
   reportType:
     AnyReportResult[
-      "reportType"
+    "reportType"
     ],
 ) {
   if (
@@ -752,8 +761,8 @@ function getOverviewItems(
         formatCurrency(
           overview
             .financialBalance +
-            overview
-              .totalExpense,
+          overview
+            .totalExpense,
         ),
       ],
 
@@ -873,7 +882,7 @@ function getOverviewItems(
 
         formatNumber(
           overview.totalEntries -
-            overview.totalExits,
+          overview.totalExits,
         ),
       ],
 
@@ -942,6 +951,10 @@ function getOverviewItems(
 
 function createPrintableHtml(
   report: AnyReportResult,
+  businessSettings:
+    BusinessSettings,
+  reportSettings:
+    ReportSettings,
 ): string {
   const columns =
     getReportColumns(
@@ -971,12 +984,12 @@ function createPrintableHtml(
         ]) => `
           <div class="metric">
             <span>${escapeHtml(
-              label,
-            )}</span>
+          label,
+        )}</span>
 
             <strong>${escapeHtml(
-              value,
-            )}</strong>
+          value,
+        )}</strong>
           </div>
         `,
       )
@@ -998,19 +1011,79 @@ function createPrintableHtml(
         (row) => `
           <tr>
             ${columns
-              .map(
-                (column) =>
-                  `<td>${escapeHtml(
-                    column.getValue(
-                      row,
-                    ),
-                  )}</td>`,
-              )
-              .join("")}
+            .map(
+              (column) =>
+                `<td>${escapeHtml(
+                  column.getValue(
+                    row,
+                  ),
+                )}</td>`,
+            )
+            .join("")}
           </tr>
         `,
       )
       .join("");
+
+  const businessAddress = [
+    [
+      businessSettings.street,
+      businessSettings.number,
+    ]
+      .filter(Boolean)
+      .join(", "),
+
+    businessSettings
+      .neighborhood,
+
+    [
+      businessSettings.city,
+      businessSettings.state,
+    ]
+      .filter(Boolean)
+      .join(" - "),
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  const businessHtml =
+    reportSettings
+      .showBusinessInformation
+      ? `
+        <strong>${escapeHtml(
+        businessSettings
+          .tradeName ||
+        businessSettings
+          .legalName ||
+        "Estabelecimento",
+      )}</strong>
+
+        ${businessSettings.document
+        ? `<p>${escapeHtml(
+          businessSettings
+            .document,
+        )}</p>`
+        : ""
+      }
+
+        ${businessAddress
+        ? `<p>${escapeHtml(
+          businessAddress,
+        )}</p>`
+        : ""
+      }
+      `
+      : "";
+
+  const generationDateHtml =
+    reportSettings
+      .showGenerationDate
+      ? `<p>Gerado em ${escapeHtml(
+        formatDate(
+          report.generatedAt,
+        ),
+      )}</p>`
+      : "";
 
   return `
     <!doctype html>
@@ -1021,8 +1094,8 @@ function createPrintableHtml(
 
         <title>
           ${escapeHtml(
-            report.title,
-          )}
+    report.title,
+  )}
         </title>
 
         <style>
@@ -1142,7 +1215,7 @@ function createPrintableHtml(
           }
 
           @page {
-            size: landscape;
+            size: ${reportSettings.printOrientation};
             margin: 12mm;
           }
 
@@ -1159,37 +1232,27 @@ function createPrintableHtml(
           <div>
             <h1>
               ${escapeHtml(
-                report.title,
-              )}
+    report.title,
+  )}
             </h1>
 
             <p>
               ${escapeHtml(
-                report.description,
-              )}
+    report.description,
+  )}
             </p>
 
             <span>
               Período:
               ${escapeHtml(
-                periodLabel,
-              )}
+    periodLabel,
+  )}
             </span>
           </div>
 
           <div class="generated">
-            <strong>
-              Gestor Fácil
-            </strong>
-
-            <p>
-              Gerado em
-              ${escapeHtml(
-                formatDate(
-                  report.generatedAt,
-                ),
-              )}
-            </p>
+            ${businessHtml}
+            ${generationDateHtml}
           </div>
         </header>
 
@@ -1211,10 +1274,10 @@ function createPrintableHtml(
 
         <footer>
           ${escapeHtml(
-            String(
-              report.totalItems,
-            ),
-          )}
+    String(
+      report.totalItems,
+    ),
+  )}
           registros encontrados
         </footer>
       </body>
@@ -1239,7 +1302,7 @@ function createFileName(
 ): string {
   const baseName =
     reportFileNames[
-      report.reportType
+    report.reportType
     ];
 
   return `${baseName}-${report.period.dateFrom}-a-${report.period.dateTo}.${extension}`;
@@ -1295,11 +1358,16 @@ async function openPrintReport(
         filters,
       );
 
+    const settings =
+      settingsStorageService.read();
+
     printWindow.document.open();
 
     printWindow.document.write(
       createPrintableHtml(
         report,
+        settings.business,
+        settings.reports,
       ),
     );
 
