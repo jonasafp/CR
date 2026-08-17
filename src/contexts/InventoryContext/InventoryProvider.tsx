@@ -97,6 +97,39 @@ export default function InventoryProvider({
     );
   }, [movements]);
 
+  useEffect(() => {
+    function handleMovementsUpdated(
+      event: Event,
+    ) {
+      const customEvent =
+        event as CustomEvent<
+          InventoryMovement[]
+        >;
+
+      if (
+        Array.isArray(
+          customEvent.detail,
+        )
+      ) {
+        setMovements(
+          customEvent.detail,
+        );
+      }
+    }
+
+    window.addEventListener(
+      "gestor-facil:inventory-movements-updated",
+      handleMovementsUpdated,
+    );
+
+    return () => {
+      window.removeEventListener(
+        "gestor-facil:inventory-movements-updated",
+        handleMovementsUpdated,
+      );
+    };
+  }, []);
+
   const createMovement = useCallback(
     (
       data: InventoryMovementFormData,

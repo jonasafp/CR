@@ -41,6 +41,9 @@ export interface InventoryMovement {
 
   notes?: string;
 
+  saleId?: number;
+  saleNumber?: string;
+
   createdAt: string;
   createdBy: string;
 }
@@ -95,7 +98,7 @@ export interface ProductInventoryData {
   potentialProfit: number;
 
   stockCondition:
-    | "available"
-    | "low"
-    | "out";
+  | "available"
+  | "low"
+  | "out";
 }

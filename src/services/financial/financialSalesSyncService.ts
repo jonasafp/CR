@@ -345,26 +345,23 @@ function synchronizeSaleInList(
       sale,
     );
 
-  if (!settings.generateIncomeFromSale) {
-    return {
-      transactions,
-      changed: false,
-    };
-  }
-
   if (
-    sale.status === "cancelled" &&
-    existingIndex === -1
+    sale.status ===
+    "cancelled"
   ) {
-    return {
-      transactions,
-      changed: false,
-    };
-  }
-
-  if (
-    sale.status === "cancelled" &&
-    !settings.cancelIncomeWithSale
+    if (
+      existingIndex === -1 ||
+      !settings
+        .cancelIncomeWithSale
+    ) {
+      return {
+        transactions,
+        changed: false,
+      };
+    }
+  } else if (
+    !settings
+      .generateIncomeFromSale
   ) {
     return {
       transactions,

@@ -104,7 +104,7 @@ export const createSaleDtoSchema =
             z.number().positive(),
 
           unitPrice:
-            z.number().nonnegative(),
+            z.number().positive(),
 
           discount:
             z.number().nonnegative(),
@@ -113,6 +113,38 @@ export const createSaleDtoSchema =
       .min(
         1,
         "A venda deve possuir pelo menos um item.",
+      )
+      .superRefine(
+        (items, context) => {
+          const productIds =
+            new Set<number>();
+
+          items.forEach(
+            (item, index) => {
+              if (
+                productIds.has(
+                  item.productId,
+                )
+              ) {
+                context.addIssue({
+                  code: "custom",
+
+                  path: [
+                    index,
+                    "productId",
+                  ],
+
+                  message:
+                    "O mesmo produto não pode aparecer mais de uma vez na venda.",
+                });
+              }
+
+              productIds.add(
+                item.productId,
+              );
+            },
+          );
+        },
       ),
 
     discount:

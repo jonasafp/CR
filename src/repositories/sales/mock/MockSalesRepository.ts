@@ -4,6 +4,10 @@ import { STORAGE_KEYS } from "../../../constants/storageKeys";
 
 import { initialSales } from "../../../data/salesMock";
 
+import {
+  initialInventoryMovements,
+} from "../../../data/inventoryMock";
+
 import type {
   CancelSaleInput,
   CreateSaleInput,
@@ -36,6 +40,10 @@ import type {
 import type {
   Product,
 } from "../../../types/Product";
+
+import type {
+  InventoryMovement,
+} from "../../../types/Inventory";
 
 import type {
   SalesRepository,
@@ -91,8 +99,11 @@ function saveSales(
   );
 }
 
-function readProducts(): Product[] {
-  return readLocalStorage<Product[]>(
+function readProducts():
+  Product[] {
+  return readLocalStorage<
+    Product[]
+  >(
     STORAGE_KEYS.products,
     [],
   );
@@ -113,6 +124,59 @@ function saveProducts(
         detail: products,
       },
     ),
+  );
+}
+
+function readInventoryMovements():
+  InventoryMovement[] {
+  return readLocalStorage<
+    InventoryMovement[]
+  >(
+    STORAGE_KEYS
+      .inventoryMovements,
+
+    initialInventoryMovements,
+  );
+}
+
+function saveInventoryMovements(
+  movements:
+    InventoryMovement[],
+): void {
+  writeLocalStorage(
+    STORAGE_KEYS
+      .inventoryMovements,
+
+    movements,
+  );
+
+  window.dispatchEvent(
+    new CustomEvent(
+      "gestor-facil:inventory-movements-updated",
+      {
+        detail: movements,
+      },
+    ),
+  );
+}
+
+function getNextMovementId(
+  movements:
+    InventoryMovement[],
+): number {
+  if (
+    movements.length === 0
+  ) {
+    return 1;
+  }
+
+  return (
+    Math.max(
+      ...movements.map(
+        (movement) =>
+          movement.id,
+      ),
+    ) + 1
   );
 }
 
@@ -733,7 +797,95 @@ export class MockSalesRepository
         };
       });
 
-    saveProducts(updatedProducts);
+    const currentMovements =
+      readInventoryMovements();
+
+    const firstMovementId =
+      getNextMovementId(
+        currentMovements,
+      );
+
+    const saleMovements:
+      InventoryMovement[] =
+      saleItems.map(
+        (item, index) => {
+          const product =
+            products.find(
+              (
+                currentProduct,
+              ) =>
+                currentProduct.id ===
+                item.productId,
+            );
+
+          const previousStock =
+            product
+              ?.stockQuantity ??
+            0;
+
+          return {
+            id:
+              firstMovementId +
+              index,
+
+            productId:
+              item.productId,
+
+            productName:
+              item.productName,
+
+            productCode:
+              item.productCode,
+
+            type: "exit",
+            reason: "sale",
+
+            quantity:
+              item.quantity,
+
+            unit:
+              item.unit,
+
+            previousStock,
+
+            currentStock:
+              previousStock -
+              item.quantity,
+
+            unitCost:
+              item.unitCost,
+
+            totalValue:
+              roundValue(
+                item.quantity *
+                item.unitCost,
+              ),
+
+            notes:
+              `Saída automática da venda ${newSale.number}.`,
+
+            saleId:
+              newSale.id,
+
+            saleNumber:
+              newSale.number,
+
+            createdAt: now,
+
+            createdBy:
+              newSale.createdBy,
+          };
+        },
+      );
+
+    saveProducts(
+      updatedProducts,
+    );
+
+    saveInventoryMovements([
+      ...saleMovements,
+      ...currentMovements,
+    ]);
 
     saveSales([
       newSale,
@@ -833,7 +985,98 @@ export class MockSalesRepository
         };
       });
 
-    saveProducts(restoredProducts);
+    const currentMovements =
+      readInventoryMovements();
+
+    const firstMovementId =
+      getNextMovementId(
+        currentMovements,
+      );
+
+    const returnMovements:
+      InventoryMovement[] =
+      sale.items.map(
+        (item, index) => {
+          const product =
+            products.find(
+              (
+                currentProduct,
+              ) =>
+                currentProduct.id ===
+                item.productId,
+            );
+
+          const previousStock =
+            product
+              ?.stockQuantity ??
+            0;
+
+          return {
+            id:
+              firstMovementId +
+              index,
+
+            productId:
+              item.productId,
+
+            productName:
+              item.productName,
+
+            productCode:
+              item.productCode,
+
+            type:
+              "adjustment_positive",
+
+            reason: "return",
+
+            quantity:
+              item.quantity,
+
+            unit:
+              item.unit,
+
+            previousStock,
+
+            currentStock:
+              previousStock +
+              item.quantity,
+
+            unitCost:
+              item.unitCost,
+
+            totalValue:
+              roundValue(
+                item.quantity *
+                item.unitCost,
+              ),
+
+            notes:
+              `Retorno automático pelo cancelamento da venda ${sale.number}. Motivo: ${input.reason}`,
+
+            saleId:
+              sale.id,
+
+            saleNumber:
+              sale.number,
+
+            createdAt: now,
+
+            createdBy:
+              sale.createdBy,
+          };
+        },
+      );
+
+    saveProducts(
+      restoredProducts,
+    );
+
+    saveInventoryMovements([
+      ...returnMovements,
+      ...currentMovements,
+    ]);
+
     saveSales(nextSales);
 
     return cancelledSale;
