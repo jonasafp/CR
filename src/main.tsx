@@ -24,6 +24,9 @@ import InventoryProvider from "./contexts/InventoryContext/InventoryProvider";
 import ProductsProvider from "./contexts/ProductsContext/ProductsProvider";
 import SettingsProvider from "./contexts/SettingsContext/SettingsProvider";
 
+import NotificationProvider from "./contexts/NotificationContext/NotificationProvider";
+import AppErrorBoundary from "./components/common/AppErrorBoundary/AppErrorBoundary";
+
 import "./styles/reset.css";
 import "./styles/variables.css";
 import "./styles/globals.css";
@@ -39,13 +42,17 @@ createRoot(
       <QueryClientProvider
         client={queryClient}
       >
-        <SettingsProvider>
-          <ProductsProvider>
-            <InventoryProvider>
-              <App />
-            </InventoryProvider>
-          </ProductsProvider>
-        </SettingsProvider>
+        <NotificationProvider>
+          <AppErrorBoundary>
+            <SettingsProvider>
+              <ProductsProvider>
+                <InventoryProvider>
+                  <App />
+                </InventoryProvider>
+              </ProductsProvider>
+            </SettingsProvider>
+          </AppErrorBoundary>
+        </NotificationProvider>
       </QueryClientProvider>
     </BrowserRouter>
   </StrictMode>,

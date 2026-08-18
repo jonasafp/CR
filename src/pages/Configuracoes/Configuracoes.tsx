@@ -44,6 +44,14 @@ import {
   formatDateTime,
 } from "../../utils/formatters";
 
+import {
+  useNotifications,
+} from "../../hooks/useNotifications";
+
+import {
+  getErrorMessage,
+} from "../../utils/errors";
+
 import styles from "./Configuracoes.module.css";
 
 function createEditableSettings(
@@ -80,14 +88,6 @@ function createEditableSettings(
   };
 }
 
-function getErrorMessage(
-  error: unknown,
-): string {
-  return error instanceof Error
-    ? error.message
-    : "Não foi possível concluir a operação.";
-}
-
 export default function Configuracoes() {
   const {
     settings,
@@ -99,6 +99,9 @@ export default function Configuracoes() {
     resetSettings,
     refetchSettings,
   } = useSettings();
+
+  const notifications =
+    useNotifications();
 
   const [
     activeSection,
@@ -118,11 +121,6 @@ export default function Configuracoes() {
           settings,
         ),
     );
-
-  const [
-    successMessage,
-    setSuccessMessage,
-  ] = useState("");
 
   const [
     localError,
@@ -320,13 +318,10 @@ export default function Configuracoes() {
         validationError,
       );
 
-      setSuccessMessage("");
-
       return;
     }
 
     setLocalError("");
-    setSuccessMessage("");
 
     try {
       const savedSettings =
@@ -343,14 +338,24 @@ export default function Configuracoes() {
         ),
       );
 
-      setSuccessMessage(
-        "Configurações salvas com sucesso.",
+      notifications.success(
+        "Configurações salvas",
+
+        "As novas preferências já estão sendo utilizadas pelo sistema.",
       );
     } catch (saveError) {
-      setLocalError(
+      const message =
         getErrorMessage(
           saveError,
-        ),
+        );
+
+      setLocalError(
+        message,
+      );
+
+      notifications.error(
+        "Não foi possível salvar as configurações",
+        message,
       );
     }
   }
@@ -363,7 +368,6 @@ export default function Configuracoes() {
     );
 
     setLocalError("");
-    setSuccessMessage("");
   }
 
   async function handleImport(
@@ -637,8 +641,8 @@ export default function Configuracoes() {
 
         <span
           className={`${styles.statusBadge} ${hasChanges
-              ? styles.pendingBadge
-              : styles.savedBadge
+            ? styles.pendingBadge
+            : styles.savedBadge
             }`}
         >
           {hasChanges ? (
@@ -657,12 +661,6 @@ export default function Configuracoes() {
           )}
         </span>
       </div>
-
-      {successMessage && (
-        <div className={styles.successMessage}>
-          {successMessage}
-        </div>
-      )}
 
       {displayedError && (
         <div className={styles.errorMessage}>

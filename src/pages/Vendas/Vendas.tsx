@@ -82,6 +82,14 @@ import {
   formatStockQuantity,
 } from "../../utils/formatters";
 
+import {
+  useNotifications,
+} from "../../hooks/useNotifications";
+
+import {
+  getErrorMessage,
+} from "../../utils/errors";
+
 import styles from "./Vendas.module.css";
 
 interface CartRow {
@@ -161,14 +169,6 @@ function normalize(
     .toLowerCase();
 }
 
-function getErrorMessage(
-  error: unknown,
-): string {
-  return error instanceof Error
-    ? error.message
-    : "Não foi possível concluir a operação.";
-}
-
 export default function Vendas() {
   const { products } =
     useProducts();
@@ -176,6 +176,9 @@ export default function Vendas() {
   const {
     settings,
   } = useSettings();
+
+  const notifications =
+    useNotifications();
 
   const salesSettings =
     settings.sales;
@@ -225,11 +228,6 @@ export default function Vendas() {
   const [
     localError,
     setLocalError,
-  ] = useState("");
-
-  const [
-    successMessage,
-    setSuccessMessage,
   ] = useState("");
 
   const [
@@ -476,7 +474,6 @@ export default function Vendas() {
 
     setSearch("");
     setLocalError("");
-    setSuccessMessage("");
 
     window.setTimeout(() => {
       searchRef.current?.focus();
@@ -801,25 +798,6 @@ export default function Vendas() {
       return;
     }
 
-    const hasInvalidItem =
-      cart.some(
-        (item) =>
-          item.quantity <= 0 ||
-          (
-            !allowNegativeStock &&
-            item.quantity >
-            item.product.stockQuantity
-          )
-      );
-
-    if (hasInvalidItem) {
-      setLocalError(
-        "Existem produtos com quantidade inválida ou superior ao estoque.",
-      );
-
-      return;
-    }
-
     if (
       salesSettings
         .requireCustomerIdentification &&
@@ -827,6 +805,26 @@ export default function Vendas() {
     ) {
       setLocalError(
         "Identifique o cliente antes de finalizar a venda.",
+      );
+
+      return;
+    }
+
+    const hasInvalidItem =
+      cart.some(
+        (item) =>
+          item.quantity <= 0 ||
+          (
+            !allowNegativeStock &&
+            item.quantity >
+            item.product
+              .stockQuantity
+          ),
+      );
+
+    if (hasInvalidItem) {
+      setLocalError(
+        "Existem produtos com quantidade inválida ou superior ao estoque.",
       );
 
       return;
@@ -842,21 +840,22 @@ export default function Vendas() {
           .defaultCustomerName ||
         "Cliente balcão",
 
-      items: cart.map(
-        (item) => ({
-          productId:
-            item.product.id,
+      items:
+        cart.map(
+          (item) => ({
+            productId:
+              item.product.id,
 
-          quantity:
-            item.quantity,
+            quantity:
+              item.quantity,
 
-          unitPrice:
-            item.unitPrice,
+            unitPrice:
+              item.unitPrice,
 
-          discount:
-            item.discount,
-        }),
-      ),
+            discount:
+              item.discount,
+          }),
+        ),
 
       discount:
         validDiscount,
@@ -864,6 +863,8 @@ export default function Vendas() {
       notes:
         notes.trim(),
     };
+
+    setLocalError("");
 
     const automaticReceiptWindow =
       salesSettings
@@ -888,8 +889,12 @@ export default function Vendas() {
                 automaticReceiptWindow,
               );
             } catch (error) {
-              setLocalError(
-                getErrorMessage(error),
+              notifications.error(
+                "Venda concluída, mas o comprovante não foi aberto",
+
+                getErrorMessage(
+                  error,
+                ),
               );
             }
           }
@@ -899,22 +904,32 @@ export default function Vendas() {
               .clearCartAfterSale,
           );
 
-          setSuccessMessage(
-            `Venda ${sale.number} finalizada com sucesso.`,
-          );
+          notifications.success(
+            "Venda finalizada",
 
-          window.setTimeout(
-            () => {
-              setSuccessMessage(
-                "",
-              );
-            },
-            4500,
+            `A venda ${sale.number} foi registrada com sucesso.`,
           );
         },
-        onError: () => {
+
+        onError: (
+          error,
+        ) => {
           automaticReceiptWindow
             ?.close();
+
+          const message =
+            getErrorMessage(
+              error,
+            );
+
+          setLocalError(
+            message,
+          );
+
+          notifications.error(
+            "Não foi possível finalizar a venda",
+            message,
+          );
         },
       },
     );
@@ -934,8 +949,24 @@ export default function Vendas() {
           "Cancelamento manual realizado pelo administrador.",
       },
       {
-        onSuccess: () => {
+        onSuccess: (sale) => {
           setSaleToCancel(null);
+
+          notifications.success(
+            "Venda cancelada",
+
+            `A venda ${sale.number} foi cancelada e os produtos retornaram ao estoque.`,
+          );
+        },
+
+        onError: (error) => {
+          notifications.error(
+            "Não foi possível cancelar a venda",
+
+            getErrorMessage(
+              error,
+            ),
+          );
         },
       },
     );
@@ -1008,18 +1039,6 @@ export default function Vendas() {
           </button>
         </div>
       </header>
-
-      {successMessage && (
-        <div
-          className={
-            styles.successToast
-          }
-        >
-          <Check size={17} />
-
-          {successMessage}
-        </div>
-      )}
 
       <div
         className={
