@@ -2,9 +2,6 @@ import type {
   SalesSettings,
 } from "../../domain/settings/SystemSettings";
 
-export const SALE_COMPLETED_EVENT =
-  "gestor-facil:sale-completed";
-
 export function roundSaleValue(
   value: number,
 ): number {
@@ -58,23 +55,6 @@ export function limitDiscount(
     getMaximumDiscount(
       baseValue,
       settings,
-    ),
-  );
-}
-
-export function notifySaleCompleted(
-  saleId: number,
-  shouldPrint: boolean,
-): void {
-  window.dispatchEvent(
-    new CustomEvent(
-      SALE_COMPLETED_EVENT,
-      {
-        detail: {
-          saleId,
-          shouldPrint,
-        },
-      },
     ),
   );
 }

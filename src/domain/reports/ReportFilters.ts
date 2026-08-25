@@ -186,6 +186,3 @@ export function createDefaultReportFilters(
       false,
   };
 }
-
-export const defaultReportFilters =
-  createDefaultReportFilters();

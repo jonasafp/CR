@@ -156,26 +156,21 @@
   background: #dcfce7;
 }
 
-.successMessage,
 .errorMessage {
   margin-top: 14px;
   padding: 11px 13px;
 
+  color: #b91c1c;
+
+  border:
+    1px solid #fecaca;
+
   border-radius: 11px;
 
+  background:
+    #fef2f2;
+
   font-size: 8px;
-}
-
-.successMessage {
-  color: #166534;
-  border: 1px solid #bbf7d0;
-  background: #f0fdf4;
-}
-
-.errorMessage {
-  color: #b91c1c;
-  border: 1px solid #fecaca;
-  background: #fef2f2;
 }
 
 .settingsLayout {

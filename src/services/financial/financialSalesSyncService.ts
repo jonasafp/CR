@@ -514,6 +514,3 @@ export function synchronizeExistingSalesWithFinancial(): void {
     transactions,
   );
 }
-
-export const financialSalesSyncEvent =
-  FINANCIAL_UPDATE_EVENT;

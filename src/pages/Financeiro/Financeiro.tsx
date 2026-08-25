@@ -73,22 +73,14 @@ import {
 } from "../../utils/formatters";
 
 import {
+  getErrorMessage,
+} from "../../utils/errors";
+
+import {
   useSettings,
 } from "../../hooks/useSettings";
 
 import styles from "./Financeiro.module.css";
-
-function getErrorMessage(
-  error: unknown,
-): string {
-  if (
-    error instanceof Error
-  ) {
-    return error.message;
-  }
-
-  return "Não foi possível concluir a operação.";
-}
 
 export default function Financeiro() {
   const { settings } =

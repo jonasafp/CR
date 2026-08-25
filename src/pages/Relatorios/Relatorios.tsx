@@ -55,6 +55,10 @@ import {
 } from "../../utils/formatters";
 
 import {
+  getErrorMessage,
+} from "../../utils/errors";
+
+import {
   useSettings,
 } from "../../hooks/useSettings";
 
@@ -65,18 +69,6 @@ type ReportRow =
   | FinancialReportRow
   | ProductReportRow
   | InventoryReportRow;
-
-function getErrorMessage(
-  error: unknown,
-): string {
-  if (
-    error instanceof Error
-  ) {
-    return error.message;
-  }
-
-  return "Não foi possível gerar o relatório solicitado.";
-}
 
 export default function Relatorios() {
   const { settings } =
@@ -274,9 +266,13 @@ export default function Relatorios() {
           <SectionCard>
             <ErrorState
               title="Não foi possível gerar o relatório"
-              description={getErrorMessage(
-                reportQuery.error,
-              )}
+              description={
+                getErrorMessage(
+                  reportQuery.error,
+
+                  "Não foi possível gerar o relatório solicitado.",
+                )
+              }
               onRetry={() =>
                 void reportQuery
                   .refetch()

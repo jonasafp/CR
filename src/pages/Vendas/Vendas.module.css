@@ -108,30 +108,6 @@
   background: var(--primary-light);
 }
 
-.successToast {
-  position: fixed;
-  z-index: 1400;
-  top: 24px;
-  left: 50%;
-
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 12px 16px;
-
-  color: #166534;
-  border: 1px solid #bbf7d0;
-  border-radius: 12px;
-  background: #f0fdf4;
-  box-shadow:
-    0 12px 35px rgba(15, 23, 42, 0.16);
-
-  font-size: 10px;
-  font-weight: 700;
-
-  transform: translateX(-50%);
-}
-
 .posGrid {
   display: grid;
   grid-template-columns:
