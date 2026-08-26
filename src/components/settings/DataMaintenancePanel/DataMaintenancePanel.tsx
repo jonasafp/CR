@@ -1,4 +1,6 @@
 import {
+  Archive,
+  CheckCircle2,
   Database,
   Download,
   FileJson,
@@ -17,23 +19,30 @@ import type {
 } from "react";
 
 import type {
+  SystemBackup,
+} from "../../../domain/backup/SystemBackup";
+
+import type {
   SystemSettings,
   UpdateSystemSettingsInput,
 } from "../../../domain/settings/SystemSettings";
+
+import {
+  systemBackupService,
+} from "../../../services/backup/systemBackupService";
 
 import styles from "./DataMaintenancePanel.module.css";
 
 interface DataMaintenancePanelProps {
   settings: SystemSettings;
+
   disabled?: boolean;
 
   onImport: (
-    settings:
-      UpdateSystemSettingsInput,
+    settings: UpdateSystemSettingsInput,
   ) => Promise<void> | void;
 
-  onReset: () =>
-    Promise<void> | void;
+  onReset: () => Promise<void> | void;
 }
 
 function isSettingsBackup(
@@ -51,12 +60,12 @@ function isSettingsBackup(
 
   return Boolean(
     candidate.business &&
-      candidate.general &&
-      candidate.sales &&
-      candidate.inventory &&
-      candidate.financial &&
-      candidate.reports &&
-      candidate.receipt,
+    candidate.general &&
+    candidate.sales &&
+    candidate.inventory &&
+    candidate.financial &&
+    candidate.reports &&
+    candidate.receipt,
   );
 }
 
@@ -93,18 +102,29 @@ export default function DataMaintenancePanel({
   onImport,
   onReset,
 }: DataMaintenancePanelProps) {
-  const inputRef =
+  const settingsInputRef =
+    useRef<HTMLInputElement>(
+      null,
+    );
+
+  const fullBackupInputRef =
     useRef<HTMLInputElement>(
       null,
     );
 
   const [
-    pendingBackup,
-    setPendingBackup,
-  ] =
-    useState<SystemSettings | null>(
-      null,
-    );
+    pendingSettingsBackup,
+    setPendingSettingsBackup,
+  ] = useState<SystemSettings | null>(
+    null,
+  );
+
+  const [
+    pendingFullBackup,
+    setPendingFullBackup,
+  ] = useState<SystemBackup | null>(
+    null,
+  );
 
   const [
     showResetConfirmation,
@@ -126,63 +146,73 @@ export default function DataMaintenancePanel({
     setIsProcessing,
   ] = useState(false);
 
-  function exportSettings() {
-    const content =
-      JSON.stringify(
-        settings,
-        null,
-        2,
-      );
-
-    const blob =
-      new Blob(
-        [content],
-        {
-          type:
-            "application/json;charset=utf-8",
-        },
-      );
-
-    const url =
-      URL.createObjectURL(blob);
-
-    const link =
-      document.createElement("a");
-
-    const date =
-      new Date()
-        .toISOString()
-        .slice(0, 10);
-
-    link.href = url;
-
-    link.download =
-      `gestor-facil-configuracoes-${date}.json`;
-
-    document.body.appendChild(
-      link,
-    );
-
-    link.click();
-    link.remove();
-
-    URL.revokeObjectURL(url);
-
+  function clearFeedback() {
+    setMessage("");
     setError("");
-
-    setMessage(
-      "Backup das configurações exportado com sucesso.",
-    );
   }
 
-  async function handleFileChange(
+  function formatBackupDate(
+    value: string,
+  ) {
+    const date =
+      new Date(value);
+
+    if (
+      Number.isNaN(
+        date.getTime(),
+      )
+    ) {
+      return value;
+    }
+
+    return new Intl.DateTimeFormat(
+      "pt-BR",
+      {
+        dateStyle:
+          "short",
+
+        timeStyle:
+          "short",
+      },
+    ).format(date);
+  }
+
+  function exportFullBackup() {
+    try {
+      const backup =
+        systemBackupService.create();
+
+      systemBackupService.download(
+        backup,
+      );
+
+      setError("");
+
+      setMessage(
+        "Backup completo exportado com sucesso. Guarde o arquivo em um local seguro.",
+      );
+    } catch (
+      exportError
+    ) {
+      setMessage("");
+
+      setError(
+        exportError instanceof Error
+          ? exportError.message
+          : "Não foi possível exportar o backup completo.",
+      );
+    }
+  }
+
+  async function handleFullBackupFileChange(
     event:
       ChangeEvent<HTMLInputElement>,
   ) {
     const file =
       event.target.files?.[0];
 
-    event.target.value = "";
+    event.target.value =
+      "";
 
     if (!file) {
       return;
@@ -193,7 +223,152 @@ export default function DataMaintenancePanel({
         .toLowerCase()
         .endsWith(".json")
     ) {
-      setPendingBackup(null);
+      setPendingFullBackup(
+        null,
+      );
+
+      setMessage("");
+
+      setError(
+        "Selecione um arquivo de backup completo no formato JSON.",
+      );
+
+      return;
+    }
+
+    try {
+      const content =
+        await file.text();
+
+      const backup =
+        systemBackupService.parse(
+          content,
+        );
+
+      setPendingFullBackup(
+        backup,
+      );
+
+      setPendingSettingsBackup(
+        null,
+      );
+
+      setShowResetConfirmation(
+        false,
+      );
+
+      clearFeedback();
+    } catch (
+      validationError
+    ) {
+      setPendingFullBackup(
+        null,
+      );
+
+      setMessage("");
+
+      setError(
+        validationError instanceof Error
+          ? validationError.message
+          : "Não foi possível validar o backup completo.",
+      );
+    }
+  }
+
+  function exportSettings() {
+    try {
+      const content =
+        JSON.stringify(
+          settings,
+          null,
+          2,
+        );
+
+      const blob =
+        new Blob(
+          [content],
+          {
+            type:
+              "application/json;charset=utf-8",
+          },
+        );
+
+      const url =
+        URL.createObjectURL(
+          blob,
+        );
+
+      const link =
+        document.createElement(
+          "a",
+        );
+
+      const date =
+        new Date()
+          .toISOString()
+          .slice(
+            0,
+            10,
+          );
+
+      link.href =
+        url;
+
+      link.download =
+        `gestor-facil-configuracoes-${date}.json`;
+
+      document.body.appendChild(
+        link,
+      );
+
+      link.click();
+      link.remove();
+
+      URL.revokeObjectURL(
+        url,
+      );
+
+      setError("");
+
+      setMessage(
+        "Backup das configurações exportado com sucesso.",
+      );
+    } catch (
+      exportError
+    ) {
+      setMessage("");
+
+      setError(
+        exportError instanceof Error
+          ? exportError.message
+          : "Não foi possível exportar as configurações.",
+      );
+    }
+  }
+
+  async function handleSettingsFileChange(
+    event:
+      ChangeEvent<HTMLInputElement>,
+  ) {
+    const file =
+      event.target.files?.[0];
+
+    event.target.value =
+      "";
+
+    if (!file) {
+      return;
+    }
+
+    if (
+      !file.name
+        .toLowerCase()
+        .endsWith(".json")
+    ) {
+      setPendingSettingsBackup(
+        null,
+      );
+
       setMessage("");
 
       setError(
@@ -204,24 +379,42 @@ export default function DataMaintenancePanel({
     }
 
     try {
+      const content =
+        await file.text();
+
       const parsed =
         JSON.parse(
-          await file.text(),
+          content,
         ) as unknown;
 
       if (
-        !isSettingsBackup(parsed)
+        !isSettingsBackup(
+          parsed,
+        )
       ) {
         throw new Error(
-          "invalid-backup",
+          "invalid-settings-backup",
         );
       }
 
-      setPendingBackup(parsed);
-      setError("");
-      setMessage("");
+      setPendingSettingsBackup(
+        parsed,
+      );
+
+      setPendingFullBackup(
+        null,
+      );
+
+      setShowResetConfirmation(
+        false,
+      );
+
+      clearFeedback();
     } catch {
-      setPendingBackup(null);
+      setPendingSettingsBackup(
+        null,
+      );
+
       setMessage("");
 
       setError(
@@ -230,39 +423,53 @@ export default function DataMaintenancePanel({
     }
   }
 
-  async function confirmImport() {
-    if (!pendingBackup) {
+  async function confirmSettingsImport() {
+    if (
+      !pendingSettingsBackup
+    ) {
       return;
     }
 
-    setIsProcessing(true);
+    setIsProcessing(
+      true,
+    );
+
     setError("");
 
     try {
       await onImport(
         toUpdateInput(
-          pendingBackup,
+          pendingSettingsBackup,
         ),
       );
 
-      setPendingBackup(null);
+      setPendingSettingsBackup(
+        null,
+      );
 
       setMessage(
         "Configurações importadas com sucesso.",
       );
-    } catch (importError) {
+    } catch (
+      importError
+    ) {
       setError(
         importError instanceof Error
           ? importError.message
           : "Não foi possível importar as configurações.",
       );
     } finally {
-      setIsProcessing(false);
+      setIsProcessing(
+        false,
+      );
     }
   }
 
   async function confirmReset() {
-    setIsProcessing(true);
+    setIsProcessing(
+      true,
+    );
+
     setError("");
 
     try {
@@ -275,22 +482,40 @@ export default function DataMaintenancePanel({
       setMessage(
         "Configurações restauradas para os valores padrão.",
       );
-    } catch (resetError) {
+    } catch (
+      resetError
+    ) {
       setError(
         resetError instanceof Error
           ? resetError.message
           : "Não foi possível restaurar as configurações.",
       );
     } finally {
-      setIsProcessing(false);
+      setIsProcessing(
+        false,
+      );
     }
   }
 
   return (
-    <section className={styles.card}>
-      <header className={styles.header}>
-        <div className={styles.headerIcon}>
-          <Database size={21} />
+    <section
+      className={
+        styles.card
+      }
+    >
+      <header
+        className={
+          styles.header
+        }
+      >
+        <div
+          className={
+            styles.headerIcon
+          }
+        >
+          <Database
+            size={21}
+          />
         </div>
 
         <div>
@@ -299,19 +524,358 @@ export default function DataMaintenancePanel({
           </h3>
 
           <p>
-            Exporte, importe ou restaure as configurações do sistema.
+            Proteja os dados internos e gerencie as configurações do sistema.
           </p>
         </div>
       </header>
 
-      <div className={styles.content}>
-        <div className={styles.actionsGrid}>
-          <article className={styles.actionCard}>
-            <div className={styles.actionIcon}>
-              <Download size={20} />
+      <div
+        className={
+          styles.content
+        }
+      >
+        <div
+          className={
+            styles.sectionHeading
+          }
+        >
+          <div>
+            <strong>
+              Backup completo do sistema
+            </strong>
+
+            <span>
+              Inclui configurações, produtos, estoque, vendas e financeiro.
+            </span>
+          </div>
+
+          <span
+            className={
+              styles.recommendedBadge
+            }
+          >
+            Recomendado
+          </span>
+        </div>
+
+        <div
+          className={
+            styles.fullBackupGrid
+          }
+        >
+          <article
+            className={
+              `${styles.actionCard} ${styles.featuredCard}`
+            }
+          >
+            <div
+              className={
+                styles.actionIcon
+              }
+            >
+              <Archive
+                size={20}
+              />
             </div>
 
-            <div className={styles.actionInformation}>
+            <div
+              className={
+                styles.actionInformation
+              }
+            >
+              <strong>
+                Exportar backup completo
+              </strong>
+
+              <span>
+                Gera uma cópia de segurança de todos os dados internos atuais.
+              </span>
+            </div>
+
+            <button
+              type="button"
+              disabled={
+                disabled ||
+                isProcessing
+              }
+              onClick={
+                exportFullBackup
+              }
+            >
+              <Download
+                size={15}
+              />
+
+              Baixar backup completo
+            </button>
+          </article>
+
+          <article
+            className={
+              `${styles.actionCard} ${styles.featuredCard}`
+            }
+          >
+            <div
+              className={
+                styles.actionIcon
+              }
+            >
+              <Upload
+                size={20}
+              />
+            </div>
+
+            <div
+              className={
+                styles.actionInformation
+              }
+            >
+              <strong>
+                Validar backup completo
+              </strong>
+
+              <span>
+                Selecione um arquivo para conferir a origem, a data e o conteúdo.
+                Nenhum dado será alterado nesta etapa.
+              </span>
+            </div>
+
+            <button
+              type="button"
+              disabled={
+                disabled ||
+                isProcessing
+              }
+              onClick={() =>
+                fullBackupInputRef
+                  .current
+                  ?.click()
+              }
+            >
+              <FileJson
+                size={15}
+              />
+
+              Selecionar e validar
+            </button>
+
+            <input
+              ref={
+                fullBackupInputRef
+              }
+              type="file"
+              accept="application/json,.json"
+              hidden
+              onChange={
+                handleFullBackupFileChange
+              }
+            />
+          </article>
+        </div>
+
+        {pendingFullBackup && (
+          <div
+            className={
+              styles.backupPreview
+            }
+          >
+            <div
+              className={
+                styles.previewHeader
+              }
+            >
+              <div
+                className={
+                  styles.validatedIcon
+                }
+              >
+                <CheckCircle2
+                  size={18}
+                />
+              </div>
+
+              <div>
+                <strong>
+                  Backup completo validado
+                </strong>
+
+                <span>
+                  O arquivo é compatível e está pronto para a etapa de restauração.
+                </span>
+              </div>
+            </div>
+
+            <dl
+              className={
+                styles.backupMetadata
+              }
+            >
+              <div>
+                <dt>
+                  Estabelecimento
+                </dt>
+
+                <dd>
+                  {
+                    pendingFullBackup.businessName ||
+                    "Não informado"
+                  }
+                </dd>
+              </div>
+
+              <div>
+                <dt>
+                  Criado em
+                </dt>
+
+                <dd>
+                  {
+                    formatBackupDate(
+                      pendingFullBackup.createdAt,
+                    )
+                  }
+                </dd>
+              </div>
+
+              <div>
+                <dt>
+                  Versão do backup
+                </dt>
+
+                <dd>
+                  {
+                    pendingFullBackup.schemaVersion
+                  }
+                </dd>
+              </div>
+            </dl>
+
+            <div
+              className={
+                styles.summaryGrid
+              }
+            >
+              <div>
+                <strong>
+                  {
+                    pendingFullBackup
+                      .summary
+                      .products
+                  }
+                </strong>
+
+                <span>
+                  Produtos
+                </span>
+              </div>
+
+              <div>
+                <strong>
+                  {
+                    pendingFullBackup
+                      .summary
+                      .inventoryMovements
+                  }
+                </strong>
+
+                <span>
+                  Movimentações
+                </span>
+              </div>
+
+              <div>
+                <strong>
+                  {
+                    pendingFullBackup
+                      .summary
+                      .sales
+                  }
+                </strong>
+
+                <span>
+                  Vendas
+                </span>
+              </div>
+
+              <div>
+                <strong>
+                  {
+                    pendingFullBackup
+                      .summary
+                      .financialTransactions
+                  }
+                </strong>
+
+                <span>
+                  Lançamentos
+                </span>
+              </div>
+            </div>
+
+            <div
+              className={
+                styles.previewFooter
+              }
+            >
+              <span>
+                A restauração segura, com confirmação final, será conectada na próxima parte.
+              </span>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setPendingFullBackup(
+                    null,
+                  )
+                }
+              >
+                Fechar prévia
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div
+          className={
+            styles.sectionHeading
+          }
+        >
+          <div>
+            <strong>
+              Manutenção das configurações
+            </strong>
+
+            <span>
+              Operações que alteram somente as preferências do sistema.
+            </span>
+          </div>
+        </div>
+
+        <div
+          className={
+            styles.actionsGrid
+          }
+        >
+          <article
+            className={
+              styles.actionCard
+            }
+          >
+            <div
+              className={
+                styles.actionIcon
+              }
+            >
+              <Download
+                size={20}
+              />
+            </div>
+
+            <div
+              className={
+                styles.actionInformation
+              }
+            >
               <strong>
                 Exportar configurações
               </strong>
@@ -327,19 +891,38 @@ export default function DataMaintenancePanel({
                 disabled ||
                 isProcessing
               }
-              onClick={exportSettings}
+              onClick={
+                exportSettings
+              }
             >
-              <FileJson size={15} />
+              <FileJson
+                size={15}
+              />
+
               Exportar backup
             </button>
           </article>
 
-          <article className={styles.actionCard}>
-            <div className={styles.actionIcon}>
-              <Upload size={20} />
+          <article
+            className={
+              styles.actionCard
+            }
+          >
+            <div
+              className={
+                styles.actionIcon
+              }
+            >
+              <Upload
+                size={20}
+              />
             </div>
 
-            <div className={styles.actionInformation}>
+            <div
+              className={
+                styles.actionInformation
+              }
+            >
               <strong>
                 Importar configurações
               </strong>
@@ -356,32 +939,51 @@ export default function DataMaintenancePanel({
                 isProcessing
               }
               onClick={() =>
-                inputRef.current?.click()
+                settingsInputRef
+                  .current
+                  ?.click()
               }
             >
-              <Upload size={15} />
+              <Upload
+                size={15}
+              />
+
               Selecionar arquivo
             </button>
 
             <input
-              ref={inputRef}
+              ref={
+                settingsInputRef
+              }
               type="file"
               accept="application/json,.json"
               hidden
-              onChange={handleFileChange}
+              onChange={
+                handleSettingsFileChange
+              }
             />
           </article>
 
           <article
-            className={`${styles.actionCard} ${styles.dangerCard}`}
+            className={
+              `${styles.actionCard} ${styles.dangerCard}`
+            }
           >
             <div
-              className={`${styles.actionIcon} ${styles.dangerIcon}`}
+              className={
+                `${styles.actionIcon} ${styles.dangerIcon}`
+              }
             >
-              <RotateCcw size={20} />
+              <RotateCcw
+                size={20}
+              />
             </div>
 
-            <div className={styles.actionInformation}>
+            <div
+              className={
+                styles.actionInformation
+              }
+            >
               <strong>
                 Restaurar configurações
               </strong>
@@ -393,25 +995,44 @@ export default function DataMaintenancePanel({
 
             <button
               type="button"
-              className={styles.dangerButton}
+              className={
+                styles.dangerButton
+              }
               disabled={
                 disabled ||
                 isProcessing
               }
-              onClick={() =>
+              onClick={() => {
+                setPendingFullBackup(
+                  null,
+                );
+
+                setPendingSettingsBackup(
+                  null,
+                );
+
                 setShowResetConfirmation(
                   true,
-                )
-              }
+                );
+
+                clearFeedback();
+              }}
             >
-              <RefreshCcw size={15} />
+              <RefreshCcw
+                size={15}
+              />
+
               Restaurar padrões
             </button>
           </article>
         </div>
 
-        {pendingBackup && (
-          <div className={styles.confirmation}>
+        {pendingSettingsBackup && (
+          <div
+            className={
+              styles.confirmation
+            }
+          >
             <div>
               <strong>
                 Aplicar o backup selecionado?
@@ -422,12 +1043,20 @@ export default function DataMaintenancePanel({
               </span>
             </div>
 
-            <div className={styles.confirmationActions}>
+            <div
+              className={
+                styles.confirmationActions
+              }
+            >
               <button
                 type="button"
-                disabled={isProcessing}
+                disabled={
+                  isProcessing
+                }
                 onClick={() =>
-                  setPendingBackup(null)
+                  setPendingSettingsBackup(
+                    null,
+                  )
                 }
               >
                 Cancelar
@@ -435,15 +1064,21 @@ export default function DataMaintenancePanel({
 
               <button
                 type="button"
-                className={styles.primaryButton}
-                disabled={isProcessing}
+                className={
+                  styles.primaryButton
+                }
+                disabled={
+                  isProcessing
+                }
                 onClick={() =>
-                  void confirmImport()
+                  void confirmSettingsImport()
                 }
               >
-                {isProcessing
-                  ? "Importando..."
-                  : "Aplicar backup"}
+                {
+                  isProcessing
+                    ? "Importando..."
+                    : "Aplicar backup"
+                }
               </button>
             </div>
           </div>
@@ -451,7 +1086,9 @@ export default function DataMaintenancePanel({
 
         {showResetConfirmation && (
           <div
-            className={`${styles.confirmation} ${styles.dangerConfirmation}`}
+            className={
+              `${styles.confirmation} ${styles.dangerConfirmation}`
+            }
           >
             <div>
               <strong>
@@ -459,14 +1096,21 @@ export default function DataMaintenancePanel({
               </strong>
 
               <span>
-                Esta operação substituirá as preferências atuais pelos valores padrão, mas não apagará vendas, produtos ou lançamentos.
+                Esta operação substituirá as preferências atuais pelos valores padrão,
+                mas não apagará vendas, produtos ou lançamentos.
               </span>
             </div>
 
-            <div className={styles.confirmationActions}>
+            <div
+              className={
+                styles.confirmationActions
+              }
+            >
               <button
                 type="button"
-                disabled={isProcessing}
+                disabled={
+                  isProcessing
+                }
                 onClick={() =>
                   setShowResetConfirmation(
                     false,
@@ -481,33 +1125,49 @@ export default function DataMaintenancePanel({
                 className={
                   styles.confirmDangerButton
                 }
-                disabled={isProcessing}
+                disabled={
+                  isProcessing
+                }
                 onClick={() =>
                   void confirmReset()
                 }
               >
-                {isProcessing
-                  ? "Restaurando..."
-                  : "Confirmar restauração"}
+                {
+                  isProcessing
+                    ? "Restaurando..."
+                    : "Confirmar restauração"
+                }
               </button>
             </div>
           </div>
         )}
 
         {message && (
-          <div className={styles.success}>
+          <div
+            className={
+              styles.success
+            }
+          >
             {message}
           </div>
         )}
 
         {error && (
-          <div className={styles.error}>
+          <div
+            className={
+              styles.error
+            }
+          >
             {error}
           </div>
         )}
 
-        <div className={styles.notice}>
-          Este backup contém somente as configurações. Produtos, vendas, estoque e lançamentos financeiros não são incluídos nesta operação.
+        <div
+          className={
+            styles.notice
+          }
+        >
+          O backup completo é destinado exclusivamente ao controle interno.
         </div>
       </div>
     </section>
