@@ -60,17 +60,13 @@ import {
   readLocalStorage,
 } from "../storage/localStorageService";
 
-function readCurrentData():
-  SystemBackupData {
+function readCurrentData(): SystemBackupData {
   return {
     settings:
-      settingsStorageService
-        .read(),
+      settingsStorageService.read(),
 
     products:
-      readLocalStorage<
-        Product[]
-      >(
+      readLocalStorage<Product[]>(
         STORAGE_KEYS.products,
         initialProducts,
       ),
@@ -79,16 +75,12 @@ function readCurrentData():
       readLocalStorage<
         InventoryMovement[]
       >(
-        STORAGE_KEYS
-          .inventoryMovements,
-
+        STORAGE_KEYS.inventoryMovements,
         initialInventoryMovements,
       ),
 
     sales:
-      readLocalStorage<
-        Sale[]
-      >(
+      readLocalStorage<Sale[]>(
         STORAGE_KEYS.sales,
         initialSales,
       ),
@@ -97,16 +89,13 @@ function readCurrentData():
       readLocalStorage<
         FinancialTransaction[]
       >(
-        STORAGE_KEYS
-          .financialTransactions,
-
+        STORAGE_KEYS.financialTransactions,
         initialFinancialTransactions,
       ),
   };
 }
 
-function create():
-  SystemBackup {
+function create(): SystemBackup {
   const data =
     readCurrentData();
 
@@ -121,16 +110,11 @@ function create():
       "Gestor Fácil",
 
     createdAt:
-      new Date()
-        .toISOString(),
+      new Date().toISOString(),
 
     businessName:
-      data.settings
-        .business
-        .tradeName ||
-      data.settings
-        .business
-        .legalName ||
+      data.settings.business.tradeName ||
+      data.settings.business.legalName ||
       "Estabelecimento",
 
     summary: {
@@ -138,17 +122,13 @@ function create():
         data.products.length,
 
       inventoryMovements:
-        data
-          .inventoryMovements
-          .length,
+        data.inventoryMovements.length,
 
       sales:
         data.sales.length,
 
       financialTransactions:
-        data
-          .financialTransactions
-          .length,
+        data.financialTransactions.length,
     },
 
     data,
@@ -183,25 +163,21 @@ function parse(
   }
 
   try {
-    return (
-      systemBackupDtoSchema
-        .parse(
-          parsedContent,
-        ) as SystemBackup
-    );
-  } catch (error) {
+    return systemBackupDtoSchema.parse(
+      parsedContent,
+    ) as SystemBackup;
+  } catch (
+    error
+  ) {
     if (
-      error instanceof
-      ZodError
+      error instanceof ZodError
     ) {
       const issue =
         error.issues[0];
 
       const location =
         issue?.path.length
-          ? ` Campo: ${issue.path.join(
-              ".",
-            )}.`
+          ? ` Campo: ${issue.path.join(".")}.`
           : "";
 
       throw new Error(
@@ -215,27 +191,27 @@ function parse(
 
 function createFileName(
   backup: SystemBackup,
-
   prefix =
     "gestor-facil-backup-completo",
 ): string {
   const date =
-    backup.createdAt
-      .slice(0, 10);
+    backup.createdAt.slice(
+      0,
+      10,
+    );
 
   const time =
     backup.createdAt
-      .slice(11, 19)
+      .slice(
+        11,
+        19,
+      )
       .replace(
         /:/g,
         "-",
       );
 
-  return (
-    `${prefix}-` +
-    `${date}-` +
-    `${time}.json`
-  );
+  return `${prefix}-${date}-${time}.json`;
 }
 
 function download(
@@ -249,7 +225,6 @@ function download(
           backup,
         ),
       ],
-
       {
         type:
           "application/json;charset=utf-8",
@@ -266,7 +241,8 @@ function download(
       "a",
     );
 
-  link.href = url;
+  link.href =
+    url;
 
   link.download =
     createFileName(
@@ -274,8 +250,9 @@ function download(
       prefix,
     );
 
-  document.body
-    .appendChild(link);
+  document.body.appendChild(
+    link,
+  );
 
   link.click();
   link.remove();
@@ -285,9 +262,134 @@ function download(
   );
 }
 
+function restore(
+  backup: SystemBackup,
+): void {
+  /*
+   * Mesmo que o arquivo já tenha sido validado pela interface,
+   * realizamos uma nova validação imediatamente antes da gravação.
+   */
+  const validatedBackup =
+    parse(
+      serialize(
+        backup,
+      ),
+    );
+
+  /*
+   * Todos os valores são serializados antes de modificar
+   * qualquer informação no localStorage.
+   */
+  const entries: Array<[
+    string,
+    unknown,
+  ]> = [
+    [
+      STORAGE_KEYS.settings,
+      validatedBackup.data.settings,
+    ],
+
+    [
+      STORAGE_KEYS.products,
+      validatedBackup.data.products,
+    ],
+
+    [
+      STORAGE_KEYS.inventoryMovements,
+      validatedBackup.data.inventoryMovements,
+    ],
+
+    [
+      STORAGE_KEYS.sales,
+      validatedBackup.data.sales,
+    ],
+
+    [
+      STORAGE_KEYS.financialTransactions,
+      validatedBackup.data.financialTransactions,
+    ],
+  ];
+
+  const serializedEntries =
+    entries.map(
+      ([
+        key,
+        value,
+      ]) => [
+        key,
+        JSON.stringify(
+          value,
+        ),
+      ] as const,
+    );
+
+  /*
+   * Mantém uma fotografia dos valores atuais.
+   * Ela será usada se alguma gravação falhar.
+   */
+  const previousValues =
+    new Map(
+      entries.map(
+        ([key]) => [
+          key,
+          window.localStorage.getItem(
+            key,
+          ),
+        ],
+      ),
+    );
+
+  try {
+    serializedEntries.forEach(
+      ([
+        key,
+        value,
+      ]) => {
+        window.localStorage.setItem(
+          key,
+          value,
+        );
+      },
+    );
+  } catch (
+    restoreError
+  ) {
+    /*
+     * Rollback: devolve todas as chaves ao estado
+     * em que estavam antes da tentativa.
+     */
+    previousValues.forEach(
+      (
+        previousValue,
+        key,
+      ) => {
+        if (
+          previousValue === null
+        ) {
+          window.localStorage.removeItem(
+            key,
+          );
+        } else {
+          window.localStorage.setItem(
+            key,
+            previousValue,
+          );
+        }
+      },
+    );
+
+    throw new Error(
+      restoreError instanceof Error
+        ? `A restauração falhou e os dados anteriores foram recuperados. ${restoreError.message}`
+        : "A restauração falhou e os dados anteriores foram recuperados.",
+    );
+  }
+}
+
 export const systemBackupService = {
   create,
   serialize,
   parse,
   download,
+  restore,
 };

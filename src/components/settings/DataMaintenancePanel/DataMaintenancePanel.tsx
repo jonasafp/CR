@@ -132,6 +132,16 @@ export default function DataMaintenancePanel({
   ] = useState(false);
 
   const [
+    showFullRestoreConfirmation,
+    setShowFullRestoreConfirmation,
+  ] = useState(false);
+
+  const [
+    restoreConfirmationText,
+    setRestoreConfirmationText,
+  ] = useState("");
+
+  const [
     message,
     setMessage,
   ] = useState("");
@@ -192,7 +202,7 @@ export default function DataMaintenancePanel({
         "Backup completo exportado com sucesso. Guarde o arquivo em um local seguro.",
       );
     } catch (
-      exportError
+    exportError
     ) {
       setMessage("");
 
@@ -257,9 +267,17 @@ export default function DataMaintenancePanel({
         false,
       );
 
+      setShowFullRestoreConfirmation(
+        false,
+      );
+
+      setRestoreConfirmationText(
+        "",
+      );
+
       clearFeedback();
     } catch (
-      validationError
+    validationError
     ) {
       setPendingFullBackup(
         null,
@@ -334,7 +352,7 @@ export default function DataMaintenancePanel({
         "Backup das configurações exportado com sucesso.",
       );
     } catch (
-      exportError
+    exportError
     ) {
       setMessage("");
 
@@ -451,7 +469,7 @@ export default function DataMaintenancePanel({
         "Configurações importadas com sucesso.",
       );
     } catch (
-      importError
+    importError
     ) {
       setError(
         importError instanceof Error
@@ -483,7 +501,7 @@ export default function DataMaintenancePanel({
         "Configurações restauradas para os valores padrão.",
       );
     } catch (
-      resetError
+    resetError
     ) {
       setError(
         resetError instanceof Error
@@ -491,6 +509,97 @@ export default function DataMaintenancePanel({
           : "Não foi possível restaurar as configurações.",
       );
     } finally {
+      setIsProcessing(
+        false,
+      );
+    }
+  }
+
+  async function confirmFullRestore() {
+    if (
+      !pendingFullBackup
+    ) {
+      return;
+    }
+
+    const normalizedConfirmation =
+      restoreConfirmationText
+        .trim()
+        .toUpperCase();
+
+    if (
+      normalizedConfirmation !==
+      "RESTAURAR"
+    ) {
+      setError(
+        'Digite a palavra "RESTAURAR" para confirmar a operação.',
+      );
+
+      return;
+    }
+
+    setIsProcessing(
+      true,
+    );
+
+    setError("");
+    setMessage("");
+
+    try {
+      /*
+       * Cria e baixa uma cópia dos dados atuais
+       * antes de iniciar qualquer alteração.
+       */
+      const safetyBackup =
+        systemBackupService.create();
+
+      systemBackupService.download(
+        safetyBackup,
+        "gestor-facil-backup-antes-da-restauracao",
+      );
+
+      /*
+       * Executa a restauração atômica.
+       */
+      systemBackupService.restore(
+        pendingFullBackup,
+      );
+
+      setShowFullRestoreConfirmation(
+        false,
+      );
+
+      setPendingFullBackup(
+        null,
+      );
+
+      setRestoreConfirmationText(
+        "",
+      );
+
+      setMessage(
+        "Backup restaurado com sucesso. O sistema será recarregado para aplicar os dados.",
+      );
+
+      /*
+       * O recarregamento faz todos os contextos e repositórios
+       * buscarem novamente os dados restaurados.
+       */
+      window.setTimeout(
+        () => {
+          window.location.reload();
+        },
+        1200,
+      );
+    } catch (
+    restoreError
+    ) {
+      setError(
+        restoreError instanceof Error
+          ? restoreError.message
+          : "Não foi possível restaurar o backup completo.",
+      );
+
       setIsProcessing(
         false,
       );
@@ -818,22 +927,168 @@ export default function DataMaintenancePanel({
               }
             >
               <span>
-                A restauração segura, com confirmação final, será conectada na próxima parte.
+                Antes da restauração, o sistema baixará automaticamente
+                um backup preventivo dos dados atuais.
               </span>
 
-              <button
-                type="button"
-                onClick={() =>
-                  setPendingFullBackup(
-                    null,
-                  )
+              <div
+                className={
+                  styles.previewActions
                 }
               >
-                Fechar prévia
-              </button>
+                <button
+                  type="button"
+                  disabled={
+                    isProcessing
+                  }
+                  onClick={() => {
+                    setPendingFullBackup(
+                      null,
+                    );
+
+                    setShowFullRestoreConfirmation(
+                      false,
+                    );
+
+                    setRestoreConfirmationText(
+                      "",
+                    );
+                  }}
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  type="button"
+                  className={
+                    styles.restoreButton
+                  }
+                  disabled={
+                    disabled ||
+                    isProcessing
+                  }
+                  onClick={() => {
+                    setShowFullRestoreConfirmation(
+                      true,
+                    );
+
+                    setRestoreConfirmationText(
+                      "",
+                    );
+
+                    setError("");
+                    setMessage("");
+                  }}
+                >
+                  <RotateCcw
+                    size={14}
+                  />
+
+                  Restaurar este backup
+                </button>
+              </div>
             </div>
           </div>
         )}
+
+        {pendingFullBackup &&
+          showFullRestoreConfirmation && (
+            <div
+              className={
+                `${styles.confirmation} ${styles.dangerConfirmation} ${styles.fullRestoreConfirmation}`
+              }
+            >
+              <div>
+                <strong>
+                  Confirmar restauração completa?
+                </strong>
+
+                <span>
+                  Os dados atuais serão substituídos pelos dados de{" "}
+                  {
+                    pendingFullBackup.businessName ||
+                    "Estabelecimento"
+                  }.
+                  Um backup preventivo será baixado antes da alteração.
+                </span>
+
+                <label
+                  className={
+                    styles.confirmationField
+                  }
+                >
+                  <span>
+                    Digite RESTAURAR para continuar
+                  </span>
+
+                  <input
+                    type="text"
+                    value={
+                      restoreConfirmationText
+                    }
+                    disabled={
+                      isProcessing
+                    }
+                    autoComplete="off"
+                    onChange={(
+                      event,
+                    ) =>
+                      setRestoreConfirmationText(
+                        event.target.value,
+                      )
+                    }
+                  />
+                </label>
+              </div>
+
+              <div
+                className={
+                  styles.confirmationActions
+                }
+              >
+                <button
+                  type="button"
+                  disabled={
+                    isProcessing
+                  }
+                  onClick={() => {
+                    setShowFullRestoreConfirmation(
+                      false,
+                    );
+
+                    setRestoreConfirmationText(
+                      "",
+                    );
+                  }}
+                >
+                  Voltar
+                </button>
+
+                <button
+                  type="button"
+                  className={
+                    styles.confirmDangerButton
+                  }
+                  disabled={
+                    isProcessing ||
+                    restoreConfirmationText
+                      .trim()
+                      .toUpperCase() !==
+                    "RESTAURAR"
+                  }
+                  onClick={() =>
+                    void confirmFullRestore()
+                  }
+                >
+                  {
+                    isProcessing
+                      ? "Restaurando..."
+                      : "Confirmar restauração"
+                  }
+                </button>
+              </div>
+            </div>
+          )}
 
         <div
           className={
