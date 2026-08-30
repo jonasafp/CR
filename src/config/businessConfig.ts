@@ -29,7 +29,7 @@ export const businessConfig: BusinessConfig = {
     finance: true,
     reports: true,
 
-    customers: false,
+    customers: true,
     suppliers: false,
     purchases: false,
     cashRegister: false,

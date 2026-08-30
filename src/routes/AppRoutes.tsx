@@ -9,6 +9,7 @@ import Financeiro from "../pages/Financeiro/Financeiro";
 import Produtos from "../pages/Produtos/Produtos";
 import Relatorios from "../pages/Relatorios/Relatorios";
 import Vendas from "../pages/Vendas/Vendas";
+import Clientes from "../pages/Clientes/Clientes";
 
 export default function AppRoutes() {
   return (
@@ -19,6 +20,7 @@ export default function AppRoutes() {
         <Route path="estoque" element={<Estoque />} />
         <Route path="vendas" element={<Vendas />} />
         <Route path="produtos" element={<Produtos />} />
+        <Route path="clientes" element={<Clientes />} />
         <Route path="financeiro" element={<Financeiro />} />
         <Route path="relatorios" element={<Relatorios />} />
 
