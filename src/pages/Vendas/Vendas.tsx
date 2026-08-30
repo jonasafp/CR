@@ -51,6 +51,10 @@ import {
   useSalesQuery,
 } from "../../application/sales/useSalesQuery";
 
+import {
+  useActiveCustomersQuery,
+} from "../../application/customers/useCustomerQuery";
+
 import type {
   CreateSaleInput,
   PaymentMethod,
@@ -180,6 +184,12 @@ export default function Vendas() {
   const notifications =
     useNotifications();
 
+  const activeCustomersQuery =
+    useActiveCustomersQuery();
+
+  const activeCustomers =
+    activeCustomersQuery.data ?? [];
+
   const salesSettings =
     settings.sales;
 
@@ -205,6 +215,11 @@ export default function Vendas() {
   ] = useState<PaymentMethod>(
     salesSettings.defaultPaymentMethod,
   );
+
+  const [
+    selectedCustomerId,
+    setSelectedCustomerId,
+  ] = useState("");
 
   const [
     customerName,
@@ -394,6 +409,10 @@ export default function Vendas() {
     setPaymentMethod(
       salesSettings
         .defaultPaymentMethod,
+    );
+
+    setSelectedCustomerId(
+      "",
     );
 
     setCustomerName(
@@ -834,10 +853,16 @@ export default function Vendas() {
       CreateSaleInput = {
       paymentMethod,
 
+      customerId:
+        selectedCustomerId
+          ? Number(
+            selectedCustomerId,
+          )
+          : undefined,
+
       customerName:
         customerName.trim() ||
-        salesSettings
-          .defaultCustomerName ||
+        salesSettings.defaultCustomerName ||
         "Cliente balcão",
 
       items:
@@ -1640,33 +1665,136 @@ export default function Vendas() {
               styles.checkoutForm
             }
           >
-            <label
+            <div
               className={
-                styles.field
+                styles.customerFields
               }
             >
-              <span>Cliente</span>
+              <label
+                className={
+                  styles.field
+                }
+              >
+                <span>
+                  Cliente cadastrado
+                </span>
 
-              <input
-                value={customerName}
-                placeholder={
-                  salesSettings
-                    .requireCustomerIdentification
-                    ? "Identificação obrigatória"
-                    : salesSettings
-                      .defaultCustomerName ||
-                    "Cliente balcão"
+                <select
+                  value={
+                    selectedCustomerId
+                  }
+                  disabled={
+                    activeCustomersQuery.isLoading
+                  }
+                  onChange={(
+                    event,
+                  ) => {
+                    const customerId =
+                      event.target.value;
+
+                    setSelectedCustomerId(
+                      customerId,
+                    );
+
+                    if (!customerId) {
+                      setCustomerName(
+                        salesSettings
+                          .requireCustomerIdentification
+                          ? ""
+                          : salesSettings
+                            .defaultCustomerName,
+                      );
+
+                      return;
+                    }
+
+                    const selectedCustomer =
+                      activeCustomers.find(
+                        (customer) =>
+                          customer.id ===
+                          Number(
+                            customerId,
+                          ),
+                      );
+
+                    setCustomerName(
+                      selectedCustomer?.name ??
+                      "",
+                    );
+                  }}
+                >
+                  <option value="">
+                    {activeCustomersQuery.isLoading
+                      ? "Carregando clientes..."
+                      : "Informar cliente manualmente"}
+                  </option>
+
+                  {activeCustomers.map(
+                    (customer) => (
+                      <option
+                        key={
+                          customer.id
+                        }
+                        value={
+                          customer.id
+                        }
+                      >
+                        {customer.name}
+                        {customer.document
+                          ? ` — ${customer.document}`
+                          : ""}
+                      </option>
+                    ),
+                  )}
+                </select>
+              </label>
+
+              <label
+                className={
+                  styles.field
                 }
-                onChange={(
-                  event,
-                ) =>
-                  setCustomerName(
-                    event.target
-                      .value,
-                  )
-                }
-              />
-            </label>
+              >
+                <span>
+                  Nome utilizado na venda
+                </span>
+
+                <input
+                  value={
+                    customerName
+                  }
+                  readOnly={
+                    Boolean(
+                      selectedCustomerId,
+                    )
+                  }
+                  placeholder={
+                    salesSettings
+                      .requireCustomerIdentification
+                      ? "Identificação obrigatória"
+                      : salesSettings
+                        .defaultCustomerName ||
+                      "Cliente balcão"
+                  }
+                  onChange={(
+                    event,
+                  ) =>
+                    setCustomerName(
+                      event.target.value,
+                    )
+                  }
+                />
+
+                {selectedCustomerId && (
+                  <small
+                    className={
+                      styles.fieldHelper
+                    }
+                  >
+                    Cliente vinculado ao cadastro.
+                  </small>
+                )}
+              </label>
+            </div>
 
             <div
               className={

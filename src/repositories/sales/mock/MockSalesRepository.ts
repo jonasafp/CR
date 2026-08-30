@@ -49,6 +49,14 @@ import type {
   SalesRepository,
 } from "../SalesRepository";
 
+import {
+  initialCustomers,
+} from "../../../data/customersMock";
+
+import type {
+  Customer,
+} from "../../../domain/customers/Customer";
+
 function delay(
   milliseconds = 350,
 ): Promise<void> {
@@ -124,6 +132,16 @@ function saveProducts(
         detail: products,
       },
     ),
+  );
+}
+
+function readCustomers():
+  Customer[] {
+  return readLocalStorage<
+    Customer[]
+  >(
+    STORAGE_KEYS.customers,
+    initialCustomers,
   );
 }
 
@@ -479,6 +497,40 @@ export class MockSalesRepository
 
     const sales = readSales();
     const products = readProducts();
+    const customers =
+      readCustomers();
+
+    const selectedCustomer =
+      input.customerId
+        ? customers.find(
+          (customer) =>
+            customer.id ===
+            input.customerId,
+        )
+        : undefined;
+
+    if (
+      input.customerId &&
+      !selectedCustomer
+    ) {
+      throw new ApiError(
+        "O cliente selecionado não foi encontrado.",
+        404,
+        "CUSTOMER_NOT_FOUND",
+      );
+    }
+
+    if (
+      selectedCustomer?.status ===
+      "inactive"
+    ) {
+      throw new ApiError(
+        "O cliente selecionado está inativo.",
+        400,
+        "CUSTOMER_INACTIVE",
+      );
+    }
+
     const systemSettings =
       settingsStorageService.read();
 
@@ -497,8 +549,8 @@ export class MockSalesRepository
     }
 
     if (
-      salesSettings
-        .requireCustomerIdentification &&
+      salesSettings.requireCustomerIdentification &&
+      !selectedCustomer &&
       !input.customerName?.trim()
     ) {
       throw new ApiError(
@@ -741,9 +793,10 @@ export class MockSalesRepository
         input.paymentMethod,
 
       customerId:
-        input.customerId,
+        selectedCustomer?.id,
 
       customerName:
+        selectedCustomer?.name ||
         input.customerName?.trim() ||
         "Cliente balcão",
 
