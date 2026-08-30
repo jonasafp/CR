@@ -11,6 +11,9 @@ export const STORAGE_KEYS = {
   financialTransactions:
     "gestor-facil:financial-transactions",
 
+  customers:
+    "gestor-facil:customers",
+
   settings:
     "gestor-facil:settings",
 } as const;
