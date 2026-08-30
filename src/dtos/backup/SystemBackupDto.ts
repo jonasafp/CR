@@ -227,6 +227,72 @@ const inventoryMovementSchema =
         .min(1),
   });
 
+const customerAddressSchema =
+  z.object({
+    postalCode:
+      z.string(),
+
+    street:
+      z.string(),
+
+    number:
+      z.string(),
+
+    complement:
+      z.string(),
+
+    neighborhood:
+      z.string(),
+
+    city:
+      z.string(),
+
+    state:
+      z.string(),
+  });
+
+const customerSchema =
+  z.object({
+    id:
+      z.number()
+        .int()
+        .positive(),
+
+    name:
+      z.string()
+        .trim()
+        .min(1),
+
+    document:
+      z.string(),
+
+    phone:
+      z.string(),
+
+    email:
+      z.string(),
+
+    address:
+      customerAddressSchema,
+
+    notes:
+      z.string(),
+
+    status:
+      z.enum([
+        "active",
+        "inactive",
+      ]),
+
+    createdAt:
+      z.string()
+        .min(1),
+
+    updatedAt:
+      z.string()
+        .min(1),
+  });
+
 export const systemBackupDtoSchema =
   z
     .object({
@@ -278,6 +344,11 @@ export const systemBackupDtoSchema =
               .number()
               .int()
               .nonnegative(),
+
+          customers:
+            z.number()
+              .int()
+              .nonnegative(),
         }),
 
       data:
@@ -303,6 +374,11 @@ export const systemBackupDtoSchema =
           financialTransactions:
             z.array(
               financialTransactionDtoSchema,
+            ),
+
+          customers:
+            z.array(
+              customerSchema,
             ),
         }),
     })
@@ -331,6 +407,9 @@ export const systemBackupDtoSchema =
             backup.data
               .financialTransactions
               .length,
+
+          customers:
+            backup.data.customers.length,
         };
 
         Object.entries(
@@ -342,11 +421,11 @@ export const systemBackupDtoSchema =
           ]) => {
             const summaryKey =
               key as keyof
-                typeof counts;
+              typeof counts;
 
             if (
               backup.summary[
-                summaryKey
+              summaryKey
               ] !== count
             ) {
               context.addIssue({

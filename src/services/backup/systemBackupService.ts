@@ -23,6 +23,10 @@ import {
 } from "../../data/salesMock";
 
 import {
+  initialCustomers,
+} from "../../data/customersMock";
+
+import {
   CURRENT_BACKUP_SCHEMA_VERSION,
   SYSTEM_BACKUP_IDENTIFIER,
 } from "../../domain/backup/SystemBackup";
@@ -39,6 +43,10 @@ import type {
 import type {
   Sale,
 } from "../../domain/sales/Sale";
+
+import type {
+  Customer,
+} from "../../domain/customers/Customer";
 
 import {
   systemBackupDtoSchema,
@@ -64,6 +72,12 @@ function readCurrentData(): SystemBackupData {
   return {
     settings:
       settingsStorageService.read(),
+
+    customers:
+      readLocalStorage<Customer[]>(
+        STORAGE_KEYS.customers,
+        initialCustomers,
+      ),
 
     products:
       readLocalStorage<Product[]>(
@@ -129,6 +143,9 @@ function create(): SystemBackup {
 
       financialTransactions:
         data.financialTransactions.length,
+
+      customers:
+        data.customers.length,
     },
 
     data,
@@ -167,7 +184,7 @@ function parse(
       parsedContent,
     ) as SystemBackup;
   } catch (
-    error
+  error
   ) {
     if (
       error instanceof ZodError
@@ -284,31 +301,37 @@ function restore(
     string,
     unknown,
   ]> = [
-    [
-      STORAGE_KEYS.settings,
-      validatedBackup.data.settings,
-    ],
 
-    [
-      STORAGE_KEYS.products,
-      validatedBackup.data.products,
-    ],
+      [
+        STORAGE_KEYS.customers,
+        validatedBackup.data.customers,
+      ],
+      
+      [
+        STORAGE_KEYS.settings,
+        validatedBackup.data.settings,
+      ],
 
-    [
-      STORAGE_KEYS.inventoryMovements,
-      validatedBackup.data.inventoryMovements,
-    ],
+      [
+        STORAGE_KEYS.products,
+        validatedBackup.data.products,
+      ],
 
-    [
-      STORAGE_KEYS.sales,
-      validatedBackup.data.sales,
-    ],
+      [
+        STORAGE_KEYS.inventoryMovements,
+        validatedBackup.data.inventoryMovements,
+      ],
 
-    [
-      STORAGE_KEYS.financialTransactions,
-      validatedBackup.data.financialTransactions,
-    ],
-  ];
+      [
+        STORAGE_KEYS.sales,
+        validatedBackup.data.sales,
+      ],
+
+      [
+        STORAGE_KEYS.financialTransactions,
+        validatedBackup.data.financialTransactions,
+      ],
+    ];
 
   const serializedEntries =
     entries.map(
@@ -352,7 +375,7 @@ function restore(
       },
     );
   } catch (
-    restoreError
+  restoreError
   ) {
     /*
      * Rollback: devolve todas as chaves ao estado

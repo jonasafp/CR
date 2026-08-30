@@ -863,7 +863,21 @@ export default function DataMaintenancePanel({
               className={
                 styles.summaryGrid
               }
+
             >
+              <div>
+                <strong>
+                  {
+                    pendingFullBackup
+                      .summary
+                      .customers
+                  }
+                </strong>
+
+                <span>
+                  Clientes
+                </span>
+              </div>
               <div>
                 <strong>
                   {
