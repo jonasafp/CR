@@ -10,6 +10,7 @@ import {
   UserRound,
   Users,
   X,
+  Eye,
 } from "lucide-react";
 
 import {
@@ -41,6 +42,7 @@ import LoadingState from "../../components/common/LoadingState/LoadingState";
 import Pagination from "../../components/common/Pagination/Pagination";
 import StatisticCard from "../../components/common/StatisticCard/StatisticCard";
 import TableCard from "../../components/common/TableCard/TableCard";
+import CustomerHistoryModal from "../../components/customers/CustomerHistoryModal/CustomerHistoryModal";
 
 import type {
   CreateCustomerInput,
@@ -222,6 +224,13 @@ export default function Clientes() {
     createMutation.isPending ||
     updateMutation.isPending;
 
+  const [
+    historyCustomer,
+    setHistoryCustomer,
+  ] = useState<Customer | null>(
+    null,
+  );
+
   useEffect(
     () => {
       if (!isFormOpen) {
@@ -231,8 +240,8 @@ export default function Clientes() {
       setForm(
         editingCustomer
           ? customerToForm(
-              editingCustomer,
-            )
+            editingCustomer,
+          )
           : emptyForm,
       );
     },
@@ -625,7 +634,7 @@ export default function Clientes() {
 
                     status:
                       event.target.value as
-                        typeof currentFilters.status,
+                      typeof currentFilters.status,
 
                     page:
                       1,
@@ -661,7 +670,7 @@ export default function Clientes() {
 
                     sortBy:
                       event.target.value as
-                        typeof currentFilters.sortBy,
+                      typeof currentFilters.sortBy,
 
                     page:
                       1,
@@ -833,6 +842,18 @@ export default function Clientes() {
                                   styles.rowActions
                                 }
                               >
+                                <button
+                                  type="button"
+                                  title="Ver histórico de compras"
+                                  onClick={() =>
+                                    setHistoryCustomer(
+                                      customer,
+                                    )
+                                  }
+                                >
+                                  <Eye size={15} />
+                                </button>
+
                                 <button
                                   type="button"
                                   title="Editar cliente"
@@ -1258,6 +1279,17 @@ export default function Clientes() {
         </div>
       )}
 
+      <CustomerHistoryModal
+        customer={
+          historyCustomer
+        }
+        onClose={() =>
+          setHistoryCustomer(
+            null,
+          )
+        }
+      />
+
       <ConfirmDialog
         isOpen={
           statusCustomer !== null
@@ -1270,12 +1302,11 @@ export default function Clientes() {
         }
         description={
           statusCustomer
-            ? `O cliente “${statusCustomer.name}” será ${
-                statusCustomer.status ===
-                  "active"
-                  ? "inativado e deixará de aparecer nas novas vendas"
-                  : "ativado novamente para uso no sistema"
-              }.`
+            ? `O cliente “${statusCustomer.name}” será ${statusCustomer.status ===
+              "active"
+              ? "inativado e deixará de aparecer nas novas vendas"
+              : "ativado novamente para uso no sistema"
+            }.`
             : ""
         }
         confirmLabel="Confirmar alteração"
