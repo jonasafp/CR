@@ -68,6 +68,14 @@ import {
   readLocalStorage,
 } from "../storage/localStorageService";
 
+import {
+  initialSuppliers,
+} from "../../data/suppliersMock";
+
+import type {
+  Supplier,
+} from "../../domain/suppliers/Supplier";
+
 function readCurrentData(): SystemBackupData {
   return {
     settings:
@@ -105,6 +113,12 @@ function readCurrentData(): SystemBackupData {
       >(
         STORAGE_KEYS.financialTransactions,
         initialFinancialTransactions,
+      ),
+
+    suppliers:
+      readLocalStorage<Supplier[]>(
+        STORAGE_KEYS.suppliers,
+        initialSuppliers,
       ),
   };
 }
@@ -146,6 +160,9 @@ function create(): SystemBackup {
 
       customers:
         data.customers.length,
+
+      suppliers:
+        data.suppliers.length,
     },
 
     data,
@@ -306,7 +323,7 @@ function restore(
         STORAGE_KEYS.customers,
         validatedBackup.data.customers,
       ],
-      
+
       [
         STORAGE_KEYS.settings,
         validatedBackup.data.settings,
@@ -330,6 +347,11 @@ function restore(
       [
         STORAGE_KEYS.financialTransactions,
         validatedBackup.data.financialTransactions,
+      ],
+
+      [
+        STORAGE_KEYS.suppliers,
+        validatedBackup.data.suppliers,
       ],
     ];
 

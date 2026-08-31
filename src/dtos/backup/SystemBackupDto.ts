@@ -293,6 +293,81 @@ const customerSchema =
         .min(1),
   });
 
+const supplierAddressSchema =
+  z.object({
+    postalCode:
+      z.string(),
+
+    street:
+      z.string(),
+
+    number:
+      z.string(),
+
+    complement:
+      z.string(),
+
+    neighborhood:
+      z.string(),
+
+    city:
+      z.string(),
+
+    state:
+      z.string(),
+  });
+
+const supplierSchema =
+  z.object({
+    id:
+      z.number()
+        .int()
+        .positive(),
+
+    legalName:
+      z.string()
+        .trim()
+        .min(2),
+
+    tradeName:
+      z.string(),
+
+    document:
+      z.string(),
+
+    stateRegistration:
+      z.string(),
+
+    contactName:
+      z.string(),
+
+    phone:
+      z.string(),
+
+    email:
+      z.string(),
+
+    address:
+      supplierAddressSchema,
+
+    notes:
+      z.string(),
+
+    status:
+      z.enum([
+        "active",
+        "inactive",
+      ]),
+
+    createdAt:
+      z.string()
+        .min(1),
+
+    updatedAt:
+      z.string()
+        .min(1),
+  });
+
 export const systemBackupDtoSchema =
   z
     .object({
@@ -349,6 +424,11 @@ export const systemBackupDtoSchema =
             z.number()
               .int()
               .nonnegative(),
+
+          suppliers:
+            z.number()
+              .int()
+              .nonnegative(),
         }),
 
       data:
@@ -380,6 +460,11 @@ export const systemBackupDtoSchema =
             z.array(
               customerSchema,
             ),
+
+          suppliers:
+            z.array(
+              supplierSchema,
+            ),
         }),
     })
     .superRefine(
@@ -410,6 +495,9 @@ export const systemBackupDtoSchema =
 
           customers:
             backup.data.customers.length,
+
+          suppliers:
+            backup.data.suppliers.length,
         };
 
         Object.entries(

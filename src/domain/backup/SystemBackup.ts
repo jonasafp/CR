@@ -22,6 +22,10 @@ import type {
   Customer,
 } from "../customers/Customer";
 
+import type {
+  Supplier,
+} from "../suppliers/Supplier";
+
 export const SYSTEM_BACKUP_IDENTIFIER =
   "gestor-facil-full-backup" as const;
 
@@ -30,54 +34,60 @@ export const CURRENT_BACKUP_SCHEMA_VERSION =
 
 export interface SystemBackupData {
   settings:
-    SystemSettings;
+  SystemSettings;
 
   products:
-    Product[];
+  Product[];
 
   inventoryMovements:
-    InventoryMovement[];
+  InventoryMovement[];
 
   sales:
-    Sale[];
+  Sale[];
 
   financialTransactions:
-    FinancialTransaction[];
+  FinancialTransaction[];
 
-  customers: 
-    Customer[];
+  customers:
+  Customer[];
+
+  suppliers:
+  Supplier[];
 }
 
 export interface SystemBackupSummary {
   products: number;
 
   inventoryMovements:
-    number;
+  number;
 
   sales: number;
 
   financialTransactions:
-    number;
+  number;
 
-  customers: 
-    number;
+  customers:
+  number;
+
+  suppliers:
+  number;
 }
 
 export interface SystemBackup {
   identifier:
-    typeof SYSTEM_BACKUP_IDENTIFIER;
+  typeof SYSTEM_BACKUP_IDENTIFIER;
 
   schemaVersion: number;
 
   application:
-    "Gestor Fácil";
+  "Gestor Fácil";
 
   createdAt: string;
   businessName: string;
 
   summary:
-    SystemBackupSummary;
+  SystemBackupSummary;
 
   data:
-    SystemBackupData;
+  SystemBackupData;
 }

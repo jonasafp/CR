@@ -865,6 +865,21 @@ export default function DataMaintenancePanel({
               }
 
             >
+
+              <div>
+                <strong>
+                  {
+                    pendingFullBackup
+                      .summary
+                      .suppliers
+                  }
+                </strong>
+
+                <span>
+                  Fornecedores
+                </span>
+              </div>
+
               <div>
                 <strong>
                   {
@@ -878,6 +893,7 @@ export default function DataMaintenancePanel({
                   Clientes
                 </span>
               </div>
+              
               <div>
                 <strong>
                   {
