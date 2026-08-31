@@ -16,4 +16,7 @@ export const STORAGE_KEYS = {
 
   settings:
     "gestor-facil:settings",
+
+  suppliers:
+    "gestor-facil:suppliers",
 } as const;
