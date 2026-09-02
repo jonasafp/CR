@@ -14,9 +14,12 @@ export const STORAGE_KEYS = {
   customers:
     "gestor-facil:customers",
 
-  settings:
-    "gestor-facil:settings",
-
   suppliers:
     "gestor-facil:suppliers",
+
+  purchases:
+    "gestor-facil:purchases",
+
+  settings:
+    "gestor-facil:settings",
 } as const;
