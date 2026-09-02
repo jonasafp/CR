@@ -30,7 +30,7 @@ export const businessConfig: BusinessConfig = {
     reports: true,
 
     customers: true,
-    suppliers: false,
+    suppliers: true,
     purchases: false,
     cashRegister: false,
   },
