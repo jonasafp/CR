@@ -26,6 +26,10 @@ import type {
   Supplier,
 } from "../suppliers/Supplier";
 
+import type {
+  Purchase,
+} from "../purchases/Purchase";
+
 export const SYSTEM_BACKUP_IDENTIFIER =
   "gestor-facil-full-backup" as const;
 
@@ -53,6 +57,9 @@ export interface SystemBackupData {
 
   suppliers:
   Supplier[];
+
+  purchases:
+  Purchase[];
 }
 
 export interface SystemBackupSummary {
@@ -61,7 +68,8 @@ export interface SystemBackupSummary {
   inventoryMovements:
   number;
 
-  sales: number;
+  sales:
+  number;
 
   financialTransactions:
   number;
@@ -70,6 +78,9 @@ export interface SystemBackupSummary {
   number;
 
   suppliers:
+  number;
+
+  purchases:
   number;
 }
 

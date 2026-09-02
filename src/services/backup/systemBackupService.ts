@@ -76,6 +76,14 @@ import type {
   Supplier,
 } from "../../domain/suppliers/Supplier";
 
+import {
+  initialPurchases,
+} from "../../data/purchasesMock";
+
+import type {
+  Purchase,
+} from "../../domain/purchases/Purchase";
+
 function readCurrentData(): SystemBackupData {
   return {
     settings:
@@ -120,6 +128,14 @@ function readCurrentData(): SystemBackupData {
         STORAGE_KEYS.suppliers,
         initialSuppliers,
       ),
+
+    purchases:
+      readLocalStorage<
+        Purchase[]
+      >(
+        STORAGE_KEYS.purchases,
+        initialPurchases,
+      ),
   };
 }
 
@@ -163,6 +179,9 @@ function create(): SystemBackup {
 
       suppliers:
         data.suppliers.length,
+
+      purchases:
+        data.purchases.length,
     },
 
     data,
@@ -352,6 +371,11 @@ function restore(
       [
         STORAGE_KEYS.suppliers,
         validatedBackup.data.suppliers,
+      ],
+
+      [
+        STORAGE_KEYS.purchases,
+        validatedBackup.data.purchases,
       ],
     ];
 

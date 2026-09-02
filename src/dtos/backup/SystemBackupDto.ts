@@ -378,6 +378,136 @@ const supplierSchema =
         .min(1),
   });
 
+const purchaseStatusSchema =
+  z.enum([
+    "pending",
+    "completed",
+    "cancelled",
+  ]);
+
+const purchaseItemSchema =
+  z.object({
+    id:
+      z.number()
+        .int()
+        .positive(),
+
+    productId:
+      z.number()
+        .int()
+        .positive(),
+
+    productCode:
+      z.string(),
+
+    productName:
+      z.string()
+        .trim()
+        .min(1),
+
+    unit:
+      stockUnitSchema,
+
+    quantity:
+      z.number()
+        .positive(),
+
+    unitCost:
+      z.number()
+        .nonnegative(),
+
+    total:
+      z.number()
+        .nonnegative(),
+  });
+
+const purchaseSchema =
+  z.object({
+    id:
+      z.number()
+        .int()
+        .positive(),
+
+    number:
+      z.string()
+        .trim()
+        .min(1),
+
+    status:
+      purchaseStatusSchema,
+
+    supplierId:
+      z.number()
+        .int()
+        .positive(),
+
+    supplierName:
+      z.string()
+        .trim()
+        .min(1),
+
+    documentNumber:
+      z.string(),
+
+    purchaseDate:
+      z.string()
+        .min(1),
+
+    items:
+      z.array(
+        purchaseItemSchema,
+      )
+        .min(1),
+
+    subtotal:
+      z.number()
+        .nonnegative(),
+
+    discount:
+      z.number()
+        .nonnegative(),
+
+    freight:
+      z.number()
+        .nonnegative(),
+
+    otherExpenses:
+      z.number()
+        .nonnegative(),
+
+    total:
+      z.number()
+        .nonnegative(),
+
+    notes:
+      z.string(),
+
+    createdAt:
+      z.string()
+        .min(1),
+
+    updatedAt:
+      z.string()
+        .min(1),
+
+    completedAt:
+      z.string()
+        .optional(),
+
+    cancelledAt:
+      z.string()
+        .optional(),
+
+    cancellationReason:
+      z.string()
+        .optional(),
+
+    createdBy:
+      z.string()
+        .trim()
+        .min(1),
+  });
+
 export const systemBackupDtoSchema =
   z
     .object({
@@ -439,6 +569,11 @@ export const systemBackupDtoSchema =
             z.number()
               .int()
               .nonnegative(),
+
+          purchases:
+            z.number()
+              .int()
+              .nonnegative(),
         }),
 
       data:
@@ -475,6 +610,11 @@ export const systemBackupDtoSchema =
             z.array(
               supplierSchema,
             ),
+
+          purchases:
+            z.array(
+              purchaseSchema,
+            ),
         }),
     })
     .superRefine(
@@ -508,6 +648,9 @@ export const systemBackupDtoSchema =
 
           suppliers:
             backup.data.suppliers.length,
+
+          purchases:
+            backup.data.purchases.length,
         };
 
         Object.entries(
