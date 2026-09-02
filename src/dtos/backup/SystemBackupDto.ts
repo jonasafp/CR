@@ -215,6 +215,16 @@ const inventoryMovementSchema =
         .string()
         .optional(),
 
+    purchaseId:
+      z.number()
+        .int()
+        .positive()
+        .optional(),
+
+    purchaseNumber:
+      z.string()
+        .optional(),
+
     createdAt:
       z
         .string()

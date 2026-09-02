@@ -44,6 +44,9 @@ export interface InventoryMovement {
   saleId?: number;
   saleNumber?: string;
 
+  purchaseId?: number;
+  purchaseNumber?: string;
+
   createdAt: string;
   createdBy: string;
 }
