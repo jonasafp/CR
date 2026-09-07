@@ -25,6 +25,12 @@
   background: #eff6ff;
 }
 
+.purchase {
+  color: #166534;
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+}
+
 .inventory {
   color: #7e22ce;
   border-color: #e9d5ff;

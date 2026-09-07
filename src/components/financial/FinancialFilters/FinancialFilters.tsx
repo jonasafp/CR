@@ -32,7 +32,7 @@ import styles from "./FinancialFilters.module.css";
 
 interface FinancialFiltersProps {
   filters:
-    FinancialFiltersState;
+  FinancialFiltersState;
 
   categories: string[];
 
@@ -47,146 +47,151 @@ interface FinancialFiltersProps {
 const typeOptions: SelectOption<
   FinancialTransactionTypeFilter
 >[] = [
-  {
-    value: "all",
-    label:
-      "Receitas e despesas",
-    icon: <Layers3 size={14} />,
-  },
-  {
-    value: "income",
-    label:
-      "Somente receitas",
-    icon: (
-      <CircleDollarSign
-        size={14}
-      />
-    ),
-  },
-  {
-    value: "expense",
-    label:
-      "Somente despesas",
-    icon: (
-      <WalletCards size={14} />
-    ),
-  },
-];
+    {
+      value: "all",
+      label:
+        "Receitas e despesas",
+      icon: <Layers3 size={14} />,
+    },
+    {
+      value: "income",
+      label:
+        "Somente receitas",
+      icon: (
+        <CircleDollarSign
+          size={14}
+        />
+      ),
+    },
+    {
+      value: "expense",
+      label:
+        "Somente despesas",
+      icon: (
+        <WalletCards size={14} />
+      ),
+    },
+  ];
 
 const statusOptions: SelectOption<
   FinancialTransactionStatusFilter
 >[] = [
-  {
-    value: "all",
-    label:
-      "Todas as situações",
-    icon: <Layers3 size={14} />,
-  },
-  {
-    value: "pending",
-    label: "Pendentes",
-    icon: (
-      <CalendarDays size={14} />
-    ),
-  },
-  {
-    value: "overdue",
-    label: "Vencidos",
-    icon: (
-      <CalendarDays size={14} />
-    ),
-  },
-  {
-    value: "received",
-    label: "Recebidos",
-    icon: (
-      <CircleDollarSign
-        size={14}
-      />
-    ),
-  },
-  {
-    value: "paid",
-    label: "Pagos",
-    icon: (
-      <WalletCards size={14} />
-    ),
-  },
-  {
-    value: "cancelled",
-    label: "Cancelados",
-    icon: <Receipt size={14} />,
-  },
-];
+    {
+      value: "all",
+      label:
+        "Todas as situações",
+      icon: <Layers3 size={14} />,
+    },
+    {
+      value: "pending",
+      label: "Pendentes",
+      icon: (
+        <CalendarDays size={14} />
+      ),
+    },
+    {
+      value: "overdue",
+      label: "Vencidos",
+      icon: (
+        <CalendarDays size={14} />
+      ),
+    },
+    {
+      value: "received",
+      label: "Recebidos",
+      icon: (
+        <CircleDollarSign
+          size={14}
+        />
+      ),
+    },
+    {
+      value: "paid",
+      label: "Pagos",
+      icon: (
+        <WalletCards size={14} />
+      ),
+    },
+    {
+      value: "cancelled",
+      label: "Cancelados",
+      icon: <Receipt size={14} />,
+    },
+  ];
 
 const sourceOptions: SelectOption<
   FinancialTransactionSourceFilter
 >[] = [
-  {
-    value: "all",
-    label:
-      "Todas as origens",
-    icon: <Layers3 size={14} />,
-  },
-  {
-    value: "manual",
-    label:
-      "Lançamento manual",
-    icon: <Receipt size={14} />,
-  },
-  {
-    value: "sale",
-    label: "Venda",
-    icon: (
-      <ShoppingCart size={14} />
-    ),
-  },
-  {
-    value: "inventory",
-    label: "Estoque",
-    icon: <Layers3 size={14} />,
-  },
-  {
-    value: "other",
-    label: "Outra origem",
-    icon: <Layers3 size={14} />,
-  },
-];
+    {
+      value: "all",
+      label:
+        "Todas as origens",
+      icon: <Layers3 size={14} />,
+    },
+    {
+      value: "manual",
+      label:
+        "Lançamento manual",
+      icon: <Receipt size={14} />,
+    },
+    {
+      value: "sale",
+      label: "Venda",
+      icon: (
+        <ShoppingCart size={14} />
+      ),
+    },
+    {
+      value: "purchase",
+      label: "Compra",
+      icon: <Layers3 size={14} />,
+    },
+    {
+      value: "inventory",
+      label: "Estoque",
+      icon: <Layers3 size={14} />,
+    },
+    {
+      value: "other",
+      label: "Outra origem",
+      icon: <Layers3 size={14} />,
+    },
+  ];
 
 const sortOptions: SelectOption<
   FinancialSortField
 >[] = [
-  {
-    value: "dueDate",
-    label:
-      "Data de vencimento",
-    icon: (
-      <CalendarDays size={14} />
-    ),
-  },
-  {
-    value: "createdAt",
-    label:
-      "Data de cadastro",
-    icon: (
-      <CalendarDays size={14} />
-    ),
-  },
-  {
-    value: "amount",
-    label: "Valor",
-    icon: (
-      <ArrowDownUp size={14} />
-    ),
-  },
-  {
-    value: "description",
-    label: "Descrição",
-    icon: (
-      <ArrowDownAZ size={14} />
-    ),
-  },
-];
+    {
+      value: "dueDate",
+      label:
+        "Data de vencimento",
+      icon: (
+        <CalendarDays size={14} />
+      ),
+    },
+    {
+      value: "createdAt",
+      label:
+        "Data de cadastro",
+      icon: (
+        <CalendarDays size={14} />
+      ),
+    },
+    {
+      value: "amount",
+      label: "Valor",
+      icon: (
+        <ArrowDownUp size={14} />
+      ),
+    },
+    {
+      value: "description",
+      label: "Descrição",
+      icon: (
+        <ArrowDownAZ size={14} />
+      ),
+    },
+  ];
 
 const directionOptions:
   SelectOption<
@@ -266,9 +271,9 @@ export default function FinancialFilters({
     filters.dateFrom !== "" ||
     filters.dateTo !== "" ||
     filters.sortBy !==
-      "dueDate" ||
+    "dueDate" ||
     filters.sortDirection !==
-      "desc";
+    "desc";
 
   return (
     <div

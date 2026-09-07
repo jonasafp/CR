@@ -219,10 +219,13 @@ function applyFilters(
 
             transaction
               .customerOrSupplier ??
-              "",
+            "",
 
             transaction.saleNumber ??
-              "",
+            "",
+
+            transaction.purchaseNumber ??
+            "",
 
             transaction.notes ?? "",
           ].join(" "),
@@ -238,19 +241,19 @@ function applyFilters(
         !filters.type ||
         filters.type === "all" ||
         transaction.type ===
-          filters.type;
+        filters.type;
 
       const matchesSource =
         !filters.source ||
         filters.source === "all" ||
         transaction.source ===
-          filters.source;
+        filters.source;
 
       const matchesCategory =
         !filters.category ||
         filters.category === "all" ||
         transaction.category ===
-          filters.category;
+        filters.category;
 
       let matchesStatus =
         true;
@@ -270,19 +273,19 @@ function applyFilters(
         } else {
           matchesStatus =
             transaction.status ===
-              filters.status;
+            filters.status;
         }
       }
 
       const matchesDateFrom =
         !filters.dateFrom ||
         transaction.dueDate >=
-          filters.dateFrom;
+        filters.dateFrom;
 
       const matchesDateTo =
         !filters.dateTo ||
         transaction.dueDate <=
-          filters.dateTo;
+        filters.dateTo;
 
       return (
         matchesSearch &&
@@ -362,13 +365,13 @@ function sortTransactions(
         firstValue < secondValue
           ? -1
           : firstValue >
-              secondValue
+            secondValue
             ? 1
             : 0;
 
       return (
         filters.sortDirection ===
-        "asc"
+          "asc"
           ? comparison
           : comparison * -1
       );
@@ -391,36 +394,36 @@ function createSummary(
     activeTransactions.filter(
       (transaction) =>
         transaction.type ===
-          "income" &&
+        "income" &&
         transaction.status ===
-          "received",
+        "received",
     );
 
   const paidTransactions =
     activeTransactions.filter(
       (transaction) =>
         transaction.type ===
-          "expense" &&
+        "expense" &&
         transaction.status ===
-          "paid",
+        "paid",
     );
 
   const pendingIncome =
     activeTransactions.filter(
       (transaction) =>
         transaction.type ===
-          "income" &&
+        "income" &&
         transaction.status ===
-          "pending",
+        "pending",
     );
 
   const pendingExpense =
     activeTransactions.filter(
       (transaction) =>
         transaction.type ===
-          "expense" &&
+        "expense" &&
         transaction.status ===
-          "pending",
+        "pending",
     );
 
   const overdueIncome =
@@ -515,7 +518,7 @@ function createSummary(
     balance:
       roundValue(
         totalIncome -
-          totalExpense,
+        totalExpense,
       ),
 
     accountsReceivable,
@@ -549,8 +552,7 @@ function createSummary(
 }
 
 export class MockFinancialRepository
-  implements FinancialRepository
-{
+  implements FinancialRepository {
   async list(
     filters:
       FinancialFilters,
@@ -582,7 +584,7 @@ export class MockFinancialRepository
 
         Math.ceil(
           totalItems /
-            filters.pageSize,
+          filters.pageSize,
         ),
       );
 
@@ -605,7 +607,7 @@ export class MockFinancialRepository
       sortedTransactions.slice(
         startIndex,
         startIndex +
-          filters.pageSize,
+        filters.pageSize,
       );
 
     return {
@@ -711,73 +713,73 @@ export class MockFinancialRepository
 
     const newTransaction:
       FinancialTransaction = {
-        id,
+      id,
 
-        number:
-          createTransactionNumber(
-            id,
-          ),
+      number:
+        createTransactionNumber(
+          id,
+        ),
 
-        type:
-          input.type,
+      type:
+        input.type,
 
-        status,
+      status,
 
-        source,
+      source,
 
-        description:
-          input.description.trim(),
+      description:
+        input.description.trim(),
 
-        category:
-          input.category.trim(),
+      category:
+        input.category.trim(),
 
-        amount:
-          validateAmount(
-            input.amount,
-          ),
+      amount:
+        validateAmount(
+          input.amount,
+        ),
 
-        dueDate:
-          input.dueDate,
+      dueDate:
+        input.dueDate,
 
-        paymentDate:
-          settled
-            ? input.paymentDate
-            : undefined,
+      paymentDate:
+        settled
+          ? input.paymentDate
+          : undefined,
 
-        paymentMethod:
-          settled
-            ? input.paymentMethod
-            : undefined,
+      paymentMethod:
+        settled
+          ? input.paymentMethod
+          : undefined,
 
-        customerOrSupplier:
-          input
-            .customerOrSupplier
-            ?.trim() ||
-          undefined,
+      customerOrSupplier:
+        input
+          .customerOrSupplier
+          ?.trim() ||
+        undefined,
 
-        notes:
-          input.notes?.trim() ||
-          undefined,
+      notes:
+        input.notes?.trim() ||
+        undefined,
 
-        saleId:
-          input.saleId,
+      saleId:
+        input.saleId,
 
-        saleNumber:
-          input.saleNumber?.trim() ||
-          undefined,
+      saleNumber:
+        input.saleNumber?.trim() ||
+        undefined,
 
-        inventoryMovementId:
-          input.inventoryMovementId,
+      inventoryMovementId:
+        input.inventoryMovementId,
 
-        createdAt:
-          now,
+      createdAt:
+        now,
 
-        updatedAt:
-          now,
+      updatedAt:
+        now,
 
-        createdBy:
-          "Administrador",
-      };
+      createdBy:
+        "Administrador",
+    };
 
     saveTransactions([
       newTransaction,
@@ -840,9 +842,9 @@ export class MockFinancialRepository
 
     const settled =
       input.status ===
-        "received" ||
+      "received" ||
       input.status ===
-        "paid";
+      "paid";
 
     if (
       settled &&
@@ -868,57 +870,57 @@ export class MockFinancialRepository
 
     const updatedTransaction:
       FinancialTransaction = {
-        ...transaction,
+      ...transaction,
 
-        type:
-          input.type,
+      type:
+        input.type,
 
-        status:
-          input.status,
+      status:
+        input.status,
 
-        description:
-          input.description.trim(),
+      description:
+        input.description.trim(),
 
-        category:
-          input.category.trim(),
+      category:
+        input.category.trim(),
 
-        amount:
-          validateAmount(
-            input.amount,
-          ),
+      amount:
+        validateAmount(
+          input.amount,
+        ),
 
-        dueDate:
-          input.dueDate,
+      dueDate:
+        input.dueDate,
 
-        paymentDate:
-          settled
-            ? input.paymentDate
-            : undefined,
+      paymentDate:
+        settled
+          ? input.paymentDate
+          : undefined,
 
-        paymentMethod:
-          settled
-            ? input.paymentMethod
-            : undefined,
+      paymentMethod:
+        settled
+          ? input.paymentMethod
+          : undefined,
 
-        customerOrSupplier:
-          input
-            .customerOrSupplier
-            ?.trim() ||
-          undefined,
+      customerOrSupplier:
+        input
+          .customerOrSupplier
+          ?.trim() ||
+        undefined,
 
-        notes:
-          input.notes?.trim() ||
-          undefined,
+      notes:
+        input.notes?.trim() ||
+        undefined,
 
-        updatedAt:
-          new Date().toISOString(),
-      };
+      updatedAt:
+        new Date().toISOString(),
+    };
 
     saveTransactions(
       transactions.map(
         (item) =>
           item.id ===
-          transaction.id
+            transaction.id
             ? updatedTransaction
             : item,
       ),
@@ -976,28 +978,28 @@ export class MockFinancialRepository
 
     const settledTransaction:
       FinancialTransaction = {
-        ...transaction,
+      ...transaction,
 
-        status:
-          getExpectedSettledStatus(
-            transaction.type,
-          ),
+      status:
+        getExpectedSettledStatus(
+          transaction.type,
+        ),
 
-        paymentDate:
-          input.paymentDate,
+      paymentDate:
+        input.paymentDate,
 
-        paymentMethod:
-          input.paymentMethod,
+      paymentMethod:
+        input.paymentMethod,
 
-        updatedAt:
-          new Date().toISOString(),
-      };
+      updatedAt:
+        new Date().toISOString(),
+    };
 
     saveTransactions(
       transactions.map(
         (item) =>
           item.id ===
-          transaction.id
+            transaction.id
             ? settledTransaction
             : item,
       ),
@@ -1065,28 +1067,28 @@ export class MockFinancialRepository
 
     const cancelledTransaction:
       FinancialTransaction = {
-        ...transaction,
+      ...transaction,
 
-        status:
-          "cancelled",
+      status:
+        "cancelled",
 
-        notes: [
-          transaction.notes,
+      notes: [
+        transaction.notes,
 
-          `Cancelamento: ${reason}`,
-        ]
-          .filter(Boolean)
-          .join("\n"),
+        `Cancelamento: ${reason}`,
+      ]
+        .filter(Boolean)
+        .join("\n"),
 
-        updatedAt:
-          new Date().toISOString(),
-      };
+      updatedAt:
+        new Date().toISOString(),
+    };
 
     saveTransactions(
       transactions.map(
         (item) =>
           item.id ===
-          transaction.id
+            transaction.id
             ? cancelledTransaction
             : item,
       ),
@@ -1109,7 +1111,7 @@ export class MockFinancialRepository
 
           status:
             filters?.status ===
-            "overdue"
+              "overdue"
               ? "overdue"
               : undefined,
         },
@@ -1136,7 +1138,7 @@ export class MockFinancialRepository
 
           status:
             filters?.status ===
-            "overdue"
+              "overdue"
               ? "overdue"
               : undefined,
         },
@@ -1172,9 +1174,9 @@ export class MockFinancialRepository
                 .filter(
                   (transaction) =>
                     transaction.type ===
-                      "income" &&
+                    "income" &&
                     transaction.status ===
-                      "received",
+                    "received",
                 )
                 .reduce(
                   (
@@ -1193,9 +1195,9 @@ export class MockFinancialRepository
                 .filter(
                   (transaction) =>
                     transaction.type ===
-                      "expense" &&
+                    "expense" &&
                     transaction.status ===
-                      "paid",
+                    "paid",
                 )
                 .reduce(
                   (
@@ -1218,7 +1220,7 @@ export class MockFinancialRepository
             balance:
               roundValue(
                 income -
-                  expense,
+                expense,
               ),
 
             transactionCount:
@@ -1254,7 +1256,7 @@ export class MockFinancialRepository
           (transaction) =>
             !type ||
             transaction.type ===
-              type,
+            type,
         )
         .map(
           (transaction) =>
@@ -1264,21 +1266,21 @@ export class MockFinancialRepository
     const defaultCategories =
       type === "income"
         ? [
-            ...financialCategories
-              .income,
-          ]
+          ...financialCategories
+            .income,
+        ]
         : type === "expense"
           ? [
-              ...financialCategories
-                .expense,
-            ]
+            ...financialCategories
+              .expense,
+          ]
           : [
-              ...financialCategories
-                .income,
+            ...financialCategories
+              .income,
 
-              ...financialCategories
-                .expense,
-            ];
+            ...financialCategories
+              .expense,
+          ];
 
     return Array.from(
       new Set([

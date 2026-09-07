@@ -2,6 +2,7 @@ import {
   Boxes,
   CircleEllipsis,
   PencilLine,
+  ShoppingBasket,
   ShoppingCart,
 } from "lucide-react";
 
@@ -26,6 +27,9 @@ const sourceLabels: Record<
   sale:
     "Venda",
 
+  purchase:
+    "Compra",
+
   inventory:
     "Estoque",
 
@@ -39,15 +43,19 @@ export default function FinancialSourceBadge({
   const Icon =
     source === "sale"
       ? ShoppingCart
-      : source === "inventory"
-        ? Boxes
-        : source === "manual"
-          ? PencilLine
-          : CircleEllipsis;
+      : source === "purchase"
+        ? ShoppingBasket
+        : source === "inventory"
+          ? Boxes
+          : source === "manual"
+            ? PencilLine
+            : CircleEllipsis;
 
   return (
     <span
-      className={`${styles.badge} ${styles[source]}`}
+      className={
+        `${styles.badge} ${styles[source]}`
+      }
     >
       <Icon size={13} />
 

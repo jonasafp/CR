@@ -16,6 +16,14 @@ import {
 } from "../../services/purchases/purchaseService";
 
 import {
+  synchronizePurchaseWithFinancial,
+} from "../../services/financial/financialPurchaseSyncService";
+
+import {
+  reportQueryKeys,
+} from "../reports/useReportQuery";
+
+import {
   purchaseQueryKeys,
 } from "./usePurchaseQuery";
 
@@ -101,13 +109,38 @@ export function useCompletePurchaseMutation() {
         input,
       ),
 
-    onSuccess: (
+    onSuccess: async (
       purchase,
-    ) =>
-      updatePurchaseCache(
-        queryClient,
+    ) => {
+      synchronizePurchaseWithFinancial(
         purchase,
-      ),
+      );
+
+      queryClient.setQueryData(
+        purchaseQueryKeys.detail(
+          purchase.id,
+        ),
+        purchase,
+      );
+
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey:
+            purchaseQueryKeys.all,
+        }),
+
+        queryClient.invalidateQueries({
+          queryKey: [
+            "financial",
+          ],
+        }),
+
+        queryClient.invalidateQueries({
+          queryKey:
+            reportQueryKeys.all,
+        }),
+      ]);
+    },
   });
 }
 
@@ -124,12 +157,37 @@ export function useCancelPurchaseMutation() {
         input,
       ),
 
-    onSuccess: (
+    onSuccess: async (
       purchase,
-    ) =>
-      updatePurchaseCache(
-        queryClient,
+    ) => {
+      synchronizePurchaseWithFinancial(
         purchase,
-      ),
+      );
+
+      queryClient.setQueryData(
+        purchaseQueryKeys.detail(
+          purchase.id,
+        ),
+        purchase,
+      );
+
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey:
+            purchaseQueryKeys.all,
+        }),
+
+        queryClient.invalidateQueries({
+          queryKey: [
+            "financial",
+          ],
+        }),
+
+        queryClient.invalidateQueries({
+          queryKey:
+            reportQueryKeys.all,
+        }),
+      ]);
+    },
   });
 }

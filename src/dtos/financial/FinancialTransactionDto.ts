@@ -20,6 +20,7 @@ export const financialTransactionSourceSchema =
   z.enum([
     "manual",
     "sale",
+    "purchase",
     "inventory",
     "other",
   ]);
@@ -130,6 +131,16 @@ export const financialTransactionDtoSchema =
     saleNumber:
       optionalTextSchema,
 
+    purchaseId:
+      z
+        .number()
+        .int()
+        .positive()
+        .optional(),
+
+    purchaseNumber:
+      optionalTextSchema,
+
     inventoryMovementId:
       z
         .number()
@@ -221,6 +232,16 @@ export const createFinancialTransactionDtoSchema =
       saleNumber:
         optionalTextSchema,
 
+      purchaseId:
+        z
+          .number()
+          .int()
+          .positive()
+          .optional(),
+
+      purchaseNumber:
+        optionalTextSchema,
+
       inventoryMovementId:
         z
           .number()
@@ -235,15 +256,15 @@ export const createFinancialTransactionDtoSchema =
       ) => {
         const isSettled =
           transaction.status ===
-            "received" ||
+          "received" ||
           transaction.status ===
-            "paid";
+          "paid";
 
         if (
           transaction.type ===
-            "income" &&
+          "income" &&
           transaction.status ===
-            "paid"
+          "paid"
         ) {
           context.addIssue({
             code:
@@ -260,9 +281,9 @@ export const createFinancialTransactionDtoSchema =
 
         if (
           transaction.type ===
-            "expense" &&
+          "expense" &&
           transaction.status ===
-            "received"
+          "received"
         ) {
           context.addIssue({
             code:
@@ -382,9 +403,9 @@ export const updateFinancialTransactionDtoSchema =
       ) => {
         if (
           transaction.type ===
-            "income" &&
+          "income" &&
           transaction.status ===
-            "paid"
+          "paid"
         ) {
           context.addIssue({
             code:
@@ -401,9 +422,9 @@ export const updateFinancialTransactionDtoSchema =
 
         if (
           transaction.type ===
-            "expense" &&
+          "expense" &&
           transaction.status ===
-            "received"
+          "received"
         ) {
           context.addIssue({
             code:

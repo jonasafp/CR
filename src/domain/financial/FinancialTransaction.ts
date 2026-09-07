@@ -11,6 +11,7 @@ export type FinancialTransactionStatus =
 export type FinancialTransactionSource =
   | "manual"
   | "sale"
+  | "purchase"
   | "inventory"
   | "other";
 
@@ -29,13 +30,13 @@ export interface FinancialTransaction {
   number: string;
 
   type:
-    FinancialTransactionType;
+  FinancialTransactionType;
 
   status:
-    FinancialTransactionStatus;
+  FinancialTransactionStatus;
 
   source:
-    FinancialTransactionSource;
+  FinancialTransactionSource;
 
   description: string;
   category: string;
@@ -47,7 +48,7 @@ export interface FinancialTransaction {
   paymentDate?: string;
 
   paymentMethod?:
-    FinancialPaymentMethod;
+  FinancialPaymentMethod;
 
   customerOrSupplier?: string;
 
@@ -55,6 +56,9 @@ export interface FinancialTransaction {
 
   saleId?: number;
   saleNumber?: string;
+
+  purchaseId?: number;
+  purchaseNumber?: string;
 
   inventoryMovementId?: number;
 
@@ -66,7 +70,7 @@ export interface FinancialTransaction {
 
 export interface CreateFinancialTransactionInput {
   type:
-    FinancialTransactionType;
+  FinancialTransactionType;
 
   description: string;
   category: string;
@@ -76,22 +80,25 @@ export interface CreateFinancialTransactionInput {
   dueDate: string;
 
   status?:
-    FinancialTransactionStatus;
+  FinancialTransactionStatus;
 
   paymentDate?: string;
 
   paymentMethod?:
-    FinancialPaymentMethod;
+  FinancialPaymentMethod;
 
   customerOrSupplier?: string;
 
   notes?: string;
 
   source?:
-    FinancialTransactionSource;
+  FinancialTransactionSource;
 
   saleId?: number;
   saleNumber?: string;
+
+  purchaseId?: number;
+  purchaseNumber?: string;
 
   inventoryMovementId?: number;
 }
@@ -100,7 +107,7 @@ export interface UpdateFinancialTransactionInput {
   transactionId: number;
 
   type:
-    FinancialTransactionType;
+  FinancialTransactionType;
 
   description: string;
   category: string;
@@ -110,12 +117,12 @@ export interface UpdateFinancialTransactionInput {
   dueDate: string;
 
   status:
-    FinancialTransactionStatus;
+  FinancialTransactionStatus;
 
   paymentDate?: string;
 
   paymentMethod?:
-    FinancialPaymentMethod;
+  FinancialPaymentMethod;
 
   customerOrSupplier?: string;
 
@@ -128,7 +135,7 @@ export interface SettleFinancialTransactionInput {
   paymentDate: string;
 
   paymentMethod:
-    FinancialPaymentMethod;
+  FinancialPaymentMethod;
 }
 
 export interface CancelFinancialTransactionInput {
@@ -188,9 +195,9 @@ export function isFinancialTransactionSettled(
 ): boolean {
   return (
     transaction.status ===
-      "received" ||
+    "received" ||
     transaction.status ===
-      "paid"
+    "paid"
   );
 }
 
