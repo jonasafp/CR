@@ -1,5 +1,6 @@
 import {
   Edit3,
+  Eye,
   Mail,
   MapPin,
   Phone,
@@ -39,6 +40,7 @@ import LoadingState from "../../components/common/LoadingState/LoadingState";
 import Pagination from "../../components/common/Pagination/Pagination";
 import StatisticCard from "../../components/common/StatisticCard/StatisticCard";
 import TableCard from "../../components/common/TableCard/TableCard";
+import SupplierPurchaseHistoryModal from "../../components/suppliers/SupplierPurchaseHistoryModal/SupplierPurchaseHistoryModal";
 
 import {
   getSupplierDisplayName,
@@ -250,6 +252,13 @@ export default function Fornecedores() {
   const isSaving =
     createMutation.isPending ||
     updateMutation.isPending;
+
+  const [
+    historySupplier,
+    setHistorySupplier,
+  ] = useState<Supplier | null>(
+    null,
+  );
 
   function openCreateForm() {
     setEditingSupplier(
@@ -656,7 +665,7 @@ export default function Fornecedores() {
 
                     status:
                       event.target.value as
-                        typeof current.status,
+                      typeof current.status,
 
                     page:
                       1,
@@ -692,7 +701,7 @@ export default function Fornecedores() {
 
                     sortBy:
                       event.target.value as
-                        typeof current.sortBy,
+                      typeof current.sortBy,
 
                     page:
                       1,
@@ -742,7 +751,7 @@ export default function Fornecedores() {
           {!suppliersQuery.isLoading &&
             !suppliersQuery.isError &&
             suppliers.length ===
-              0 && (
+            0 && (
               <EmptyState
                 icon={Truck}
                 title="Nenhum fornecedor encontrado"
@@ -767,7 +776,7 @@ export default function Fornecedores() {
           {!suppliersQuery.isLoading &&
             !suppliersQuery.isError &&
             suppliers.length >
-              0 && (
+            0 && (
               <>
                 <div
                   className={
@@ -882,6 +891,18 @@ export default function Fornecedores() {
                                   styles.rowActions
                                 }
                               >
+                                <button
+                                  type="button"
+                                  title="Ver histórico de compras"
+                                  onClick={() =>
+                                    setHistorySupplier(
+                                      supplier,
+                                    )
+                                  }
+                                >
+                                  <Eye size={15} />
+                                </button>
+
                                 <button
                                   type="button"
                                   title="Editar fornecedor"
@@ -1372,6 +1393,17 @@ export default function Fornecedores() {
         </div>
       )}
 
+      <SupplierPurchaseHistoryModal
+        supplier={
+          historySupplier
+        }
+        onClose={() =>
+          setHistorySupplier(
+            null,
+          )
+        }
+      />
+
       <ConfirmDialog
         isOpen={
           statusSupplier !==
@@ -1385,12 +1417,11 @@ export default function Fornecedores() {
         }
         description={
           statusSupplier
-            ? `O fornecedor “${getSupplierDisplayName(statusSupplier)}” será ${
-                statusSupplier.status ===
-                  "active"
-                  ? "inativado e deixará de estar disponível para novas compras"
-                  : "ativado novamente para uso no sistema"
-              }.`
+            ? `O fornecedor “${getSupplierDisplayName(statusSupplier)}” será ${statusSupplier.status ===
+              "active"
+              ? "inativado e deixará de estar disponível para novas compras"
+              : "ativado novamente para uso no sistema"
+            }.`
             : ""
         }
         confirmLabel="Confirmar alteração"
