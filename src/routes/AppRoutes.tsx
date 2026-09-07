@@ -11,6 +11,7 @@ import Relatorios from "../pages/Relatorios/Relatorios";
 import Vendas from "../pages/Vendas/Vendas";
 import Clientes from "../pages/Clientes/Clientes";
 import Fornecedores from "../pages/Fornecedores/Fornecedores";
+import Compras from "../pages/Compras/Compras";
 
 export default function AppRoutes() {
   return (
@@ -25,6 +26,7 @@ export default function AppRoutes() {
         <Route path="financeiro" element={<Financeiro />} />
         <Route path="relatorios" element={<Relatorios />} />
         <Route path="configuracoes" element={<Configuracoes />} />
+        <Route path="compras" element={<Compras />} />
         <Route path="fornecedores" element={<Fornecedores />} />
       </Route>
 

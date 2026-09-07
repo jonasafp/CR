@@ -31,7 +31,7 @@ export const businessConfig: BusinessConfig = {
 
     customers: true,
     suppliers: true,
-    purchases: false,
+    purchases: true,
     cashRegister: false,
   },
 };
