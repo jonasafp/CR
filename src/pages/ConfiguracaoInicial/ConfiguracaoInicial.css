@@ -1,0 +1,145 @@
+.initial-company-page {
+  align-items: center;
+  background: var(--background);
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+  padding: var(--space-7);
+}
+
+.initial-company-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  max-width: 600px;
+  padding: 42px;
+  width: 100%;
+}
+
+.initial-company-card header span {
+  background: var(--primary-light);
+  border-radius: 999px;
+  color: var(--primary);
+  display: inline-flex;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 8px 12px;
+  text-transform: uppercase;
+}
+
+.initial-company-card header h1 {
+  color: var(--text);
+  font-size: 30px;
+  margin: 17px 0 8px;
+}
+
+.initial-company-card header p {
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.65;
+  margin: 0 0 28px;
+}
+
+.initial-company-card form {
+  display: grid;
+  gap: 18px;
+}
+
+.initial-company-card label {
+  color: var(--text);
+  display: grid;
+  font-size: 13px;
+  font-weight: 600;
+  gap: 8px;
+}
+
+.initial-company-card input {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font: inherit;
+  height: 48px;
+  outline: none;
+  padding: 0 14px;
+  transition: var(--transition);
+}
+
+.initial-company-card input:focus {
+  border-color: var(--primary);
+  box-shadow:
+    0 0 0 3px
+    rgb(37 99 235 / 12%);
+}
+
+.initial-company-card input::placeholder {
+  color: var(--text-light);
+}
+
+.initial-company-card form > button {
+  background: var(--primary);
+  border: 0;
+  border-radius: var(--radius-sm);
+  box-shadow:
+    0 8px 18px
+    rgb(37 99 235 / 22%);
+  color: var(--white);
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  height: 48px;
+  transition: var(--transition);
+}
+
+.initial-company-card form > button:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+.initial-company-card button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+  transform: none;
+}
+
+.initial-company-error {
+  background: var(--danger-light);
+  border-radius: var(--radius-sm);
+  color: var(--danger);
+  font-size: 13px;
+  margin: 0;
+  padding: 11px 12px;
+}
+
+.initial-company-exit {
+  background: transparent;
+  border: 0;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: block;
+  font: inherit;
+  font-size: 13px;
+  margin: 20px auto 0;
+  transition: var(--transition);
+}
+
+.initial-company-exit:hover {
+  color: var(--primary);
+}
+
+@media (max-width: 600px) {
+  .initial-company-page {
+    padding: 16px;
+  }
+
+  .initial-company-card {
+    padding: 30px 24px;
+  }
+
+  .initial-company-card header h1 {
+    font-size: 25px;
+  }
+}

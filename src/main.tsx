@@ -20,11 +20,12 @@ import {
   queryClient,
 } from "./application/query/queryClient";
 
+import AuthProvider from "./contexts/AuthContext/AuthProvider";
 import InventoryProvider from "./contexts/InventoryContext/InventoryProvider";
+import NotificationProvider from "./contexts/NotificationContext/NotificationProvider";
 import ProductsProvider from "./contexts/ProductsContext/ProductsProvider";
 import SettingsProvider from "./contexts/SettingsContext/SettingsProvider";
 
-import NotificationProvider from "./contexts/NotificationContext/NotificationProvider";
 import AppErrorBoundary from "./components/common/AppErrorBoundary/AppErrorBoundary";
 
 import "./styles/reset.css";
@@ -40,17 +41,21 @@ createRoot(
   <StrictMode>
     <BrowserRouter>
       <QueryClientProvider
-        client={queryClient}
+        client={
+          queryClient
+        }
       >
         <NotificationProvider>
           <AppErrorBoundary>
-            <SettingsProvider>
-              <ProductsProvider>
-                <InventoryProvider>
-                  <App />
-                </InventoryProvider>
-              </ProductsProvider>
-            </SettingsProvider>
+            <AuthProvider>
+              <SettingsProvider>
+                <ProductsProvider>
+                  <InventoryProvider>
+                    <App />
+                  </InventoryProvider>
+                </ProductsProvider>
+              </SettingsProvider>
+            </AuthProvider>
           </AppErrorBoundary>
         </NotificationProvider>
       </QueryClientProvider>
