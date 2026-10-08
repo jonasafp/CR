@@ -21,6 +21,7 @@ import {
 } from "./application/query/queryClient";
 
 import AuthProvider from "./contexts/AuthContext/AuthProvider";
+import CompanyProvider from "./contexts/CompanyContext/CompanyProvider";
 import InventoryProvider from "./contexts/InventoryContext/InventoryProvider";
 import NotificationProvider from "./contexts/NotificationContext/NotificationProvider";
 import ProductsProvider from "./contexts/ProductsContext/ProductsProvider";
@@ -48,13 +49,15 @@ createRoot(
         <NotificationProvider>
           <AppErrorBoundary>
             <AuthProvider>
-              <SettingsProvider>
-                <ProductsProvider>
-                  <InventoryProvider>
-                    <App />
-                  </InventoryProvider>
-                </ProductsProvider>
-              </SettingsProvider>
+              <CompanyProvider>
+                <SettingsProvider>
+                  <ProductsProvider>
+                    <InventoryProvider>
+                      <App />
+                    </InventoryProvider>
+                  </ProductsProvider>
+                </SettingsProvider>
+              </CompanyProvider>
             </AuthProvider>
           </AppErrorBoundary>
         </NotificationProvider>

@@ -19,10 +19,16 @@ import {
 } from "../../services/auth/authService";
 
 import "./ConfiguracaoInicial.css";
+import useCompany from "../../contexts/CompanyContext/useCompany";
 
 export default function ConfiguracaoInicial() {
   const navigate =
     useNavigate();
+
+  const {
+    refreshCompany,
+  } =
+    useCompany();
 
   const [
     legalName,
@@ -112,6 +118,8 @@ export default function ConfiguracaoInicial() {
         document,
       });
 
+      await refreshCompany();
+
       navigate(
         "/",
         {
@@ -120,7 +128,7 @@ export default function ConfiguracaoInicial() {
         },
       );
     } catch (
-      error
+    error
     ) {
       setErrorMessage(
         getAuthErrorMessage(
