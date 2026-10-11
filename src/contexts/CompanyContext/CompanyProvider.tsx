@@ -130,18 +130,7 @@ export default function CompanyProvider({
                 "companies",
               )
               .select(
-                [
-                  "id",
-                  "legal_name",
-                  "trade_name",
-                  "document",
-                  "email",
-                  "phone",
-                  "city",
-                  "state",
-                  "logo_url",
-                  "status",
-                ].join(","),
+                "id, legal_name, trade_name, document, email, phone, city, state, logo_url, status",
               )
               .eq(
                 "id",

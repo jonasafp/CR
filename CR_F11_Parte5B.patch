@@ -1,0 +1,1989 @@
+diff --git a/src/components/inventory/InventoryMovementModal/InventoryMovementModal.tsx b/src/components/inventory/InventoryMovementModal/InventoryMovementModal.tsx
+index 44e8d87..3a0636a 100644
+--- a/src/components/inventory/InventoryMovementModal/InventoryMovementModal.tsx
++++ b/src/components/inventory/InventoryMovementModal/InventoryMovementModal.tsx
+@@ -214,7 +214,7 @@ export default function InventoryMovementModal({
+   }
+ 
+   function handleProductChange(value: string) {
+-    const productId = Number(value);
++    const productId = value;
+ 
+     const product = products.find(
+       (item) => item.id === productId,
+diff --git a/src/components/products/ProductFormModal/ProductFormModal.tsx b/src/components/products/ProductFormModal/ProductFormModal.tsx
+index b2a5e1b..46fa1c5 100644
+--- a/src/components/products/ProductFormModal/ProductFormModal.tsx
++++ b/src/components/products/ProductFormModal/ProductFormModal.tsx
+@@ -46,7 +46,7 @@ interface ProductFormModalProps {
+   allowNegativeStock: boolean;
+ 
+   onClose: () => void;
+-  onSubmit: (data: ProductFormData) => void;
++  onSubmit: (data: ProductFormData) => void | Promise<void>;
+ }
+ 
+ interface FormErrors {
+@@ -715,4 +715,4 @@ export default function ProductFormModal({
+       </div>
+     </div>
+   );
+-}
+\ No newline at end of file
++}
+diff --git a/src/components/reports/ReportFilters/ReportFilters.tsx b/src/components/reports/ReportFilters/ReportFilters.tsx
+index 1232170..6398335 100644
+--- a/src/components/reports/ReportFilters/ReportFilters.tsx
++++ b/src/components/reports/ReportFilters/ReportFilters.tsx
+@@ -884,7 +884,7 @@ export default function ReportFilters({
+ 
+               value === "all"
+                 ? null
+-                : Number(value),
++                : value,
+             )
+           }
+         />
+@@ -1090,4 +1090,4 @@ export default function ReportFilters({
+       </footer>
+     </section>
+   );
+-}
+\ No newline at end of file
++}
+diff --git a/src/contexts/CompanyContext/CompanyProvider.tsx b/src/contexts/CompanyContext/CompanyProvider.tsx
+index 60a9650..8ea3388 100644
+--- a/src/contexts/CompanyContext/CompanyProvider.tsx
++++ b/src/contexts/CompanyContext/CompanyProvider.tsx
+@@ -130,18 +130,7 @@ export default function CompanyProvider({
+                 "companies",
+               )
+               .select(
+-                [
+-                  "id",
+-                  "legal_name",
+-                  "trade_name",
+-                  "document",
+-                  "email",
+-                  "phone",
+-                  "city",
+-                  "state",
+-                  "logo_url",
+-                  "status",
+-                ].join(","),
++                "id, legal_name, trade_name, document, email, phone, city, state, logo_url, status",
+               )
+               .eq(
+                 "id",
+@@ -256,4 +245,4 @@ export default function CompanyProvider({
+       {children}
+     </CompanyContext.Provider>
+   );
+-}
+\ No newline at end of file
++}
+diff --git a/src/contexts/ProductsContext/ProductsProvider.tsx b/src/contexts/ProductsContext/ProductsProvider.tsx
+index 2cf36a6..625b912 100644
+--- a/src/contexts/ProductsContext/ProductsProvider.tsx
++++ b/src/contexts/ProductsContext/ProductsProvider.tsx
+@@ -1,312 +1,250 @@
+-import {
+-  useCallback,
+-  useEffect,
+-  useMemo,
+-  useState,
+-} from "react";
+-
++import { useCallback, useEffect, useMemo, useState } from "react";
+ import type { ReactNode } from "react";
+ 
+ import { STORAGE_KEYS } from "../../constants/storageKeys";
+-
++import useCompany from "../CompanyContext/useCompany";
++import { useSettings } from "../../hooks/useSettings";
+ import {
+-  products as initialProducts,
+-} from "../../data/mock";
+-
+-import {
+-  readLocalStorage,
+-  removeLocalStorage,
+-  writeLocalStorage,
+-} from "../../services/storage/localStorageService";
+-
+-import type {
+-  Product,
+-  ProductFormData,
+-} from "../../types/Product";
+-
+-import {
+-  ProductsContext,
+-} from "./productsContext";
+-
+-import {
+-  useSettings,
+-} from "../../hooks/useSettings";
++  createProduct as createProductInDatabase,
++  deleteProduct as deleteProductInDatabase,
++  listProducts,
++  updateProduct as updateProductInDatabase,
++  updateProductFields,
++} from "../../repositories/products/SupabaseProductsRepository";
++import { writeLocalStorage } from "../../services/storage/localStorageService";
++import type { Product, ProductFormData } from "../../types/Product";
++import { getErrorMessage } from "../../utils/errors";
++import { ProductsContext } from "./productsContext";
+ 
+ interface ProductsProviderProps {
+   children: ReactNode;
+ }
+ 
+-function createProductId(
+-  products: Product[],
+-): number {
+-  if (products.length === 0) {
+-    return 1;
+-  }
++export default function ProductsProvider({ children }: ProductsProviderProps) {
++  const { companyId } = useCompany();
++  const { settings } = useSettings();
++  const [products, setProducts] = useState<Product[]>([]);
++  const [isLoading, setIsLoading] = useState(true);
++  const [error, setError] = useState("");
++
++  const refreshProducts = useCallback(async () => {
++    if (!companyId) {
++      setProducts([]);
++      setError("");
++      setIsLoading(false);
++      return;
++    }
++
++    setIsLoading(true);
++    setError("");
+ 
+-  return (
+-    Math.max(
+-      ...products.map(
+-        (product) => product.id,
+-      ),
+-    ) + 1
+-  );
+-}
++    try {
++      setProducts(await listProducts(companyId));
++    } catch (loadError) {
++      setProducts([]);
++      setError(getErrorMessage(loadError));
++    } finally {
++      setIsLoading(false);
++    }
++  }, [companyId]);
+ 
+-export default function ProductsProvider({
+-  children,
+-}: ProductsProviderProps) {
+-  const {
+-    settings,
+-  } = useSettings();
+-
+-  const [products, setProducts] =
+-    useState<Product[]>(() =>
+-      readLocalStorage<Product[]>(
+-        STORAGE_KEYS.products,
+-        initialProducts,
+-      ),
+-    );
++  useEffect(() => {
++    void refreshProducts();
++  }, [refreshProducts]);
+ 
++  // Ponte temporária para vendas, compras e backup, que ainda usam o armazenamento local.
+   useEffect(() => {
+-    writeLocalStorage(
+-      STORAGE_KEYS.products,
+-      products,
+-    );
++    writeLocalStorage(STORAGE_KEYS.products, products);
+   }, [products]);
+ 
+   useEffect(() => {
+-    function handleProductsUpdated(
+-      event: Event,
+-    ) {
+-      const customEvent =
+-        event as CustomEvent<Product[]>;
+-
+-      if (
+-        Array.isArray(
+-          customEvent.detail,
+-        )
+-      ) {
+-        setProducts(
+-          customEvent.detail,
++    function handleProductsUpdated(event: Event) {
++      if (!companyId) return;
++
++      const nextProducts = (event as CustomEvent<Product[]>).detail;
++      if (!Array.isArray(nextProducts)) return;
++
++      setProducts((currentProducts) => {
++        const currentById = new Map(
++          currentProducts.map((product) => [product.id, product]),
+         );
+-      }
+-    }
+ 
+-    window.addEventListener(
+-      "gestor-facil:products-updated",
+-      handleProductsUpdated,
+-    );
++        for (const product of nextProducts) {
++          const currentProduct = currentById.get(product.id);
++
++          if (
++            currentProduct &&
++            (currentProduct.stockQuantity !== product.stockQuantity ||
++              currentProduct.purchasePrice !== product.purchasePrice)
++          ) {
++            void updateProductFields(companyId, product.id, {
++              stock_quantity: product.stockQuantity,
++              purchase_price: product.purchasePrice,
++            }).catch(() => void refreshProducts());
++          }
++        }
+ 
+-    return () => {
++        return nextProducts;
++      });
++    }
++
++    window.addEventListener("gestor-facil:products-updated", handleProductsUpdated);
++    return () =>
+       window.removeEventListener(
+         "gestor-facil:products-updated",
+         handleProductsUpdated,
+       );
+-    };
+-  }, []);
++  }, [companyId, refreshProducts]);
+ 
+   const createProduct = useCallback(
+-    (data: ProductFormData): Product => {
+-      const now = new Date().toISOString();
+-
+-      const newProduct: Product = {
+-        id: createProductId(products),
+-
+-        ...data,
+-
+-        soldQuantity: 0,
+-
+-        createdAt: now,
+-        updatedAt: now,
+-      };
++    async (data: ProductFormData): Promise<Product> => {
++      if (!companyId) throw new Error("Nenhuma empresa ativa foi encontrada.");
+ 
+-      setProducts((currentProducts) => [
+-        newProduct,
+-        ...currentProducts,
+-      ]);
++      const newProduct = await createProductInDatabase(
++        companyId,
++        data,
++        settings.inventory.allowNegativeStock,
++      );
+ 
++      setProducts((currentProducts) =>
++        [newProduct, ...currentProducts].sort((a, b) =>
++          a.name.localeCompare(b.name, "pt-BR"),
++        ),
++      );
+       return newProduct;
+     },
+-    [products],
++    [companyId, settings.inventory.allowNegativeStock],
+   );
+ 
+   const updateProduct = useCallback(
+-    (
+-      productId: number,
+-      data: ProductFormData,
+-    ) => {
++    async (productId: string, data: ProductFormData): Promise<Product> => {
++      if (!companyId) throw new Error("Nenhuma empresa ativa foi encontrada.");
++
++      const updatedProduct = await updateProductInDatabase(
++        companyId,
++        productId,
++        data,
++        settings.inventory.allowNegativeStock,
++      );
++
+       setProducts((currentProducts) =>
+-        currentProducts.map((product) =>
+-          product.id === productId
+-            ? {
+-              ...product,
+-              ...data,
+-              updatedAt:
+-                new Date().toISOString(),
+-            }
+-            : product,
+-        ),
++        currentProducts
++          .map((product) =>
++            product.id === productId ? updatedProduct : product,
++          )
++          .sort((a, b) => a.name.localeCompare(b.name, "pt-BR")),
+       );
++      return updatedProduct;
+     },
+-    [],
++    [companyId, settings.inventory.allowNegativeStock],
+   );
+ 
+   const deleteProduct = useCallback(
+-    (productId: number) => {
++    async (productId: string): Promise<void> => {
++      if (!companyId) throw new Error("Nenhuma empresa ativa foi encontrada.");
++
++      await deleteProductInDatabase(companyId, productId);
+       setProducts((currentProducts) =>
+-        currentProducts.filter(
+-          (product) =>
+-            product.id !== productId,
+-        ),
++        currentProducts.filter((product) => product.id !== productId),
+       );
+     },
+-    [],
++    [companyId],
+   );
+ 
+   const toggleProductStatus = useCallback(
+-    (productId: number) => {
+-      setProducts((currentProducts) =>
+-        currentProducts.map((product) =>
+-          product.id === productId
+-            ? {
+-              ...product,
++    async (productId: string): Promise<void> => {
++      if (!companyId) throw new Error("Nenhuma empresa ativa foi encontrada.");
+ 
+-              status:
+-                product.status === "active"
+-                  ? "inactive"
+-                  : "active",
++      const product = products.find((item) => item.id === productId);
++      if (!product) throw new Error("Produto não encontrado.");
+ 
+-              updatedAt:
+-                new Date().toISOString(),
+-            }
+-            : product,
++      const nextStatus = product.status === "active" ? "inactive" : "active";
++      await updateProductFields(companyId, productId, { status: nextStatus });
++
++      setProducts((currentProducts) =>
++        currentProducts.map((item) =>
++          item.id === productId
++            ? { ...item, status: nextStatus, updatedAt: new Date().toISOString() }
++            : item,
+         ),
+       );
+     },
+-    [],
++    [companyId, products],
+   );
+ 
+   const updateProductStock = useCallback(
+-    (
+-      productId: number,
+-      stockQuantity: number,
+-    ) => {
++    async (productId: string, stockQuantity: number): Promise<void> => {
++      if (!companyId) throw new Error("Nenhuma empresa ativa foi encontrada.");
++
++      const nextStockQuantity = settings.inventory.allowNegativeStock
++        ? stockQuantity
++        : Math.max(0, stockQuantity);
++
++      await updateProductFields(companyId, productId, {
++        stock_quantity: nextStockQuantity,
++      });
++
+       setProducts((currentProducts) =>
+         currentProducts.map((product) =>
+           product.id === productId
+             ? {
+-              ...product,
+-
+-              stockQuantity:
+-                settings.inventory
+-                  .allowNegativeStock
+-                  ? stockQuantity
+-                  : Math.max(
+-                    0,
+-                    stockQuantity,
+-                  ),
+-
+-              updatedAt:
+-                new Date().toISOString(),
+-            }
++                ...product,
++                stockQuantity: nextStockQuantity,
++                updatedAt: new Date().toISOString(),
++              }
+             : product,
+         ),
+       );
+     },
+-    [
+-      settings.inventory
+-        .allowNegativeStock,
+-    ],
++    [companyId, settings.inventory.allowNegativeStock],
+   );
+ 
+-  const updateProductPurchasePrice =
+-    useCallback(
+-      (
+-        productId: number,
+-        purchasePrice: number,
+-      ) => {
+-        if (
+-          !Number.isFinite(
+-            purchasePrice,
+-          ) ||
+-          purchasePrice < 0
+-        ) {
+-          return;
+-        }
++  const updateProductPurchasePrice = useCallback(
++    async (productId: string, purchasePrice: number): Promise<void> => {
++      if (!Number.isFinite(purchasePrice) || purchasePrice < 0) return;
++      if (!companyId) throw new Error("Nenhuma empresa ativa foi encontrada.");
+ 
+-        setProducts(
+-          (currentProducts) =>
+-            currentProducts.map(
+-              (product) =>
+-                product.id ===
+-                  productId
+-                  ? {
+-                    ...product,
+-
+-                    purchasePrice,
+-
+-                    updatedAt:
+-                      new Date()
+-                        .toISOString(),
+-                  }
+-                  : product,
+-            ),
+-        );
+-      },
+-      [],
+-    );
+-
+-  const incrementProductSoldQuantity =
+-    useCallback(
+-      (
+-        productId: number,
+-        quantity: number,
+-      ) => {
+-        if (quantity <= 0) {
+-          return;
+-        }
++      await updateProductFields(companyId, productId, {
++        purchase_price: purchasePrice,
++      });
+ 
+-        setProducts((currentProducts) =>
+-          currentProducts.map((product) =>
+-            product.id === productId
+-              ? {
+-                ...product,
++      setProducts((currentProducts) =>
++        currentProducts.map((product) =>
++          product.id === productId
++            ? { ...product, purchasePrice, updatedAt: new Date().toISOString() }
++            : product,
++        ),
++      );
++    },
++    [companyId],
++  );
+ 
+-                soldQuantity:
+-                  product.soldQuantity +
+-                  quantity,
++  const incrementProductSoldQuantity = useCallback(
++    (productId: string, quantity: number): void => {
++      if (quantity <= 0) return;
+ 
+-                updatedAt:
+-                  new Date().toISOString(),
+-              }
+-              : product,
+-          ),
+-        );
+-      },
+-      [],
+-    );
++      setProducts((currentProducts) =>
++        currentProducts.map((product) =>
++          product.id === productId
++            ? { ...product, soldQuantity: product.soldQuantity + quantity }
++            : product,
++        ),
++      );
++    },
++    [],
++  );
+ 
+   const findProductById = useCallback(
+-    (productId: number) =>
+-      products.find(
+-        (product) =>
+-          product.id === productId,
+-      ),
++    (productId: string) => products.find((product) => product.id === productId),
+     [products],
+   );
+ 
+-  const resetProducts = useCallback(() => {
+-    removeLocalStorage(
+-      STORAGE_KEYS.products,
+-    );
+-
+-    setProducts(initialProducts);
+-  }, []);
+-
+   const contextValue = useMemo(
+     () => ({
+       products,
+-
++      isLoading,
++      error,
++      refreshProducts,
+       createProduct,
+       updateProduct,
+       deleteProduct,
+@@ -314,11 +252,14 @@ export default function ProductsProvider({
+       updateProductStock,
+       updateProductPurchasePrice,
+       findProductById,
+-      resetProducts,
++      resetProducts: refreshProducts,
+       incrementProductSoldQuantity,
+     }),
+     [
+       products,
++      isLoading,
++      error,
++      refreshProducts,
+       createProduct,
+       updateProduct,
+       deleteProduct,
+@@ -326,16 +267,13 @@ export default function ProductsProvider({
+       updateProductStock,
+       updateProductPurchasePrice,
+       findProductById,
+-      resetProducts,
+       incrementProductSoldQuantity,
+     ],
+   );
+ 
+   return (
+-    <ProductsContext.Provider
+-      value={contextValue}
+-    >
++    <ProductsContext.Provider value={contextValue}>
+       {children}
+     </ProductsContext.Provider>
+   );
+-}
+\ No newline at end of file
++}
+diff --git a/src/contexts/ProductsContext/productsContext.ts b/src/contexts/ProductsContext/productsContext.ts
+index b28a1af..f6979fe 100644
+--- a/src/contexts/ProductsContext/productsContext.ts
++++ b/src/contexts/ProductsContext/productsContext.ts
+@@ -7,42 +7,46 @@ import type {
+ 
+ export interface ProductsContextValue {
+   products: Product[];
++  isLoading: boolean;
++  error: string;
++
++  refreshProducts: () => Promise<void>;
+ 
+   createProduct: (
+     data: ProductFormData,
+-  ) => Product;
++  ) => Promise<Product>;
+ 
+   updateProduct: (
+-    productId: number,
++    productId: string,
+     data: ProductFormData,
+-  ) => void;
++  ) => Promise<Product>;
+ 
+   deleteProduct: (
+-    productId: number,
+-  ) => void;
++    productId: string,
++  ) => Promise<void>;
+ 
+   toggleProductStatus: (
+-    productId: number,
+-  ) => void;
++    productId: string,
++  ) => Promise<void>;
+ 
+   updateProductStock: (
+-    productId: number,
++    productId: string,
+     stockQuantity: number,
+-  ) => void;
++  ) => Promise<void>;
+ 
+   updateProductPurchasePrice: (
+-    productId: number,
++    productId: string,
+     purchasePrice: number,
+-  ) => void;
++  ) => Promise<void>;
+ 
+   findProductById: (
+-    productId: number,
++    productId: string,
+   ) => Product | undefined;
+ 
+-  resetProducts: () => void;
++  resetProducts: () => Promise<void>;
+ 
+   incrementProductSoldQuantity: (
+-    productId: number,
++    productId: string,
+     quantity: number,
+   ) => void;
+ }
+@@ -50,4 +54,4 @@ export interface ProductsContextValue {
+ export const ProductsContext =
+   createContext<ProductsContextValue | null>(
+     null,
+-  );
+\ No newline at end of file
++  );
+diff --git a/src/data/inventoryMock.ts b/src/data/inventoryMock.ts
+index 6944fdf..6e6625f 100644
+--- a/src/data/inventoryMock.ts
++++ b/src/data/inventoryMock.ts
+@@ -5,7 +5,7 @@ export const initialInventoryMovements: InventoryMovement[] =
+     {
+       id: 1,
+ 
+-      productId: 1,
++      productId: "1",
+       productName: "Ração Premium para Cães",
+       productCode: "RAC-001",
+ 
+@@ -31,7 +31,7 @@ export const initialInventoryMovements: InventoryMovement[] =
+     {
+       id: 2,
+ 
+-      productId: 2,
++      productId: "2",
+       productName: "Ração Premium para Gatos",
+       productCode: "RAC-002",
+ 
+@@ -56,7 +56,7 @@ export const initialInventoryMovements: InventoryMovement[] =
+     {
+       id: 3,
+ 
+-      productId: 3,
++      productId: "3",
+       productName: "Ração para Filhotes",
+       productCode: "RAC-003",
+ 
+@@ -82,7 +82,7 @@ export const initialInventoryMovements: InventoryMovement[] =
+     {
+       id: 4,
+ 
+-      productId: 4,
++      productId: "4",
+       productName: "Ração para Aves",
+       productCode: "RAC-004",
+ 
+@@ -105,7 +105,7 @@ export const initialInventoryMovements: InventoryMovement[] =
+     {
+       id: 5,
+ 
+-      productId: 5,
++      productId: "5",
+       productName: "Ração para Peixes",
+       productCode: "RAC-005",
+ 
+diff --git a/src/data/mock.ts b/src/data/mock.ts
+index 973a15e..7180797 100644
+--- a/src/data/mock.ts
++++ b/src/data/mock.ts
+@@ -19,7 +19,7 @@ import {
+ 
+ export const products: Product[] = [
+   {
+-    id: 1,
++    id: "1",
+     code: "RAC-001",
+ 
+     name: "Ração Premium para Cães",
+@@ -43,7 +43,7 @@ export const products: Product[] = [
+   },
+ 
+   {
+-    id: 2,
++    id: "2",
+     code: "RAC-002",
+ 
+     name: "Ração Premium para Gatos",
+@@ -67,7 +67,7 @@ export const products: Product[] = [
+   },
+ 
+   {
+-    id: 3,
++    id: "3",
+     code: "RAC-003",
+ 
+     name: "Ração para Filhotes",
+@@ -91,7 +91,7 @@ export const products: Product[] = [
+   },
+ 
+   {
+-    id: 4,
++    id: "4",
+     code: "RAC-004",
+ 
+     name: "Ração para Aves",
+@@ -115,7 +115,7 @@ export const products: Product[] = [
+   },
+ 
+   {
+-    id: 5,
++    id: "5",
+     code: "RAC-005",
+ 
+     name: "Ração para Peixes",
+@@ -139,7 +139,7 @@ export const products: Product[] = [
+   },
+ 
+   {
+-    id: 6,
++    id: "6",
+     code: "ACE-001",
+ 
+     name: "Areia Higiênica para Gatos",
+diff --git a/src/data/salesMock.ts b/src/data/salesMock.ts
+index 2d2818a..6171773 100644
+--- a/src/data/salesMock.ts
++++ b/src/data/salesMock.ts
+@@ -16,7 +16,7 @@ export const initialSales: Sale[] = [
+       {
+         id: 1,
+ 
+-        productId: 1,
++        productId: "1",
+         productCode: "RAC-001",
+         productName:
+           "Ração Premium para Cães",
+@@ -69,7 +69,7 @@ export const initialSales: Sale[] = [
+       {
+         id: 2,
+ 
+-        productId: 2,
++        productId: "2",
+         productCode: "RAC-002",
+         productName:
+           "Ração Premium para Gatos",
+@@ -90,7 +90,7 @@ export const initialSales: Sale[] = [
+       {
+         id: 3,
+ 
+-        productId: 6,
++        productId: "6",
+         productCode: "ACE-001",
+         productName:
+           "Areia Higiênica para Gatos",
+diff --git a/src/domain/purchases/Purchase.ts b/src/domain/purchases/Purchase.ts
+index 2200057..ad5b471 100644
+--- a/src/domain/purchases/Purchase.ts
++++ b/src/domain/purchases/Purchase.ts
+@@ -10,7 +10,7 @@ export type PurchaseStatus =
+ export interface PurchaseItem {
+   id: number;
+ 
+-  productId: number;
++  productId: string;
+   productCode: string;
+   productName: string;
+ 
+@@ -63,7 +63,7 @@ export interface Purchase {
+ }
+ 
+ export interface PurchaseCartItem {
+-  productId: number;
++  productId: string;
+ 
+   quantity: number;
+   unitCost: number;
+@@ -121,4 +121,4 @@ export interface PurchaseSummary {
+ 
+   totalCompletedValue: number;
+   averagePurchaseValue: number;
+-}
+\ No newline at end of file
++}
+diff --git a/src/domain/reports/Report.ts b/src/domain/reports/Report.ts
+index 1418730..9e56178 100644
+--- a/src/domain/reports/Report.ts
++++ b/src/domain/reports/Report.ts
+@@ -176,7 +176,7 @@ export interface FinancialReportRow {
+ }
+ 
+ export interface ProductReportRow {
+-  id: number;
++  id: string;
+ 
+   code: string;
+   name: string;
+@@ -205,7 +205,7 @@ export interface ProductReportRow {
+ export interface InventoryReportRow {
+   id: number;
+ 
+-  productId: number;
++  productId: string;
+   productCode: string;
+   productName: string;
+ 
+@@ -275,4 +275,4 @@ export type AnyReportResult =
+   | SalesReportResult
+   | FinancialReportResult
+   | ProductReportResult
+-  | InventoryReportResult;
+\ No newline at end of file
++  | InventoryReportResult;
+diff --git a/src/domain/reports/ReportFilters.ts b/src/domain/reports/ReportFilters.ts
+index e1676bf..6060e3d 100644
+--- a/src/domain/reports/ReportFilters.ts
++++ b/src/domain/reports/ReportFilters.ts
+@@ -64,7 +64,7 @@ export interface ReportFilters {
+ 
+   search: string;
+   category: string;
+-  productId: number | null;
++  productId: string | null;
+ 
+   saleStatus:
+   | SaleStatus
+@@ -185,4 +185,4 @@ export function createDefaultReportFilters(
+         .includeCancelledRecords ??
+       false,
+   };
+-}
+\ No newline at end of file
++}
+diff --git a/src/domain/sales/Sale.ts b/src/domain/sales/Sale.ts
+index 788e5e0..de6abb9 100644
+--- a/src/domain/sales/Sale.ts
++++ b/src/domain/sales/Sale.ts
+@@ -18,7 +18,7 @@ export type PaymentMethod =
+ export interface SaleItem {
+   id: number;
+ 
+-  productId: number;
++  productId: string;
+   productCode: string;
+   productName: string;
+ 
+@@ -66,7 +66,7 @@ export interface Sale {
+ }
+ 
+ export interface SaleCartItem {
+-  productId: number;
++  productId: string;
+   quantity: number;
+ 
+   unitPrice: number;
+@@ -105,4 +105,4 @@ export interface SalesSummary {
+   totalProfit: number;
+ 
+   averageTicket: number;
+-}
+\ No newline at end of file
++}
+diff --git a/src/dtos/backup/SystemBackupDto.ts b/src/dtos/backup/SystemBackupDto.ts
+index 06889bb..10a6efd 100644
+--- a/src/dtos/backup/SystemBackupDto.ts
++++ b/src/dtos/backup/SystemBackupDto.ts
+@@ -30,13 +30,19 @@ const stockUnitSchema =
+     "pct",
+   ]);
+ 
++const productIdSchema =
++  z.preprocess(
++    (value) =>
++      typeof value === "number"
++        ? String(value)
++        : value,
++    z.string().trim().min(1),
++  );
++
+ const productSchema =
+   z.object({
+     id:
+-      z
+-        .number()
+-        .int()
+-        .positive(),
++      productIdSchema,
+ 
+     code:
+       z
+@@ -129,10 +135,7 @@ const inventoryMovementSchema =
+         .positive(),
+ 
+     productId:
+-      z
+-        .number()
+-        .int()
+-        .positive(),
++      productIdSchema,
+ 
+     productName:
+       z
+@@ -393,9 +396,7 @@ const purchaseItemSchema =
+         .positive(),
+ 
+     productId:
+-      z.number()
+-        .int()
+-        .positive(),
++      productIdSchema,
+ 
+     productCode:
+       z.string(),
+@@ -684,4 +685,4 @@ export const systemBackupDtoSchema =
+           },
+         );
+       },
+-    );
+\ No newline at end of file
++    );
+diff --git a/src/dtos/sales/SaleDto.test.ts b/src/dtos/sales/SaleDto.test.ts
+index 0657de8..fd68a79 100644
+--- a/src/dtos/sales/SaleDto.test.ts
++++ b/src/dtos/sales/SaleDto.test.ts
+@@ -17,7 +17,7 @@ const validSaleInput = {
+ 
+   items: [
+     {
+-      productId: 1,
++      productId: "1",
+       quantity: 2,
+       unitPrice: 15,
+       discount: 0,
+diff --git a/src/dtos/sales/SaleDto.ts b/src/dtos/sales/SaleDto.ts
+index 77a02f7..fe041d2 100644
+--- a/src/dtos/sales/SaleDto.ts
++++ b/src/dtos/sales/SaleDto.ts
+@@ -21,7 +21,7 @@ export const saleItemDtoSchema =
+   z.object({
+     id: z.number(),
+ 
+-    productId: z.number(),
++    productId: z.string().min(1),
+     productCode: z.string(),
+     productName: z.string(),
+ 
+@@ -99,7 +99,7 @@ export const createSaleDtoSchema =
+     items: z
+       .array(
+         z.object({
+-          productId: z.number(),
++          productId: z.string().min(1),
+           quantity:
+             z.number().positive(),
+ 
+@@ -117,7 +117,7 @@ export const createSaleDtoSchema =
+       .superRefine(
+         (items, context) => {
+           const productIds =
+-            new Set<number>();
++            new Set<string>();
+ 
+           items.forEach(
+             (item, index) => {
+diff --git a/src/pages/Compras/Compras.tsx b/src/pages/Compras/Compras.tsx
+index 4c935b1..0b95b1e 100644
+--- a/src/pages/Compras/Compras.tsx
++++ b/src/pages/Compras/Compras.tsx
+@@ -424,9 +424,7 @@ export default function Compras() {
+ 
+   function addProduct() {
+     const productId =
+-      Number(
+-        selectedProductId,
+-      );
++      selectedProductId;
+ 
+     const product =
+       activeProducts.find(
+@@ -497,7 +495,7 @@ export default function Compras() {
+   }
+ 
+   function updateCartItem(
+-    productId: number,
++    productId: string,
+     field:
+       | "quantity"
+       | "unitCost",
+@@ -526,7 +524,7 @@ export default function Compras() {
+   }
+ 
+   function removeCartItem(
+-    productId: number,
++    productId: string,
+   ) {
+     setCart(
+       (
+@@ -1727,4 +1725,4 @@ export default function Compras() {
+       />
+     </section>
+   );
+-}
+\ No newline at end of file
++}
+diff --git a/src/pages/Produtos/Produtos.tsx b/src/pages/Produtos/Produtos.tsx
+index a1dd10f..4769d19 100644
+--- a/src/pages/Produtos/Produtos.tsx
++++ b/src/pages/Produtos/Produtos.tsx
+@@ -14,6 +14,8 @@ import {
+ } from "react";
+ 
+ import ConfirmDialog from "../../components/common/ConfirmDialog/ConfirmDialog";
++import ErrorState from "../../components/common/ErrorState/ErrorState";
++import LoadingState from "../../components/common/LoadingState/LoadingState";
+ import StatisticCard from "../../components/common/StatisticCard/StatisticCard";
+ import TableCard from "../../components/common/TableCard/TableCard";
+ 
+@@ -23,6 +25,7 @@ import ProductsTable from "../../components/products/ProductsTable/ProductsTable
+ 
+ import { useProducts } from "../../hooks/useProducts";
+ import { useInventory } from "../../hooks/useInventory";
++import { useNotifications } from "../../hooks/useNotifications";
+ import { useSettings, } from "../../hooks/useSettings";
+ 
+ import type {
+@@ -42,6 +45,7 @@ import {
+   formatCurrency,
+   formatNumber,
+ } from "../../utils/formatters";
++import { getErrorMessage } from "../../utils/errors";
+ 
+ import {
+   filterProducts,
+@@ -58,6 +62,8 @@ interface ProductConfirmation {
+ }
+ 
+ export default function Produtos() {
++  const notifications = useNotifications();
++
+   const {
+   settings,
+ } = useSettings();
+@@ -68,6 +74,9 @@ export default function Produtos() {
+     updateProduct,
+     deleteProduct,
+     toggleProductStatus,
++    isLoading,
++    error,
++    refreshProducts,
+   } = useProducts();
+ 
+   const [filters, setFilters] =
+@@ -159,19 +168,38 @@ export default function Produtos() {
+     setEditingProduct(null);
+   }
+ 
+-  function handleSaveProduct(
++  async function handleSaveProduct(
+     data: ProductFormData,
+   ) {
+-    if (editingProduct) {
+-      updateProduct(
+-        editingProduct.id,
+-        data,
++    try {
++      if (editingProduct) {
++        const product = await updateProduct(
++          editingProduct.id,
++          data,
++        );
++
++        notifications.success(
++          "Produto atualizado",
++          `${product.name} foi atualizado com sucesso.`,
++        );
++      } else {
++        const product = await createProduct(data);
++
++        notifications.success(
++          "Produto cadastrado",
++          `${product.name} foi cadastrado com sucesso.`,
++        );
++      }
++
++      closeForm();
++    } catch (saveError) {
++      notifications.error(
++        editingProduct
++          ? "Não foi possível atualizar o produto"
++          : "Não foi possível cadastrar o produto",
++        getErrorMessage(saveError),
+       );
+-    } else {
+-      createProduct(data);
+     }
+-
+-    closeForm();
+   }
+ 
+   function requestToggleStatus(product: Product) {
+@@ -204,26 +232,37 @@ export default function Produtos() {
+     });
+   }
+ 
+-  function handleConfirmAction() {
++  async function handleConfirmAction() {
+     if (!confirmation) {
+       return;
+     }
+ 
+-    if (confirmation.type === "delete") {
+-      deleteProduct(
+-        confirmation.product.id,
+-      );
+-    }
+-
+-    if (
+-      confirmation.type === "toggle-status"
+-    ) {
+-      toggleProductStatus(
+-        confirmation.product.id,
++    try {
++      if (confirmation.type === "delete") {
++        await deleteProduct(confirmation.product.id);
++
++        notifications.success(
++          "Produto excluído",
++          `${confirmation.product.name} foi excluído com sucesso.`,
++        );
++      }
++
++      if (confirmation.type === "toggle-status") {
++        await toggleProductStatus(confirmation.product.id);
++
++        notifications.success(
++          "Situação atualizada",
++          `${confirmation.product.name} foi atualizado com sucesso.`,
++        );
++      }
++
++      setConfirmation(null);
++    } catch (actionError) {
++      notifications.error(
++        "Não foi possível alterar o produto",
++        getErrorMessage(actionError),
+       );
+     }
+-
+-    setConfirmation(null);
+   }
+ 
+   const confirmationTitle =
+@@ -243,6 +282,25 @@ export default function Produtos() {
+         }.`
+         : "";
+ 
++  if (isLoading) {
++    return (
++      <LoadingState
++        title="Carregando produtos"
++        description="Buscando o catálogo da empresa no banco de dados."
++      />
++    );
++  }
++
++  if (error) {
++    return (
++      <ErrorState
++        title="Não foi possível carregar os produtos"
++        description={error}
++        onRetry={() => void refreshProducts()}
++      />
++    );
++  }
++
+   return (
+     <section className={styles.page}>
+       <div className={styles.pageHeader}>
+@@ -393,4 +451,4 @@ export default function Produtos() {
+       />
+     </section>
+   );
+-}
+\ No newline at end of file
++}
+diff --git a/src/pages/Vendas/Vendas.tsx b/src/pages/Vendas/Vendas.tsx
+index 92b5a69..eed49da 100644
+--- a/src/pages/Vendas/Vendas.tsx
++++ b/src/pages/Vendas/Vendas.tsx
+@@ -500,7 +500,7 @@ export default function Vendas() {
+   }
+ 
+   function updateQuantity(
+-    productId: number,
++    productId: string,
+     quantity: number,
+   ) {
+     setLocalError("");
+@@ -591,7 +591,7 @@ export default function Vendas() {
+   }
+ 
+   function updateItemValue(
+-    productId: number,
++    productId: string,
+     requestedValue: number,
+   ) {
+     setLocalError("");
+@@ -668,7 +668,7 @@ export default function Vendas() {
+   }
+ 
+   function updateItemPrice(
+-    productId: number,
++    productId: string,
+     unitPrice: number,
+   ) {
+     if (
+@@ -726,7 +726,7 @@ export default function Vendas() {
+   }
+ 
+   function updateItemDiscount(
+-    productId: number,
++    productId: string,
+     discount: number,
+   ) {
+     if (
+@@ -763,7 +763,7 @@ export default function Vendas() {
+   }
+ 
+   function removeProduct(
+-    productId: number,
++    productId: string,
+   ) {
+     setCart(
+       (currentCart) =>
+diff --git a/src/repositories/products/SupabaseProductsRepository.ts b/src/repositories/products/SupabaseProductsRepository.ts
+new file mode 100644
+index 0000000..1fbfd68
+--- /dev/null
++++ b/src/repositories/products/SupabaseProductsRepository.ts
+@@ -0,0 +1,252 @@
++import { supabase } from "../../lib/supabase";
++
++import type {
++  Product,
++  ProductFormData,
++  ProductStatus,
++  StockUnit,
++} from "../../types/Product";
++
++import type {
++  Tables,
++  TablesInsert,
++  TablesUpdate,
++} from "../../types/database.types";
++
++type ProductRow = Tables<"products">;
++type CategoryRow = Tables<"product_categories">;
++
++function nullableText(value: string): string | null {
++  const normalizedValue = value.trim();
++
++  return normalizedValue || null;
++}
++
++function toProduct(
++  row: ProductRow,
++  categoryName: string,
++): Product {
++  return {
++    id: row.id,
++    code: row.sku ?? "",
++    barcode: row.barcode ?? "",
++    name: row.name,
++    description: row.notes ?? "",
++    category: categoryName,
++    stockUnit: row.unit as StockUnit,
++    stockQuantity: Number(row.stock_quantity),
++    minimumStock: Number(row.minimum_stock),
++    soldQuantity: 0,
++    purchasePrice: Number(row.purchase_price),
++    salePrice: Number(row.sale_price),
++    status: row.status as ProductStatus,
++    createdAt: row.created_at,
++    updatedAt: row.updated_at,
++  };
++}
++
++async function getCategoryId(
++  companyId: string,
++  categoryName: string,
++): Promise<string> {
++  const normalizedName = categoryName.trim();
++
++  const { data: existingCategory, error: selectError } =
++    await supabase
++      .from("product_categories")
++      .select("id")
++      .eq("company_id", companyId)
++      .eq("name", normalizedName)
++      .maybeSingle();
++
++  if (selectError) {
++    throw selectError;
++  }
++
++  if (existingCategory) {
++    return existingCategory.id;
++  }
++
++  const category: TablesInsert<"product_categories"> = {
++    company_id: companyId,
++    name: normalizedName,
++    status: "active",
++  };
++
++  const { data: createdCategory, error: insertError } =
++    await supabase
++      .from("product_categories")
++      .insert(category)
++      .select("id")
++      .single();
++
++  if (insertError) {
++    throw insertError;
++  }
++
++  return createdCategory.id;
++}
++
++async function findCategoryName(
++  categoryId: string | null,
++  categoriesById: Map<string, string>,
++): Promise<string> {
++  if (!categoryId) {
++    return "Sem categoria";
++  }
++
++  return categoriesById.get(categoryId) ?? "Sem categoria";
++}
++
++export async function listProducts(
++  companyId: string,
++): Promise<Product[]> {
++  const [productsResult, categoriesResult] = await Promise.all([
++    supabase
++      .from("products")
++      .select("*")
++      .eq("company_id", companyId)
++      .order("name", { ascending: true }),
++    supabase
++      .from("product_categories")
++      .select("id, name")
++      .eq("company_id", companyId),
++  ]);
++
++  if (productsResult.error) {
++    throw productsResult.error;
++  }
++
++  if (categoriesResult.error) {
++    throw categoriesResult.error;
++  }
++
++  const categoriesById = new Map(
++    (categoriesResult.data as Pick<CategoryRow, "id" | "name">[])
++      .map((category) => [category.id, category.name]),
++  );
++
++  return Promise.all(
++    productsResult.data.map(async (row) =>
++      toProduct(
++        row,
++        await findCategoryName(row.category_id, categoriesById),
++      ),
++    ),
++  );
++}
++
++export async function createProduct(
++  companyId: string,
++  data: ProductFormData,
++  allowNegativeStock: boolean,
++): Promise<Product> {
++  const categoryId = await getCategoryId(
++    companyId,
++    data.category,
++  );
++
++  const input: TablesInsert<"products"> = {
++    company_id: companyId,
++    category_id: categoryId,
++    name: data.name.trim(),
++    sku: nullableText(data.code),
++    barcode: nullableText(data.barcode),
++    unit: data.stockUnit,
++    purchase_price: data.purchasePrice,
++    sale_price: data.salePrice,
++    stock_quantity: allowNegativeStock
++      ? data.stockQuantity
++      : Math.max(0, data.stockQuantity),
++    minimum_stock: data.minimumStock,
++    allow_negative_stock: allowNegativeStock,
++    notes: nullableText(data.description),
++    status: data.status,
++  };
++
++  const { data: createdProduct, error } = await supabase
++    .from("products")
++    .insert(input)
++    .select("*")
++    .single();
++
++  if (error) {
++    throw error;
++  }
++
++  return toProduct(createdProduct, data.category.trim());
++}
++
++export async function updateProduct(
++  companyId: string,
++  productId: string,
++  data: ProductFormData,
++  allowNegativeStock: boolean,
++): Promise<Product> {
++  const categoryId = await getCategoryId(
++    companyId,
++    data.category,
++  );
++
++  const input: TablesUpdate<"products"> = {
++    category_id: categoryId,
++    name: data.name.trim(),
++    sku: nullableText(data.code),
++    barcode: nullableText(data.barcode),
++    unit: data.stockUnit,
++    purchase_price: data.purchasePrice,
++    sale_price: data.salePrice,
++    stock_quantity: allowNegativeStock
++      ? data.stockQuantity
++      : Math.max(0, data.stockQuantity),
++    minimum_stock: data.minimumStock,
++    allow_negative_stock: allowNegativeStock,
++    notes: nullableText(data.description),
++    status: data.status,
++  };
++
++  const { data: updatedProduct, error } = await supabase
++    .from("products")
++    .update(input)
++    .eq("company_id", companyId)
++    .eq("id", productId)
++    .select("*")
++    .single();
++
++  if (error) {
++    throw error;
++  }
++
++  return toProduct(updatedProduct, data.category.trim());
++}
++
++export async function deleteProduct(
++  companyId: string,
++  productId: string,
++): Promise<void> {
++  const { error } = await supabase
++    .from("products")
++    .delete()
++    .eq("company_id", companyId)
++    .eq("id", productId);
++
++  if (error) {
++    throw error;
++  }
++}
++
++export async function updateProductFields(
++  companyId: string,
++  productId: string,
++  input: TablesUpdate<"products">,
++): Promise<void> {
++  const { error } = await supabase
++    .from("products")
++    .update(input)
++    .eq("company_id", companyId)
++    .eq("id", productId);
++
++  if (error) {
++    throw error;
++  }
++}
+diff --git a/src/repositories/purchases/mock/MockPurchaseRepository.ts b/src/repositories/purchases/mock/MockPurchaseRepository.ts
+index c71bb5a..90c170d 100644
+--- a/src/repositories/purchases/mock/MockPurchaseRepository.ts
++++ b/src/repositories/purchases/mock/MockPurchaseRepository.ts
+@@ -294,7 +294,7 @@ function createPurchaseItems(
+   }
+ 
+   const usedProductIds =
+-    new Set<number>();
++    new Set<string>();
+ 
+   return inputItems.map(
+     (
+diff --git a/src/repositories/reports/ReportRepository.ts b/src/repositories/reports/ReportRepository.ts
+index 52192cd..d63515f 100644
+--- a/src/repositories/reports/ReportRepository.ts
++++ b/src/repositories/reports/ReportRepository.ts
+@@ -10,7 +10,7 @@ export interface ReportFilterOptions {
+   categories: string[];
+ 
+   products: Array<{
+-    id: number;
++    id: string;
+     code: string;
+     name: string;
+   }>;
+@@ -23,4 +23,4 @@ export interface ReportRepository {
+ 
+   getFilterOptions():
+     Promise<ReportFilterOptions>;
+-}
+\ No newline at end of file
++}
+diff --git a/src/services/inventory/inventorySettingsRules.test.ts b/src/services/inventory/inventorySettingsRules.test.ts
+index f4f4145..55bf58b 100644
+--- a/src/services/inventory/inventorySettingsRules.test.ts
++++ b/src/services/inventory/inventorySettingsRules.test.ts
+@@ -19,7 +19,7 @@ import {
+ 
+ const baseMovement:
+   InventoryMovementFormData = {
+-  productId: 1,
++  productId: "1",
+ 
+   type: "entry",
+   reason: "purchase",
+diff --git a/src/types/Dashboard.ts b/src/types/Dashboard.ts
+index 8ddae1e..905a73d 100644
+--- a/src/types/Dashboard.ts
++++ b/src/types/Dashboard.ts
+@@ -55,7 +55,7 @@ export interface FinancialSummary {
+ }
+ 
+ export interface StockAlertItem {
+-  productId: number;
++  productId: string;
+   name: string;
+   currentStock: number;
+   minimumStock: number;
+@@ -64,7 +64,7 @@ export interface StockAlertItem {
+ }
+ 
+ export interface TopSellingProduct {
+-  productId: number;
++  productId: string;
+   name: string;
+   category: string;
+   quantitySold: number;
+@@ -114,4 +114,4 @@ export interface DashboardData {
+ export interface DashboardInventorySummary {
+   totalEntries: number;
+   totalExits: number;
+-}
+\ No newline at end of file
++}
+diff --git a/src/types/Inventory.ts b/src/types/Inventory.ts
+index dbebbae..216a00c 100644
+--- a/src/types/Inventory.ts
++++ b/src/types/Inventory.ts
+@@ -23,7 +23,7 @@ export type InventoryMovementReason =
+ export interface InventoryMovement {
+   id: number;
+ 
+-  productId: number;
++  productId: string;
+   productName: string;
+   productCode: string;
+ 
+@@ -52,7 +52,7 @@ export interface InventoryMovement {
+ }
+ 
+ export interface InventoryMovementFormData {
+-  productId: number | null;
++  productId: string | null;
+ 
+   type: InventoryMovementType;
+   reason: InventoryMovementReason;
+@@ -104,4 +104,4 @@ export interface ProductInventoryData {
+   | "available"
+   | "low"
+   | "out";
+-}
+\ No newline at end of file
++}
+diff --git a/src/types/Product.ts b/src/types/Product.ts
+index 2e69d2f..b0e4c68 100644
+--- a/src/types/Product.ts
++++ b/src/types/Product.ts
+@@ -12,7 +12,7 @@ export type ProductStatus =
+   | "inactive";
+ 
+ export interface Product {
+-  id: number;
++  id: string;
+ 
+   code: string;
+   barcode?: string;
+@@ -65,4 +65,4 @@ export interface ProductFormData {
+   salePrice: number;
+ 
+   status: ProductStatus;
+-}
+\ No newline at end of file
++}
+diff --git a/src/types/Sale.ts b/src/types/Sale.ts
+index 49ee1c6..6cd1639 100644
+--- a/src/types/Sale.ts
++++ b/src/types/Sale.ts
+@@ -13,7 +13,7 @@ export type PaymentMethod =
+ 
+ export interface SaleItem {
+   id: number;
+-  productId: number;
++  productId: string;
+   productName: string;
+ 
+   quantity: number;
+@@ -41,4 +41,4 @@ export interface Sale {
+   totalCost: number;
+   totalValue: number;
+   totalProfit: number;
+-}
+\ No newline at end of file
++}
+diff --git a/src/types/database.types.ts b/src/types/database.types.ts
+index 55f0a78..3231472 100644
+--- a/src/types/database.types.ts
++++ b/src/types/database.types.ts
+@@ -10,7 +10,7 @@ export type Database = {
+   // Allows to automatically instantiate createClient with right options
+   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+   __InternalSupabase: {
+-    PostgrestVersion: "14.5"
++    PostgrestVersion: "14.17"
+   }
+   public: {
+     Tables: {
+@@ -524,6 +524,157 @@ export type Database = {
+           },
+         ]
+       }
++      purchase_items: {
++        Row: {
++          company_id: string
++          created_at: string
++          discount: number
++          id: string
++          product_id: string
++          product_name: string
++          purchase_id: string
++          quantity: number
++          total: number
++          unit: string
++          unit_cost: number
++        }
++        Insert: {
++          company_id: string
++          created_at?: string
++          discount?: number
++          id?: string
++          product_id: string
++          product_name: string
++          purchase_id: string
++          quantity: number
++          total: number
++          unit: string
++          unit_cost: number
++        }
++        Update: {
++          company_id?: string
++          created_at?: string
++          discount?: number
++          id?: string
++          product_id?: string
++          product_name?: string
++          purchase_id?: string
++          quantity?: number
++          total?: number
++          unit?: string
++          unit_cost?: number
++        }
++        Relationships: [
++          {
++            foreignKeyName: "purchase_items_company_id_fkey"
++            columns: ["company_id"]
++            isOneToOne: false
++            referencedRelation: "companies"
++            referencedColumns: ["id"]
++          },
++          {
++            foreignKeyName: "purchase_items_company_product_fkey"
++            columns: ["company_id", "product_id"]
++            isOneToOne: false
++            referencedRelation: "products"
++            referencedColumns: ["company_id", "id"]
++          },
++          {
++            foreignKeyName: "purchase_items_company_purchase_fkey"
++            columns: ["company_id", "purchase_id"]
++            isOneToOne: false
++            referencedRelation: "purchases"
++            referencedColumns: ["company_id", "id"]
++          },
++        ]
++      }
++      purchases: {
++        Row: {
++          cancellation_reason: string | null
++          cancelled_at: string | null
++          company_id: string
++          completed_at: string | null
++          created_at: string
++          created_by: string | null
++          discount: number
++          document_number: string | null
++          due_date: string | null
++          freight: number
++          id: string
++          notes: string | null
++          number: number
++          payment_method: Database["public"]["Enums"]["payment_method"] | null
++          purchased_at: string | null
++          status: Database["public"]["Enums"]["purchase_status"]
++          subtotal: number
++          supplier_id: string | null
++          supplier_name: string
++          total: number
++          updated_at: string
++        }
++        Insert: {
++          cancellation_reason?: string | null
++          cancelled_at?: string | null
++          company_id: string
++          completed_at?: string | null
++          created_at?: string
++          created_by?: string | null
++          discount?: number
++          document_number?: string | null
++          due_date?: string | null
++          freight?: number
++          id?: string
++          notes?: string | null
++          number?: never
++          payment_method?: Database["public"]["Enums"]["payment_method"] | null
++          purchased_at?: string | null
++          status?: Database["public"]["Enums"]["purchase_status"]
++          subtotal?: number
++          supplier_id?: string | null
++          supplier_name: string
++          total?: number
++          updated_at?: string
++        }
++        Update: {
++          cancellation_reason?: string | null
++          cancelled_at?: string | null
++          company_id?: string
++          completed_at?: string | null
++          created_at?: string
++          created_by?: string | null
++          discount?: number
++          document_number?: string | null
++          due_date?: string | null
++          freight?: number
++          id?: string
++          notes?: string | null
++          number?: never
++          payment_method?: Database["public"]["Enums"]["payment_method"] | null
++          purchased_at?: string | null
++          status?: Database["public"]["Enums"]["purchase_status"]
++          subtotal?: number
++          supplier_id?: string | null
++          supplier_name?: string
++          total?: number
++          updated_at?: string
++        }
++        Relationships: [
++          {
++            foreignKeyName: "purchases_company_id_fkey"
++            columns: ["company_id"]
++            isOneToOne: false
++            referencedRelation: "companies"
++            referencedColumns: ["id"]
++          },
++          {
++            foreignKeyName: "purchases_company_supplier_fkey"
++            columns: ["company_id", "supplier_id"]
++            isOneToOne: false
++            referencedRelation: "suppliers"
++            referencedColumns: ["company_id", "id"]
++          },
++        ]
++      }
+       sale_items: {
+         Row: {
+           company_id: string
+@@ -663,6 +814,83 @@ export type Database = {
+           },
+         ]
+       }
++      suppliers: {
++        Row: {
++          address_number: string | null
++          city: string | null
++          company_id: string
++          complement: string | null
++          contact_name: string | null
++          created_at: string
++          document: string | null
++          email: string | null
++          id: string
++          name: string
++          neighborhood: string | null
++          notes: string | null
++          phone: string | null
++          postal_code: string | null
++          state: string | null
++          state_registration: string | null
++          status: Database["public"]["Enums"]["registration_status"]
++          street: string | null
++          trade_name: string | null
++          updated_at: string
++        }
++        Insert: {
++          address_number?: string | null
++          city?: string | null
++          company_id: string
++          complement?: string | null
++          contact_name?: string | null
++          created_at?: string
++          document?: string | null
++          email?: string | null
++          id?: string
++          name: string
++          neighborhood?: string | null
++          notes?: string | null
++          phone?: string | null
++          postal_code?: string | null
++          state?: string | null
++          state_registration?: string | null
++          status?: Database["public"]["Enums"]["registration_status"]
++          street?: string | null
++          trade_name?: string | null
++          updated_at?: string
++        }
++        Update: {
++          address_number?: string | null
++          city?: string | null
++          company_id?: string
++          complement?: string | null
++          contact_name?: string | null
++          created_at?: string
++          document?: string | null
++          email?: string | null
++          id?: string
++          name?: string
++          neighborhood?: string | null
++          notes?: string | null
++          phone?: string | null
++          postal_code?: string | null
++          state?: string | null
++          state_registration?: string | null
++          status?: Database["public"]["Enums"]["registration_status"]
++          street?: string | null
++          trade_name?: string | null
++          updated_at?: string
++        }
++        Relationships: [
++          {
++            foreignKeyName: "suppliers_company_id_fkey"
++            columns: ["company_id"]
++            isOneToOne: false
++            referencedRelation: "companies"
++            referencedColumns: ["id"]
++          },
++        ]
++      }
+       system_settings: {
+         Row: {
+           company_id: string
+@@ -703,7 +931,14 @@ export type Database = {
+       [_ in never]: never
+     }
+     Functions: {
+-      [_ in never]: never
++      bootstrap_company: {
++        Args: {
++          p_document?: string
++          p_legal_name: string
++          p_trade_name: string
++        }
++        Returns: string
++      }
+     }
+     Enums: {
+       company_member_role: "owner" | "admin" | "manager" | "cashier" | "viewer"
+@@ -722,6 +957,7 @@ export type Database = {
+         | "debit_card"
+         | "bank_transfer"
+         | "other"
++      purchase_status: "draft" | "completed" | "cancelled"
+       registration_status: "active" | "inactive"
+       sale_status: "completed" | "cancelled"
+     }
+@@ -869,6 +1105,7 @@ export const Constants = {
+         "bank_transfer",
+         "other",
+       ],
++      purchase_status: ["draft", "completed", "cancelled"],
+       registration_status: ["active", "inactive"],
+       sale_status: ["completed", "cancelled"],
+     },
+

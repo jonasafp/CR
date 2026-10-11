@@ -179,39 +179,26 @@ function saveInventoryMovements(
 }
 
 function getNextMovementId(
-  movements:
+  _movements:
     InventoryMovement[],
-): number {
-  if (
-    movements.length === 0
-  ) {
-    return 1;
-  }
-
-  return (
-    Math.max(
-      ...movements.map(
-        (movement) =>
-          movement.id,
-      ),
-    ) + 1
-  );
+): string {
+  return crypto.randomUUID();
 }
 
 function createSaleId(
   sales: Sale[],
-): number {
+): string {
   if (sales.length === 0) {
-    return 1;
+    return "1";
   }
 
   return (
     Math.max(
       ...sales.map(
-        (sale) => sale.id,
+        (sale) => Number(sale.id),
       ),
     ) + 1
-  );
+  ).toString();
 }
 
 function createSaleNumber(
@@ -470,7 +457,7 @@ export class MockSalesRepository
   }
 
   async getById(
-    saleId: number,
+    saleId: string,
   ): Promise<Sale> {
     await delay(200);
 
@@ -687,7 +674,7 @@ export class MockSalesRepository
             );
 
           return {
-            id: index + 1,
+            id: `${sales.length + 1}-${index + 1}`,
 
             productId:
               product.id,
@@ -785,7 +772,7 @@ export class MockSalesRepository
     const newSale: Sale = {
       id,
       number:
-        createSaleNumber(id),
+        createSaleNumber(Number(id)),
 
       status: "completed",
 
@@ -853,15 +840,10 @@ export class MockSalesRepository
     const currentMovements =
       readInventoryMovements();
 
-    const firstMovementId =
-      getNextMovementId(
-        currentMovements,
-      );
-
     const saleMovements:
       InventoryMovement[] =
       saleItems.map(
-        (item, index) => {
+        (item) => {
           const product =
             products.find(
               (
@@ -878,8 +860,7 @@ export class MockSalesRepository
 
           return {
             id:
-              firstMovementId +
-              index,
+              getNextMovementId(currentMovements),
 
             productId:
               item.productId,
@@ -1041,15 +1022,10 @@ export class MockSalesRepository
     const currentMovements =
       readInventoryMovements();
 
-    const firstMovementId =
-      getNextMovementId(
-        currentMovements,
-      );
-
     const returnMovements:
       InventoryMovement[] =
       sale.items.map(
-        (item, index) => {
+        (item) => {
           const product =
             products.find(
               (
@@ -1066,8 +1042,7 @@ export class MockSalesRepository
 
           return {
             id:
-              firstMovementId +
-              index,
+              getNextMovementId(currentMovements),
 
             productId:
               item.productId,

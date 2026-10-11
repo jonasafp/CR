@@ -4,7 +4,7 @@ import type {
 
 export interface SupplierPurchaseHistory {
   supplierId:
-    number;
+    string | number;
 
   purchases:
     Purchase[];

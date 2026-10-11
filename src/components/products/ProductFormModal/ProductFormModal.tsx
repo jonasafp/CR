@@ -46,7 +46,7 @@ interface ProductFormModalProps {
   allowNegativeStock: boolean;
 
   onClose: () => void;
-  onSubmit: (data: ProductFormData) => void;
+  onSubmit: (data: ProductFormData) => void | Promise<void>;
 }
 
 interface FormErrors {

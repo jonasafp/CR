@@ -500,7 +500,7 @@ export default function Vendas() {
   }
 
   function updateQuantity(
-    productId: number,
+    productId: string,
     quantity: number,
   ) {
     setLocalError("");
@@ -591,7 +591,7 @@ export default function Vendas() {
   }
 
   function updateItemValue(
-    productId: number,
+    productId: string,
     requestedValue: number,
   ) {
     setLocalError("");
@@ -668,7 +668,7 @@ export default function Vendas() {
   }
 
   function updateItemPrice(
-    productId: number,
+    productId: string,
     unitPrice: number,
   ) {
     if (
@@ -726,7 +726,7 @@ export default function Vendas() {
   }
 
   function updateItemDiscount(
-    productId: number,
+    productId: string,
     discount: number,
   ) {
     if (
@@ -763,7 +763,7 @@ export default function Vendas() {
   }
 
   function removeProduct(
-    productId: number,
+    productId: string,
   ) {
     setCart(
       (currentCart) =>
@@ -855,9 +855,7 @@ export default function Vendas() {
 
       customerId:
         selectedCustomerId
-          ? Number(
-            selectedCustomerId,
-          )
+          ? selectedCustomerId
           : undefined,
 
       customerName:
@@ -1712,9 +1710,7 @@ export default function Vendas() {
                       activeCustomers.find(
                         (customer) =>
                           customer.id ===
-                          Number(
-                            customerId,
-                          ),
+                          customerId,
                       );
 
                     setCustomerName(

@@ -7,12 +7,16 @@ import type {
 
 export interface InventoryContextValue {
   movements: InventoryMovement[];
+  isLoading: boolean;
+  error: string;
+
+  refreshMovements: () => Promise<void>;
 
   createMovement: (
     data: InventoryMovementFormData,
-  ) => InventoryMovement | null;
+  ) => Promise<InventoryMovement>;
 
-  resetMovements: () => void;
+  resetMovements: () => Promise<void>;
 }
 
 export const InventoryContext =

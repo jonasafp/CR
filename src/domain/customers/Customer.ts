@@ -13,7 +13,7 @@ export interface CustomerAddress {
 }
 
 export interface Customer {
-  id: number;
+  id: string;
 
   name: string;
   document: string;
@@ -48,7 +48,7 @@ export interface CreateCustomerInput {
 }
 
 export interface UpdateCustomerInput {
-  id: number;
+  id: string;
 
   name: string;
   document?: string;
@@ -67,7 +67,7 @@ export interface UpdateCustomerInput {
 }
 
 export interface ChangeCustomerStatusInput {
-  customerId: number;
+  customerId: string;
 
   status:
     CustomerStatus;

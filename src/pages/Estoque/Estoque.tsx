@@ -17,6 +17,8 @@ import {
 
 import StatisticCard from "../../components/common/StatisticCard/StatisticCard";
 import TableCard from "../../components/common/TableCard/TableCard";
+import ErrorState from "../../components/common/ErrorState/ErrorState";
+import LoadingState from "../../components/common/LoadingState/LoadingState";
 
 import InventoryFilters from "../../components/inventory/InventoryFilters/InventoryFilters";
 import InventoryMovementModal from "../../components/inventory/InventoryMovementModal/InventoryMovementModal";
@@ -25,6 +27,7 @@ import InventoryProductsTable from "../../components/inventory/InventoryProducts
 
 import { useInventory } from "../../hooks/useInventory";
 import { useProducts } from "../../hooks/useProducts";
+import { useNotifications } from "../../hooks/useNotifications";
 import {
   useSettings,
 } from "../../hooks/useSettings";
@@ -44,6 +47,7 @@ import {
   formatCurrency,
   formatNumber,
 } from "../../utils/formatters";
+import { getErrorMessage } from "../../utils/errors";
 
 import {
   isProductAvailable,
@@ -68,15 +72,25 @@ function normalizeText(value: string): string {
 }
 
 export default function Estoque() {
+  const notifications = useNotifications();
+
   const {
     settings,
   } = useSettings();
 
-  const { products } = useProducts();
+  const {
+    products,
+    isLoading: isLoadingProducts,
+    error: productsError,
+    refreshProducts,
+  } = useProducts();
 
   const {
     movements,
     createMovement,
+    isLoading: isLoadingMovements,
+    error: movementsError,
+    refreshMovements,
   } = useInventory();
 
   const [filters, setFilters] =
@@ -183,17 +197,47 @@ export default function Estoque() {
     setSelectedProduct(null);
   }
 
-  function handleCreateMovement(
+  async function handleCreateMovement(
     data: InventoryMovementFormData,
   ) {
-    const createdMovement =
-      createMovement(data);
+    try {
+      const createdMovement = await createMovement(data);
 
-    if (!createdMovement) {
-      return;
+      closeMovementModal();
+      notifications.success(
+        "Movimentação registrada",
+        `O estoque de ${createdMovement.productName} foi atualizado com sucesso.`,
+      );
+    } catch (movementError) {
+      notifications.error(
+        "Não foi possível movimentar o estoque",
+        getErrorMessage(movementError),
+      );
     }
+  }
 
-    closeMovementModal();
+  const isLoading = isLoadingProducts || isLoadingMovements;
+  const loadingError = productsError || movementsError;
+
+  if (isLoading) {
+    return (
+      <LoadingState
+        title="Carregando estoque"
+        description="Buscando produtos e movimentações no banco de dados."
+      />
+    );
+  }
+
+  if (loadingError) {
+    return (
+      <ErrorState
+        title="Não foi possível carregar o estoque"
+        description={loadingError}
+        onRetry={() => {
+          void Promise.all([refreshProducts(), refreshMovements()]);
+        }}
+      />
+    );
   }
 
   return (

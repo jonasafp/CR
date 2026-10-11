@@ -3,9 +3,9 @@ import type { InventoryMovement } from "../types/Inventory";
 export const initialInventoryMovements: InventoryMovement[] =
   [
     {
-      id: 1,
+      id: "1",
 
-      productId: 1,
+      productId: "1",
       productName: "Ração Premium para Cães",
       productCode: "RAC-001",
 
@@ -29,9 +29,9 @@ export const initialInventoryMovements: InventoryMovement[] =
     },
 
     {
-      id: 2,
+      id: "2",
 
-      productId: 2,
+      productId: "2",
       productName: "Ração Premium para Gatos",
       productCode: "RAC-002",
 
@@ -54,9 +54,9 @@ export const initialInventoryMovements: InventoryMovement[] =
     },
 
     {
-      id: 3,
+      id: "3",
 
-      productId: 3,
+      productId: "3",
       productName: "Ração para Filhotes",
       productCode: "RAC-003",
 
@@ -80,9 +80,9 @@ export const initialInventoryMovements: InventoryMovement[] =
     },
 
     {
-      id: 4,
+      id: "4",
 
-      productId: 4,
+      productId: "4",
       productName: "Ração para Aves",
       productCode: "RAC-004",
 
@@ -103,9 +103,9 @@ export const initialInventoryMovements: InventoryMovement[] =
     },
 
     {
-      id: 5,
+      id: "5",
 
-      productId: 5,
+      productId: "5",
       productName: "Ração para Peixes",
       productCode: "RAC-005",
 

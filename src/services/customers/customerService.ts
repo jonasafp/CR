@@ -27,7 +27,7 @@ export const customerService = {
   },
 
   getById(
-    customerId: number,
+    customerId: string,
   ) {
     return customerRepository.getById(
       customerId,

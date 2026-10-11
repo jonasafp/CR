@@ -13,7 +13,7 @@ export type PaymentMethod =
 
 export interface SaleItem {
   id: number;
-  productId: number;
+  productId: string;
   productName: string;
 
   quantity: number;

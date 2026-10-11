@@ -22,7 +22,7 @@ export const salesService = {
     );
   },
 
-  getById(saleId: number) {
+  getById(saleId: string) {
     return salesRepository.getById(
       saleId,
     );

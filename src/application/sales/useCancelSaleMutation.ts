@@ -22,10 +22,14 @@ import {
 import {
   salesQueryKeys,
 } from "./useSalesQuery";
+import { useProducts } from "../../hooks/useProducts";
+import { useInventory } from "../../hooks/useInventory";
 
 export function useCancelSaleMutation() {
   const queryClient =
     useQueryClient();
+  const { refreshProducts } = useProducts();
+  const { refreshMovements } = useInventory();
 
   return useMutation({
     mutationFn: (
@@ -56,6 +60,9 @@ export function useCancelSaleMutation() {
           queryKey:
             reportQueryKeys.all,
         }),
+
+        refreshProducts(),
+        refreshMovements(),
       ]);
     },
   });

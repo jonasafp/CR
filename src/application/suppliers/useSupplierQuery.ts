@@ -44,7 +44,7 @@ export const supplierQueryKeys = {
     ] as const,
 
   detail: (
-    supplierId: number,
+    supplierId: string | number,
   ) =>
     [
       ...supplierQueryKeys.details(),
@@ -84,21 +84,21 @@ export function useActiveSuppliersQuery() {
 
 export function useSupplierQuery(
   supplierId:
-    number | null,
+    string | number | null,
 ) {
   return useQuery({
     queryKey:
       supplierQueryKeys.detail(
-        supplierId ?? 0,
+        supplierId ?? "",
       ),
 
     queryFn: () =>
       supplierService.getById(
-        supplierId ?? 0,
+        supplierId ?? "",
       ),
 
     enabled:
       supplierId !== null &&
-      supplierId > 0,
+      String(supplierId).length > 0,
   });
 }

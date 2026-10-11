@@ -28,7 +28,7 @@ export interface PurchaseFilters
     PurchaseStatusFilter;
 
   supplierId?:
-    number;
+    string | number;
 
   dateFrom?:
     string;

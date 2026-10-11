@@ -48,6 +48,12 @@ const optionalDateSchema =
     .trim()
     .optional();
 
+const optionalReferenceIdSchema =
+  z.union([
+    z.string().trim().min(1),
+    z.number().int().positive(),
+  ]).optional();
+
 export const financialTransactionDtoSchema =
   z.object({
     id:
@@ -122,11 +128,7 @@ export const financialTransactionDtoSchema =
       optionalTextSchema,
 
     saleId:
-      z
-        .number()
-        .int()
-        .positive()
-        .optional(),
+      optionalReferenceIdSchema,
 
     saleNumber:
       optionalTextSchema,
@@ -223,11 +225,7 @@ export const createFinancialTransactionDtoSchema =
           .optional(),
 
       saleId:
-        z
-          .number()
-          .int()
-          .positive()
-          .optional(),
+        optionalReferenceIdSchema,
 
       saleNumber:
         optionalTextSchema,

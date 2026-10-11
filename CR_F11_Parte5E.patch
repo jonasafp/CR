@@ -1,0 +1,748 @@
+diff --git a/src/application/customers/useCustomerHistoryQuery.ts b/src/application/customers/useCustomerHistoryQuery.ts
+index 95b5091..87b9868 100644
+--- a/src/application/customers/useCustomerHistoryQuery.ts
++++ b/src/application/customers/useCustomerHistoryQuery.ts
+@@ -12,23 +12,22 @@ import {
+ 
+ export function useCustomerHistoryQuery(
+   customerId:
+-    number | null,
++    string | null,
+ ) {
+   return useQuery({
+     queryKey: [
+       ...salesQueryKeys.all,
+       "customer-history",
+-      customerId ?? 0,
++      customerId ?? "",
+     ],
+ 
+     queryFn: () =>
+       customerHistoryService
+         .getByCustomerId(
+-          customerId ?? 0,
++          customerId ?? "",
+         ),
+ 
+     enabled:
+-      customerId !== null &&
+-      customerId > 0,
++      Boolean(customerId),
+   });
+-}
+\ No newline at end of file
++}
+diff --git a/src/application/customers/useCustomerQuery.ts b/src/application/customers/useCustomerQuery.ts
+index 7cb6bb9..ba1260a 100644
+--- a/src/application/customers/useCustomerQuery.ts
++++ b/src/application/customers/useCustomerQuery.ts
+@@ -44,7 +44,7 @@ export const customerQueryKeys = {
+     ] as const,
+ 
+   detail: (
+-    customerId: number,
++    customerId: string,
+   ) =>
+     [
+       ...customerQueryKeys.details(),
+@@ -84,21 +84,20 @@ export function useActiveCustomersQuery() {
+ 
+ export function useCustomerQuery(
+   customerId:
+-    number | null,
++    string | null,
+ ) {
+   return useQuery({
+     queryKey:
+       customerQueryKeys.detail(
+-        customerId ?? 0,
++        customerId ?? "",
+       ),
+ 
+     queryFn: () =>
+       customerService.getById(
+-        customerId ?? 0,
++        customerId ?? "",
+       ),
+ 
+     enabled:
+-      customerId !== null &&
+-      customerId > 0,
++      Boolean(customerId),
+   });
+-}
+\ No newline at end of file
++}
+diff --git a/src/data/customersMock.ts b/src/data/customersMock.ts
+index 5d4372f..232d315 100644
+--- a/src/data/customersMock.ts
++++ b/src/data/customersMock.ts
+@@ -6,7 +6,7 @@ export const initialCustomers:
+   Customer[] = [
+   {
+     id:
+-      1,
++      "1",
+ 
+     name:
+       "Cliente balcão",
+@@ -55,4 +55,4 @@ export const initialCustomers:
+     updatedAt:
+       "2026-01-01T00:00:00.000Z",
+   },
+-];
+\ No newline at end of file
++];
+diff --git a/src/domain/customers/Customer.ts b/src/domain/customers/Customer.ts
+index 7d33ec7..6fd5800 100644
+--- a/src/domain/customers/Customer.ts
++++ b/src/domain/customers/Customer.ts
+@@ -13,7 +13,7 @@ export interface CustomerAddress {
+ }
+ 
+ export interface Customer {
+-  id: number;
++  id: string;
+ 
+   name: string;
+   document: string;
+@@ -48,7 +48,7 @@ export interface CreateCustomerInput {
+ }
+ 
+ export interface UpdateCustomerInput {
+-  id: number;
++  id: string;
+ 
+   name: string;
+   document?: string;
+@@ -67,7 +67,7 @@ export interface UpdateCustomerInput {
+ }
+ 
+ export interface ChangeCustomerStatusInput {
+-  customerId: number;
++  customerId: string;
+ 
+   status:
+     CustomerStatus;
+@@ -97,4 +97,4 @@ export function createEmptyCustomerAddress():
+     state:
+       "",
+   };
+-}
+\ No newline at end of file
++}
+diff --git a/src/domain/customers/CustomerSalesHistory.ts b/src/domain/customers/CustomerSalesHistory.ts
+index 325e8b3..960902e 100644
+--- a/src/domain/customers/CustomerSalesHistory.ts
++++ b/src/domain/customers/CustomerSalesHistory.ts
+@@ -3,7 +3,7 @@ import type {
+ } from "../sales/Sale";
+ 
+ export interface CustomerSalesHistory {
+-  customerId: number;
++  customerId: string;
+ 
+   completedSales:
+     Sale[];
+@@ -19,4 +19,4 @@ export interface CustomerSalesHistory {
+ 
+   lastPurchaseAt?:
+     string;
+-}
+\ No newline at end of file
++}
+diff --git a/src/dtos/backup/SystemBackupDto.ts b/src/dtos/backup/SystemBackupDto.ts
+index bd18558..baa16fa 100644
+--- a/src/dtos/backup/SystemBackupDto.ts
++++ b/src/dtos/backup/SystemBackupDto.ts
+@@ -260,9 +260,7 @@ const customerAddressSchema =
+ const customerSchema =
+   z.object({
+     id:
+-      z.number()
+-        .int()
+-        .positive(),
++      productIdSchema,
+ 
+     name:
+       z.string()
+diff --git a/src/pages/Clientes/Clientes.tsx b/src/pages/Clientes/Clientes.tsx
+index 1863bbd..1032ebd 100644
+--- a/src/pages/Clientes/Clientes.tsx
++++ b/src/pages/Clientes/Clientes.tsx
+@@ -772,7 +772,7 @@ export default function Clientes() {
+                               </strong>
+ 
+                               <span>
+-                                Código #{customer.id}
++                                Cliente cadastrado
+                               </span>
+                             </td>
+ 
+@@ -1322,4 +1322,4 @@ export default function Clientes() {
+       />
+     </section>
+   );
+-}
+\ No newline at end of file
++}
+diff --git a/src/pages/Vendas/Vendas.tsx b/src/pages/Vendas/Vendas.tsx
+index 0f615a9..1eab8f8 100644
+--- a/src/pages/Vendas/Vendas.tsx
++++ b/src/pages/Vendas/Vendas.tsx
+@@ -1710,9 +1710,7 @@ export default function Vendas() {
+                       activeCustomers.find(
+                         (customer) =>
+                           customer.id ===
+-                          Number(
+-                            customerId,
+-                          ),
++                          customerId,
+                       );
+ 
+                     setCustomerName(
+diff --git a/src/repositories/customers/CustomerRepository.ts b/src/repositories/customers/CustomerRepository.ts
+index a1bd845..7f99653 100644
+--- a/src/repositories/customers/CustomerRepository.ts
++++ b/src/repositories/customers/CustomerRepository.ts
+@@ -25,7 +25,7 @@ export interface CustomerRepository {
+     Promise<Customer[]>;
+ 
+   getById(
+-    customerId: number,
++    customerId: string,
+   ): Promise<Customer>;
+ 
+   create(
+@@ -42,4 +42,4 @@ export interface CustomerRepository {
+     input:
+       ChangeCustomerStatusInput,
+   ): Promise<Customer>;
+-}
+\ No newline at end of file
++}
+diff --git a/src/repositories/customers/customerRepositoryFactory.ts b/src/repositories/customers/customerRepositoryFactory.ts
+index 399365b..d392dc9 100644
+--- a/src/repositories/customers/customerRepositoryFactory.ts
++++ b/src/repositories/customers/customerRepositoryFactory.ts
+@@ -1,6 +1,4 @@
+-import {
+-  MockCustomerRepository,
+-} from "./mock/MockCustomerRepository";
++import { SupabaseCustomerRepository } from "./supabase/SupabaseCustomerRepository";
+ 
+ import type {
+   CustomerRepository,
+@@ -8,15 +6,8 @@ import type {
+ 
+ function createCustomerRepository():
+   CustomerRepository {
+-  /*
+-   * Nesta primeira versão os dados são armazenados
+-   * localmente no navegador.
+-   *
+-   * Quando o backend for implementado, a troca poderá
+-   * ser feita aqui sem alterar páginas ou componentes.
+-   */
+-  return new MockCustomerRepository();
++  return new SupabaseCustomerRepository();
+ }
+ 
+ export const customerRepository =
+-  createCustomerRepository();
+\ No newline at end of file
++  createCustomerRepository();
+diff --git a/src/repositories/customers/mock/MockCustomerRepository.ts b/src/repositories/customers/mock/MockCustomerRepository.ts
+index 4f3b741..0bef89b 100644
+--- a/src/repositories/customers/mock/MockCustomerRepository.ts
++++ b/src/repositories/customers/mock/MockCustomerRepository.ts
+@@ -161,22 +161,9 @@ function saveCustomers(
+ }
+ 
+ function createCustomerId(
+-  customers: Customer[],
+-): number {
+-  if (
+-    customers.length === 0
+-  ) {
+-    return 1;
+-  }
+-
+-  return (
+-    Math.max(
+-      ...customers.map(
+-        (customer) =>
+-          customer.id,
+-      ),
+-    ) + 1
+-  );
++  _customers: Customer[],
++): string {
++  return crypto.randomUUID();
+ }
+ 
+ function validateName(
+@@ -235,7 +222,7 @@ function validateEmail(
+ function ensureDocumentIsUnique(
+   customers: Customer[],
+   document: string,
+-  ignoredCustomerId?: number,
++  ignoredCustomerId?: string,
+ ): void {
+   if (!document) {
+     return;
+@@ -269,7 +256,7 @@ function ensureDocumentIsUnique(
+ 
+ function findCustomerOrThrow(
+   customers: Customer[],
+-  customerId: number,
++  customerId: string,
+ ): Customer {
+   const customer =
+     customers.find(
+@@ -468,7 +455,7 @@ export class MockCustomerRepository
+   }
+ 
+   async getById(
+-    customerId: number,
++    customerId: string,
+   ): Promise<Customer> {
+     await delay();
+ 
+@@ -651,7 +638,7 @@ export class MockCustomerRepository
+       );
+ 
+     if (
+-      currentCustomer.id === 1 &&
++      currentCustomer.id === "1" &&
+       input.status === "inactive"
+     ) {
+       throw new ApiError(
+@@ -685,4 +672,4 @@ export class MockCustomerRepository
+ 
+     return updatedCustomer;
+   }
+-}
+\ No newline at end of file
++}
+diff --git a/src/repositories/customers/supabase/SupabaseCustomerRepository.ts b/src/repositories/customers/supabase/SupabaseCustomerRepository.ts
+new file mode 100644
+index 0000000..8e9e46f
+--- /dev/null
++++ b/src/repositories/customers/supabase/SupabaseCustomerRepository.ts
+@@ -0,0 +1,252 @@
++import { supabase } from "../../../lib/supabase";
++import { getCurrentCompanyMembership } from "../../../services/auth/authService";
++import type {
++  ChangeCustomerStatusInput,
++  CreateCustomerInput,
++  Customer,
++  CustomerAddress,
++  UpdateCustomerInput,
++} from "../../../domain/customers/Customer";
++import { createEmptyCustomerAddress } from "../../../domain/customers/Customer";
++import type { CustomerFilters } from "../../../domain/customers/CustomerFilters";
++import type { PaginatedResult } from "../../../types/Pagination";
++import type {
++  Tables,
++  TablesInsert,
++  TablesUpdate,
++} from "../../../types/database.types";
++import type { CustomerRepository } from "../CustomerRepository";
++
++type CustomerRow = Tables<"customers">;
++
++function normalizeText(value: string): string {
++  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
++}
++
++function normalizeDocument(value = ""): string {
++  return value.replace(/\D/g, "");
++}
++
++function normalizePhone(value = ""): string {
++  return value.replace(/\D/g, "");
++}
++
++function normalizeEmail(value = ""): string {
++  const email = value.trim().toLowerCase();
++  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
++    throw new Error("Informe um endereço de e-mail válido.");
++  }
++  return email;
++}
++
++function normalizeName(value: string): string {
++  const name = value.trim();
++  if (name.length < 2) throw new Error("Informe um nome válido para o cliente.");
++  return name;
++}
++
++function normalizeAddress(address?: Partial<CustomerAddress>): CustomerAddress {
++  const empty = createEmptyCustomerAddress();
++  return {
++    postalCode: address?.postalCode?.trim() ?? empty.postalCode,
++    street: address?.street?.trim() ?? empty.street,
++    number: address?.number?.trim() ?? empty.number,
++    complement: address?.complement?.trim() ?? empty.complement,
++    neighborhood: address?.neighborhood?.trim() ?? empty.neighborhood,
++    city: address?.city?.trim() ?? empty.city,
++    state: address?.state?.trim().toUpperCase() ?? empty.state,
++  };
++}
++
++function nullableText(value: string): string | null {
++  return value || null;
++}
++
++function mapCustomer(row: CustomerRow): Customer {
++  return {
++    id: row.id,
++    name: row.name,
++    document: row.document ?? "",
++    phone: row.phone ?? "",
++    email: row.email ?? "",
++    address: {
++      postalCode: row.postal_code ?? "",
++      street: row.street ?? "",
++      number: row.address_number ?? "",
++      complement: row.complement ?? "",
++      neighborhood: row.neighborhood ?? "",
++      city: row.city ?? "",
++      state: row.state ?? "",
++    },
++    notes: row.notes ?? "",
++    status: row.status,
++    createdAt: row.created_at,
++    updatedAt: row.updated_at,
++  };
++}
++
++async function getCompanyId(): Promise<string> {
++  const membership = await getCurrentCompanyMembership();
++  if (!membership) throw new Error("Nenhuma empresa ativa foi encontrada.");
++  return membership.company_id;
++}
++
++async function ensureDocumentIsUnique(
++  companyId: string,
++  document: string,
++  ignoredCustomerId?: string,
++): Promise<void> {
++  if (!document) return;
++
++  let query = supabase
++    .from("customers")
++    .select("id, name")
++    .eq("company_id", companyId)
++    .eq("document", document);
++
++  if (ignoredCustomerId) query = query.neq("id", ignoredCustomerId);
++
++  const { data, error } = await query.maybeSingle();
++  if (error) throw error;
++  if (data) {
++    throw new Error(`O documento informado já pertence ao cliente ${data.name}.`);
++  }
++}
++
++function toDatabaseInput(
++  input: CreateCustomerInput,
++): Omit<TablesInsert<"customers">, "company_id"> {
++  const address = normalizeAddress(input.address);
++  const document = normalizeDocument(input.document);
++  return {
++    name: normalizeName(input.name),
++    document: nullableText(document),
++    phone: nullableText(normalizePhone(input.phone)),
++    email: nullableText(normalizeEmail(input.email)),
++    postal_code: nullableText(address.postalCode),
++    street: nullableText(address.street),
++    address_number: nullableText(address.number),
++    complement: nullableText(address.complement),
++    neighborhood: nullableText(address.neighborhood),
++    city: nullableText(address.city),
++    state: nullableText(address.state),
++    notes: nullableText(input.notes?.trim() ?? ""),
++  };
++}
++
++export class SupabaseCustomerRepository implements CustomerRepository {
++  private async loadAll(): Promise<Customer[]> {
++    const companyId = await getCompanyId();
++    const { data, error } = await supabase
++      .from("customers")
++      .select("*")
++      .eq("company_id", companyId);
++    if (error) throw error;
++    return data.map(mapCustomer);
++  }
++
++  async list(filters: CustomerFilters): Promise<PaginatedResult<Customer>> {
++    const search = normalizeText(filters.search);
++    const customers = (await this.loadAll())
++      .filter((customer) => {
++        const content = normalizeText([
++          customer.name,
++          customer.document,
++          customer.phone,
++          customer.email,
++          customer.address.city,
++          customer.address.state,
++        ].join(" "));
++        return (!search || content.includes(search)) &&
++          (filters.status === "all" || customer.status === filters.status);
++      })
++      .sort((first, second) => {
++        const comparison = filters.sortBy === "name"
++          ? first.name.localeCompare(second.name, "pt-BR")
++          : first[filters.sortBy].localeCompare(second[filters.sortBy]);
++        return filters.sortDirection === "asc" ? comparison : comparison * -1;
++      });
++
++    const pageSize = Math.max(1, filters.pageSize);
++    const totalItems = customers.length;
++    const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
++    const page = Math.min(Math.max(1, filters.page), totalPages);
++
++    return {
++      items: customers.slice((page - 1) * pageSize, page * pageSize),
++      page,
++      pageSize,
++      totalItems,
++      totalPages,
++      hasPreviousPage: page > 1,
++      hasNextPage: page < totalPages,
++    };
++  }
++
++  async listActive(): Promise<Customer[]> {
++    return (await this.loadAll())
++      .filter((customer) => customer.status === "active")
++      .sort((first, second) => first.name.localeCompare(second.name, "pt-BR"));
++  }
++
++  async getById(customerId: string): Promise<Customer> {
++    const companyId = await getCompanyId();
++    const { data, error } = await supabase
++      .from("customers")
++      .select("*")
++      .eq("company_id", companyId)
++      .eq("id", customerId)
++      .single();
++    if (error) throw error;
++    return mapCustomer(data);
++  }
++
++  async create(input: CreateCustomerInput): Promise<Customer> {
++    const companyId = await getCompanyId();
++    const values = toDatabaseInput(input);
++    await ensureDocumentIsUnique(companyId, values.document ?? "");
++
++    const row: TablesInsert<"customers"> = {
++      ...values,
++      company_id: companyId,
++      status: "active",
++    };
++    const { data, error } = await supabase
++      .from("customers")
++      .insert(row)
++      .select("*")
++      .single();
++    if (error) throw error;
++    return mapCustomer(data);
++  }
++
++  async update(input: UpdateCustomerInput): Promise<Customer> {
++    const companyId = await getCompanyId();
++    const values = toDatabaseInput(input);
++    await ensureDocumentIsUnique(companyId, values.document ?? "", input.id);
++
++    const row: TablesUpdate<"customers"> = { ...values, status: input.status };
++    const { data, error } = await supabase
++      .from("customers")
++      .update(row)
++      .eq("company_id", companyId)
++      .eq("id", input.id)
++      .select("*")
++      .single();
++    if (error) throw error;
++    return mapCustomer(data);
++  }
++
++  async changeStatus(input: ChangeCustomerStatusInput): Promise<Customer> {
++    const companyId = await getCompanyId();
++    const { data, error } = await supabase
++      .from("customers")
++      .update({ status: input.status })
++      .eq("company_id", companyId)
++      .eq("id", input.customerId)
++      .select("*")
++      .single();
++    if (error) throw error;
++    return mapCustomer(data);
++  }
++}
+diff --git a/src/services/customers/customerHistoryService.ts b/src/services/customers/customerHistoryService.ts
+index ed915f0..3db9d0f 100644
+--- a/src/services/customers/customerHistoryService.ts
++++ b/src/services/customers/customerHistoryService.ts
+@@ -1,112 +1,38 @@
+-import {
+-  STORAGE_KEYS,
+-} from "../../constants/storageKeys";
++import type { CustomerSalesHistory } from "../../domain/customers/CustomerSalesHistory";
++import { defaultSaleFilters } from "../../domain/sales/SaleFilters";
++import { salesService } from "../sales/salesService";
+ 
+-import {
+-  initialSales,
+-} from "../../data/salesMock";
+-
+-import type {
+-  CustomerSalesHistory,
+-} from "../../domain/customers/CustomerSalesHistory";
+-
+-import type {
+-  Sale,
+-} from "../../domain/sales/Sale";
+-
+-import {
+-  readLocalStorage,
+-} from "../storage/localStorageService";
+-
+-function roundValue(
+-  value: number,
+-): number {
+-  return (
+-    Math.round(
+-      (
+-        value +
+-        Number.EPSILON
+-      ) * 100,
+-    ) / 100
+-  );
++function roundValue(value: number): number {
++  return Math.round((value + Number.EPSILON) * 100) / 100;
+ }
+ 
+-async function getByCustomerId(
+-  customerId: number,
+-): Promise<CustomerSalesHistory> {
+-  await new Promise<void>(
+-    (resolve) => {
+-      window.setTimeout(
+-        resolve,
+-        200,
+-      );
+-    },
+-  );
+-
+-  const sales =
+-    readLocalStorage<Sale[]>(
+-      STORAGE_KEYS.sales,
+-      initialSales,
+-    );
++async function getByCustomerId(customerId: string): Promise<CustomerSalesHistory> {
++  const result = await salesService.list({
++    ...defaultSaleFilters,
++    status: "completed",
++    page: 1,
++    pageSize: 100_000,
++  });
+ 
+-  const completedSales =
+-    sales
+-      .filter(
+-        (sale) =>
+-          sale.customerId ===
+-            customerId &&
+-          sale.status ===
+-            "completed",
+-      )
+-      .sort(
+-        (
+-          firstSale,
+-          secondSale,
+-        ) =>
+-          secondSale.createdAt.localeCompare(
+-            firstSale.createdAt,
+-          ),
+-      );
++  const completedSales = result.items
++    .filter((sale) => sale.customerId === customerId)
++    .sort((first, second) => second.createdAt.localeCompare(first.createdAt));
+ 
+-  const totalSpent =
+-    roundValue(
+-      completedSales.reduce(
+-        (
+-          total,
+-          sale,
+-        ) =>
+-          total +
+-          sale.total,
+-        0,
+-      ),
+-    );
+-
+-  const totalPurchases =
+-    completedSales.length;
++  const totalSpent = roundValue(
++    completedSales.reduce((total, sale) => total + sale.total, 0),
++  );
++  const totalPurchases = completedSales.length;
+ 
+   return {
+     customerId,
+-
+     completedSales,
+-
+     totalPurchases,
+-
+     totalSpent,
+-
+-    averageTicket:
+-      totalPurchases > 0
+-        ? roundValue(
+-            totalSpent /
+-            totalPurchases,
+-          )
+-        : 0,
+-
+-    lastPurchaseAt:
+-      completedSales[0]
+-        ?.createdAt,
++    averageTicket: totalPurchases > 0
++      ? roundValue(totalSpent / totalPurchases)
++      : 0,
++    lastPurchaseAt: completedSales[0]?.createdAt,
+   };
+ }
+ 
+-export const customerHistoryService = {
+-  getByCustomerId,
+-};
+\ No newline at end of file
++export const customerHistoryService = { getByCustomerId };
+diff --git a/src/services/customers/customerService.ts b/src/services/customers/customerService.ts
+index 6c97a91..42bb90d 100644
+--- a/src/services/customers/customerService.ts
++++ b/src/services/customers/customerService.ts
+@@ -27,7 +27,7 @@ export const customerService = {
+   },
+ 
+   getById(
+-    customerId: number,
++    customerId: string,
+   ) {
+     return customerRepository.getById(
+       customerId,
+@@ -60,4 +60,4 @@ export const customerService = {
+       input,
+     );
+   },
+-};
+\ No newline at end of file
++};
+

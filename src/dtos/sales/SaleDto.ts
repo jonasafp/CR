@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+const entityIdSchema = z.preprocess(
+  (value) => typeof value === "number" ? String(value) : value,
+  z.string().min(1),
+);
+
 export const saleStatusSchema =
   z.enum([
     "completed",
@@ -19,9 +24,9 @@ export const paymentMethodSchema =
 
 export const saleItemDtoSchema =
   z.object({
-    id: z.number(),
+    id: entityIdSchema,
 
-    productId: z.number(),
+    productId: z.string().min(1),
     productCode: z.string(),
     productName: z.string(),
 
@@ -48,7 +53,7 @@ export const saleItemDtoSchema =
 
 export const saleDtoSchema =
   z.object({
-    id: z.number(),
+    id: entityIdSchema,
     number: z.string(),
 
     status: saleStatusSchema,
@@ -56,7 +61,7 @@ export const saleDtoSchema =
       paymentMethodSchema,
 
     customerId:
-      z.number().optional(),
+      z.union([z.string(), z.number()]).optional(),
 
     customerName:
       z.string().optional(),
@@ -91,7 +96,7 @@ export const createSaleDtoSchema =
       paymentMethodSchema,
 
     customerId:
-      z.number().optional(),
+      z.union([z.string(), z.number()]).optional(),
 
     customerName:
       z.string().optional(),
@@ -99,7 +104,7 @@ export const createSaleDtoSchema =
     items: z
       .array(
         z.object({
-          productId: z.number(),
+          productId: z.string().min(1),
           quantity:
             z.number().positive(),
 
@@ -117,7 +122,7 @@ export const createSaleDtoSchema =
       .superRefine(
         (items, context) => {
           const productIds =
-            new Set<number>();
+            new Set<string>();
 
           items.forEach(
             (item, index) => {

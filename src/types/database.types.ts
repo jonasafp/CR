@@ -353,6 +353,7 @@ export type Database = {
           movement_type: Database["public"]["Enums"]["inventory_movement_type"]
           notes: string | null
           product_id: string
+          purchase_id: string | null
           quantity: number
           reason: string | null
           sale_id: string | null
@@ -368,6 +369,7 @@ export type Database = {
           movement_type: Database["public"]["Enums"]["inventory_movement_type"]
           notes?: string | null
           product_id: string
+          purchase_id?: string | null
           quantity: number
           reason?: string | null
           sale_id?: string | null
@@ -383,6 +385,7 @@ export type Database = {
           movement_type?: Database["public"]["Enums"]["inventory_movement_type"]
           notes?: string | null
           product_id?: string
+          purchase_id?: string | null
           quantity?: number
           reason?: string | null
           sale_id?: string | null
@@ -403,6 +406,13 @@ export type Database = {
             columns: ["company_id", "product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "inventory_movements_company_purchase_fkey"
+            columns: ["company_id", "purchase_id"]
+            isOneToOne: false
+            referencedRelation: "purchases"
             referencedColumns: ["company_id", "id"]
           },
           {
@@ -524,18 +534,177 @@ export type Database = {
           },
         ]
       }
+      purchase_items: {
+        Row: {
+          company_id: string
+          created_at: string
+          discount: number
+          id: string
+          product_code: string | null
+          product_id: string
+          product_name: string
+          purchase_id: string
+          quantity: number
+          total: number
+          unit: string
+          unit_cost: number
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          discount?: number
+          id?: string
+          product_code?: string | null
+          product_id: string
+          product_name: string
+          purchase_id: string
+          quantity: number
+          total: number
+          unit: string
+          unit_cost: number
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          discount?: number
+          id?: string
+          product_code?: string | null
+          product_id?: string
+          product_name?: string
+          purchase_id?: string
+          quantity?: number
+          total?: number
+          unit?: string
+          unit_cost?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_items_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_items_company_product_fkey"
+            columns: ["company_id", "product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "purchase_items_company_purchase_fkey"
+            columns: ["company_id", "purchase_id"]
+            isOneToOne: false
+            referencedRelation: "purchases"
+            referencedColumns: ["company_id", "id"]
+          },
+        ]
+      }
+      purchases: {
+        Row: {
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          company_id: string
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          discount: number
+          document_number: string | null
+          due_date: string | null
+          freight: number
+          id: string
+          notes: string | null
+          number: number
+          other_expenses: number
+          payment_method: Database["public"]["Enums"]["payment_method"] | null
+          purchased_at: string | null
+          status: Database["public"]["Enums"]["purchase_status"]
+          subtotal: number
+          supplier_id: string | null
+          supplier_name: string
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          company_id: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          discount?: number
+          document_number?: string | null
+          due_date?: string | null
+          freight?: number
+          id?: string
+          notes?: string | null
+          number?: never
+          other_expenses?: number
+          payment_method?: Database["public"]["Enums"]["payment_method"] | null
+          purchased_at?: string | null
+          status?: Database["public"]["Enums"]["purchase_status"]
+          subtotal?: number
+          supplier_id?: string | null
+          supplier_name: string
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          company_id?: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          discount?: number
+          document_number?: string | null
+          due_date?: string | null
+          freight?: number
+          id?: string
+          notes?: string | null
+          number?: never
+          other_expenses?: number
+          payment_method?: Database["public"]["Enums"]["payment_method"] | null
+          purchased_at?: string | null
+          status?: Database["public"]["Enums"]["purchase_status"]
+          subtotal?: number
+          supplier_id?: string | null
+          supplier_name?: string
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchases_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchases_company_supplier_fkey"
+            columns: ["company_id", "supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["company_id", "id"]
+          },
+        ]
+      }
       sale_items: {
         Row: {
           company_id: string
           created_at: string
           discount: number
           id: string
+          product_code: string | null
           product_id: string
           product_name: string
           quantity: number
           sale_id: string
           total: number
           unit: string
+          unit_cost: number
           unit_price: number
         }
         Insert: {
@@ -543,12 +712,14 @@ export type Database = {
           created_at?: string
           discount?: number
           id?: string
+          product_code?: string | null
           product_id: string
           product_name: string
           quantity: number
           sale_id: string
           total: number
           unit: string
+          unit_cost?: number
           unit_price: number
         }
         Update: {
@@ -556,12 +727,14 @@ export type Database = {
           created_at?: string
           discount?: number
           id?: string
+          product_code?: string | null
           product_id?: string
           product_name?: string
           quantity?: number
           sale_id?: string
           total?: number
           unit?: string
+          unit_cost?: number
           unit_price?: number
         }
         Relationships: [
@@ -663,6 +836,83 @@ export type Database = {
           },
         ]
       }
+      suppliers: {
+        Row: {
+          address_number: string | null
+          city: string | null
+          company_id: string
+          complement: string | null
+          contact_name: string | null
+          created_at: string
+          document: string | null
+          email: string | null
+          id: string
+          name: string
+          neighborhood: string | null
+          notes: string | null
+          phone: string | null
+          postal_code: string | null
+          state: string | null
+          state_registration: string | null
+          status: Database["public"]["Enums"]["registration_status"]
+          street: string | null
+          trade_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          address_number?: string | null
+          city?: string | null
+          company_id: string
+          complement?: string | null
+          contact_name?: string | null
+          created_at?: string
+          document?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          neighborhood?: string | null
+          notes?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          state?: string | null
+          state_registration?: string | null
+          status?: Database["public"]["Enums"]["registration_status"]
+          street?: string | null
+          trade_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address_number?: string | null
+          city?: string | null
+          company_id?: string
+          complement?: string | null
+          contact_name?: string | null
+          created_at?: string
+          document?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          neighborhood?: string | null
+          notes?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          state?: string | null
+          state_registration?: string | null
+          status?: Database["public"]["Enums"]["registration_status"]
+          street?: string | null
+          trade_name?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "suppliers_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       system_settings: {
         Row: {
           company_id: string
@@ -703,7 +953,142 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      bootstrap_company: {
+        Args: {
+          p_document?: string
+          p_legal_name: string
+          p_trade_name: string
+        }
+        Returns: string
+      }
+      cancel_purchase: {
+        Args: { p_company_id: string; p_purchase_id: string; p_reason: string }
+        Returns: Database["public"]["Tables"]["purchases"]["Row"]
+      }
+      cancel_sale: {
+        Args: { p_company_id: string; p_reason: string; p_sale_id: string }
+        Returns: {
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          company_id: string
+          completed_at: string
+          created_at: string
+          created_by: string | null
+          customer_id: string | null
+          customer_name: string
+          discount: number
+          id: string
+          notes: string | null
+          number: number
+          payment_method: Database["public"]["Enums"]["payment_method"]
+          status: Database["public"]["Enums"]["sale_status"]
+          subtotal: number
+          total: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "sales"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      complete_purchase: {
+        Args: {
+          p_company_id: string
+          p_purchase_id: string
+          p_update_purchase_price: boolean
+        }
+        Returns: Database["public"]["Tables"]["purchases"]["Row"]
+      }
+      complete_sale: {
+        Args: {
+          p_company_id: string
+          p_customer_id?: string
+          p_customer_name?: string
+          p_discount?: number
+          p_items?: Json
+          p_notes?: string
+          p_payment_method: Database["public"]["Enums"]["payment_method"]
+        }
+        Returns: {
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          company_id: string
+          completed_at: string
+          created_at: string
+          created_by: string | null
+          customer_id: string | null
+          customer_name: string
+          discount: number
+          id: string
+          notes: string | null
+          number: number
+          payment_method: Database["public"]["Enums"]["payment_method"]
+          status: Database["public"]["Enums"]["sale_status"]
+          subtotal: number
+          total: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "sales"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      record_inventory_movement: {
+        Args: {
+          p_company_id: string
+          p_movement_type: Database["public"]["Enums"]["inventory_movement_type"]
+          p_notes?: string
+          p_product_id: string
+          p_purchase_id?: string
+          p_quantity: number
+          p_reason?: string
+          p_sale_id?: string
+          p_stock_change: number
+          p_unit_cost?: number
+          p_update_purchase_price?: boolean
+        }
+        Returns: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          movement_type: Database["public"]["Enums"]["inventory_movement_type"]
+          notes: string | null
+          product_id: string
+          purchase_id: string | null
+          quantity: number
+          reason: string | null
+          sale_id: string | null
+          stock_after: number
+          stock_before: number
+          unit_cost: number | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "inventory_movements"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      save_purchase: {
+        Args: {
+          p_company_id: string
+          p_purchase_id: string | null
+          p_supplier_id: string
+          p_document_number: string
+          p_purchase_date: string
+          p_items: Json
+          p_discount: number
+          p_freight: number
+          p_other_expenses: number
+          p_notes: string
+        }
+        Returns: Database["public"]["Tables"]["purchases"]["Row"]
+      }
     }
     Enums: {
       company_member_role: "owner" | "admin" | "manager" | "cashier" | "viewer"
@@ -722,6 +1107,7 @@ export type Database = {
         | "debit_card"
         | "bank_transfer"
         | "other"
+      purchase_status: "draft" | "completed" | "cancelled"
       registration_status: "active" | "inactive"
       sale_status: "completed" | "cancelled"
     }
@@ -869,6 +1255,7 @@ export const Constants = {
         "bank_transfer",
         "other",
       ],
+      purchase_status: ["draft", "completed", "cancelled"],
       registration_status: ["active", "inactive"],
       sale_status: ["completed", "cancelled"],
     },

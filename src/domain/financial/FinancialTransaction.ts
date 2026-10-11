@@ -54,10 +54,10 @@ export interface FinancialTransaction {
 
   notes?: string;
 
-  saleId?: number;
+  saleId?: string | number;
   saleNumber?: string;
 
-  purchaseId?: number;
+  purchaseId?: string | number;
   purchaseNumber?: string;
 
   inventoryMovementId?: number;
@@ -94,10 +94,10 @@ export interface CreateFinancialTransactionInput {
   source?:
   FinancialTransactionSource;
 
-  saleId?: number;
+  saleId?: string | number;
   saleNumber?: string;
 
-  purchaseId?: number;
+  purchaseId?: string | number;
   purchaseNumber?: string;
 
   inventoryMovementId?: number;

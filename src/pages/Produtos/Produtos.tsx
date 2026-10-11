@@ -14,6 +14,8 @@ import {
 } from "react";
 
 import ConfirmDialog from "../../components/common/ConfirmDialog/ConfirmDialog";
+import ErrorState from "../../components/common/ErrorState/ErrorState";
+import LoadingState from "../../components/common/LoadingState/LoadingState";
 import StatisticCard from "../../components/common/StatisticCard/StatisticCard";
 import TableCard from "../../components/common/TableCard/TableCard";
 
@@ -23,6 +25,7 @@ import ProductsTable from "../../components/products/ProductsTable/ProductsTable
 
 import { useProducts } from "../../hooks/useProducts";
 import { useInventory } from "../../hooks/useInventory";
+import { useNotifications } from "../../hooks/useNotifications";
 import { useSettings, } from "../../hooks/useSettings";
 
 import type {
@@ -42,6 +45,7 @@ import {
   formatCurrency,
   formatNumber,
 } from "../../utils/formatters";
+import { getErrorMessage } from "../../utils/errors";
 
 import {
   filterProducts,
@@ -58,6 +62,8 @@ interface ProductConfirmation {
 }
 
 export default function Produtos() {
+  const notifications = useNotifications();
+
   const {
   settings,
 } = useSettings();
@@ -68,6 +74,9 @@ export default function Produtos() {
     updateProduct,
     deleteProduct,
     toggleProductStatus,
+    isLoading,
+    error,
+    refreshProducts,
   } = useProducts();
 
   const [filters, setFilters] =
@@ -159,19 +168,38 @@ export default function Produtos() {
     setEditingProduct(null);
   }
 
-  function handleSaveProduct(
+  async function handleSaveProduct(
     data: ProductFormData,
   ) {
-    if (editingProduct) {
-      updateProduct(
-        editingProduct.id,
-        data,
-      );
-    } else {
-      createProduct(data);
-    }
+    try {
+      if (editingProduct) {
+        const product = await updateProduct(
+          editingProduct.id,
+          data,
+        );
 
-    closeForm();
+        notifications.success(
+          "Produto atualizado",
+          `${product.name} foi atualizado com sucesso.`,
+        );
+      } else {
+        const product = await createProduct(data);
+
+        notifications.success(
+          "Produto cadastrado",
+          `${product.name} foi cadastrado com sucesso.`,
+        );
+      }
+
+      closeForm();
+    } catch (saveError) {
+      notifications.error(
+        editingProduct
+          ? "Não foi possível atualizar o produto"
+          : "Não foi possível cadastrar o produto",
+        getErrorMessage(saveError),
+      );
+    }
   }
 
   function requestToggleStatus(product: Product) {
@@ -204,26 +232,37 @@ export default function Produtos() {
     });
   }
 
-  function handleConfirmAction() {
+  async function handleConfirmAction() {
     if (!confirmation) {
       return;
     }
 
-    if (confirmation.type === "delete") {
-      deleteProduct(
-        confirmation.product.id,
+    try {
+      if (confirmation.type === "delete") {
+        await deleteProduct(confirmation.product.id);
+
+        notifications.success(
+          "Produto excluído",
+          `${confirmation.product.name} foi excluído com sucesso.`,
+        );
+      }
+
+      if (confirmation.type === "toggle-status") {
+        await toggleProductStatus(confirmation.product.id);
+
+        notifications.success(
+          "Situação atualizada",
+          `${confirmation.product.name} foi atualizado com sucesso.`,
+        );
+      }
+
+      setConfirmation(null);
+    } catch (actionError) {
+      notifications.error(
+        "Não foi possível alterar o produto",
+        getErrorMessage(actionError),
       );
     }
-
-    if (
-      confirmation.type === "toggle-status"
-    ) {
-      toggleProductStatus(
-        confirmation.product.id,
-      );
-    }
-
-    setConfirmation(null);
   }
 
   const confirmationTitle =
@@ -242,6 +281,25 @@ export default function Produtos() {
           : "ativado novamente para uso no sistema"
         }.`
         : "";
+
+  if (isLoading) {
+    return (
+      <LoadingState
+        title="Carregando produtos"
+        description="Buscando o catálogo da empresa no banco de dados."
+      />
+    );
+  }
+
+  if (error) {
+    return (
+      <ErrorState
+        title="Não foi possível carregar os produtos"
+        description={error}
+        onRetry={() => void refreshProducts()}
+      />
+    );
+  }
 
   return (
     <section className={styles.page}>

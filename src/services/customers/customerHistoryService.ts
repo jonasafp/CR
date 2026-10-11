@@ -1,112 +1,38 @@
-import {
-  STORAGE_KEYS,
-} from "../../constants/storageKeys";
+import type { CustomerSalesHistory } from "../../domain/customers/CustomerSalesHistory";
+import { defaultSaleFilters } from "../../domain/sales/SaleFilters";
+import { salesService } from "../sales/salesService";
 
-import {
-  initialSales,
-} from "../../data/salesMock";
-
-import type {
-  CustomerSalesHistory,
-} from "../../domain/customers/CustomerSalesHistory";
-
-import type {
-  Sale,
-} from "../../domain/sales/Sale";
-
-import {
-  readLocalStorage,
-} from "../storage/localStorageService";
-
-function roundValue(
-  value: number,
-): number {
-  return (
-    Math.round(
-      (
-        value +
-        Number.EPSILON
-      ) * 100,
-    ) / 100
-  );
+function roundValue(value: number): number {
+  return Math.round((value + Number.EPSILON) * 100) / 100;
 }
 
-async function getByCustomerId(
-  customerId: number,
-): Promise<CustomerSalesHistory> {
-  await new Promise<void>(
-    (resolve) => {
-      window.setTimeout(
-        resolve,
-        200,
-      );
-    },
+async function getByCustomerId(customerId: string): Promise<CustomerSalesHistory> {
+  const result = await salesService.list({
+    ...defaultSaleFilters,
+    status: "completed",
+    page: 1,
+    pageSize: 100_000,
+  });
+
+  const completedSales = result.items
+    .filter((sale) => sale.customerId === customerId)
+    .sort((first, second) => second.createdAt.localeCompare(first.createdAt));
+
+  const totalSpent = roundValue(
+    completedSales.reduce((total, sale) => total + sale.total, 0),
   );
-
-  const sales =
-    readLocalStorage<Sale[]>(
-      STORAGE_KEYS.sales,
-      initialSales,
-    );
-
-  const completedSales =
-    sales
-      .filter(
-        (sale) =>
-          sale.customerId ===
-            customerId &&
-          sale.status ===
-            "completed",
-      )
-      .sort(
-        (
-          firstSale,
-          secondSale,
-        ) =>
-          secondSale.createdAt.localeCompare(
-            firstSale.createdAt,
-          ),
-      );
-
-  const totalSpent =
-    roundValue(
-      completedSales.reduce(
-        (
-          total,
-          sale,
-        ) =>
-          total +
-          sale.total,
-        0,
-      ),
-    );
-
-  const totalPurchases =
-    completedSales.length;
+  const totalPurchases = completedSales.length;
 
   return {
     customerId,
-
     completedSales,
-
     totalPurchases,
-
     totalSpent,
-
-    averageTicket:
-      totalPurchases > 0
-        ? roundValue(
-            totalSpent /
-            totalPurchases,
-          )
-        : 0,
-
-    lastPurchaseAt:
-      completedSales[0]
-        ?.createdAt,
+    averageTicket: totalPurchases > 0
+      ? roundValue(totalSpent / totalPurchases)
+      : 0,
+    lastPurchaseAt: completedSales[0]?.createdAt,
   };
 }
 
-export const customerHistoryService = {
-  getByCustomerId,
-};
+export const customerHistoryService = { getByCustomerId };

@@ -1,35 +1,8 @@
-import {
-  STORAGE_KEYS,
-} from "../../constants/storageKeys";
-
-import {
-  initialPurchases,
-} from "../../data/purchasesMock";
-
-import type {
-  Purchase,
-} from "../../domain/purchases/Purchase";
-
 import type {
   SupplierPurchaseHistory,
 } from "../../domain/suppliers/SupplierPurchaseHistory";
-
-import {
-  readLocalStorage,
-} from "../storage/localStorageService";
-
-function delay(
-  milliseconds = 200,
-): Promise<void> {
-  return new Promise(
-    (resolve) => {
-      window.setTimeout(
-        resolve,
-        milliseconds,
-      );
-    },
-  );
-}
+import { createDefaultPurchaseFilters } from "../../domain/purchases/PurchaseFilters";
+import { purchaseService } from "../purchases/purchaseService";
 
 function roundValue(
   value: number,
@@ -45,27 +18,18 @@ function roundValue(
 }
 
 async function getBySupplierId(
-  supplierId: number,
+  supplierId: string | number,
 ): Promise<
   SupplierPurchaseHistory
 > {
-  await delay();
-
-  const storedPurchases =
-    readLocalStorage<
-      Purchase[]
-    >(
-      STORAGE_KEYS.purchases,
-      initialPurchases,
-    );
+  const result = await purchaseService.list({
+    ...createDefaultPurchaseFilters(),
+    supplierId,
+    pageSize: 10_000,
+  });
 
   const purchases =
-    storedPurchases
-      .filter(
-        (purchase) =>
-          purchase.supplierId ===
-          supplierId,
-      )
+    result.items
       .sort(
         (
           firstPurchase,

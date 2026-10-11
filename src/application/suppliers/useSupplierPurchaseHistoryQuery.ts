@@ -12,23 +12,23 @@ import {
 
 export function useSupplierPurchaseHistoryQuery(
   supplierId:
-    number | null,
+    string | number | null,
 ) {
   return useQuery({
     queryKey: [
       ...purchaseQueryKeys.all,
       "supplier-history",
-      supplierId ?? 0,
+      supplierId ?? "",
     ],
 
     queryFn: () =>
       supplierPurchaseHistoryService
         .getBySupplierId(
-          supplierId ?? 0,
+          supplierId ?? "",
         ),
 
     enabled:
       supplierId !== null &&
-      supplierId > 0,
+      String(supplierId).length > 0,
   });
 }

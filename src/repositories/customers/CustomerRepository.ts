@@ -25,7 +25,7 @@ export interface CustomerRepository {
     Promise<Customer[]>;
 
   getById(
-    customerId: number,
+    customerId: string,
   ): Promise<Customer>;
 
   create(

@@ -21,9 +21,9 @@ export type InventoryMovementReason =
   | "other";
 
 export interface InventoryMovement {
-  id: number;
+  id: string;
 
-  productId: number;
+  productId: string;
   productName: string;
   productCode: string;
 
@@ -41,10 +41,10 @@ export interface InventoryMovement {
 
   notes?: string;
 
-  saleId?: number;
+  saleId?: string | number;
   saleNumber?: string;
 
-  purchaseId?: number;
+  purchaseId?: string | number;
   purchaseNumber?: string;
 
   createdAt: string;
@@ -52,7 +52,7 @@ export interface InventoryMovement {
 }
 
 export interface InventoryMovementFormData {
-  productId: number | null;
+  productId: string | null;
 
   type: InventoryMovementType;
   reason: InventoryMovementReason;

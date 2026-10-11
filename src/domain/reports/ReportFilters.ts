@@ -64,7 +64,7 @@ export interface ReportFilters {
 
   search: string;
   category: string;
-  productId: number | null;
+  productId: string | null;
 
   saleStatus:
   | SaleStatus

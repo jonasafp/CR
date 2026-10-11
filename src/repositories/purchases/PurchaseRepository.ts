@@ -24,7 +24,7 @@ export interface PurchaseRepository {
   >;
 
   getById(
-    purchaseId: number,
+    purchaseId: string | number,
   ): Promise<Purchase>;
 
   create(

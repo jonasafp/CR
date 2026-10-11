@@ -19,7 +19,7 @@ import {
 
 export const products: Product[] = [
   {
-    id: 1,
+    id: "1",
     code: "RAC-001",
 
     name: "Ração Premium para Cães",
@@ -43,7 +43,7 @@ export const products: Product[] = [
   },
 
   {
-    id: 2,
+    id: "2",
     code: "RAC-002",
 
     name: "Ração Premium para Gatos",
@@ -67,7 +67,7 @@ export const products: Product[] = [
   },
 
   {
-    id: 3,
+    id: "3",
     code: "RAC-003",
 
     name: "Ração para Filhotes",
@@ -91,7 +91,7 @@ export const products: Product[] = [
   },
 
   {
-    id: 4,
+    id: "4",
     code: "RAC-004",
 
     name: "Ração para Aves",
@@ -115,7 +115,7 @@ export const products: Product[] = [
   },
 
   {
-    id: 5,
+    id: "5",
     code: "RAC-005",
 
     name: "Ração para Peixes",
@@ -139,7 +139,7 @@ export const products: Product[] = [
   },
 
   {
-    id: 6,
+    id: "6",
     code: "ACE-001",
 
     name: "Areia Higiênica para Gatos",

@@ -168,7 +168,7 @@ function createSupplierId(
     Math.max(
       ...suppliers.map(
         (supplier) =>
-          supplier.id,
+          Number(supplier.id),
       ),
     ) + 1
   );
@@ -230,7 +230,7 @@ function validateEmail(
 function ensureDocumentIsUnique(
   suppliers: Supplier[],
   document: string,
-  ignoredSupplierId?: number,
+  ignoredSupplierId?: string | number,
 ): void {
   if (!document) {
     return;
@@ -262,7 +262,7 @@ function ensureDocumentIsUnique(
 
 function findSupplierOrThrow(
   suppliers: Supplier[],
-  supplierId: number,
+  supplierId: string | number,
 ): Supplier {
   const supplier =
     suppliers.find(
@@ -465,7 +465,7 @@ export class MockSupplierRepository
   }
 
   async getById(
-    supplierId: number,
+    supplierId: string | number,
   ): Promise<Supplier> {
     await delay();
 

@@ -7,42 +7,46 @@ import type {
 
 export interface ProductsContextValue {
   products: Product[];
+  isLoading: boolean;
+  error: string;
+
+  refreshProducts: () => Promise<void>;
 
   createProduct: (
     data: ProductFormData,
-  ) => Product;
+  ) => Promise<Product>;
 
   updateProduct: (
-    productId: number,
+    productId: string,
     data: ProductFormData,
-  ) => void;
+  ) => Promise<Product>;
 
   deleteProduct: (
-    productId: number,
-  ) => void;
+    productId: string,
+  ) => Promise<void>;
 
   toggleProductStatus: (
-    productId: number,
-  ) => void;
+    productId: string,
+  ) => Promise<void>;
 
   updateProductStock: (
-    productId: number,
+    productId: string,
     stockQuantity: number,
-  ) => void;
+  ) => Promise<void>;
 
   updateProductPurchasePrice: (
-    productId: number,
+    productId: string,
     purchasePrice: number,
-  ) => void;
+  ) => Promise<void>;
 
   findProductById: (
-    productId: number,
+    productId: string,
   ) => Product | undefined;
 
-  resetProducts: () => void;
+  resetProducts: () => Promise<void>;
 
   incrementProductSoldQuantity: (
-    productId: number,
+    productId: string,
     quantity: number,
   ) => void;
 }

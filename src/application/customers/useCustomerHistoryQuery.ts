@@ -12,23 +12,22 @@ import {
 
 export function useCustomerHistoryQuery(
   customerId:
-    number | null,
+    string | null,
 ) {
   return useQuery({
     queryKey: [
       ...salesQueryKeys.all,
       "customer-history",
-      customerId ?? 0,
+      customerId ?? "",
     ],
 
     queryFn: () =>
       customerHistoryService
         .getByCustomerId(
-          customerId ?? 0,
+          customerId ?? "",
         ),
 
     enabled:
-      customerId !== null &&
-      customerId > 0,
+      Boolean(customerId),
   });
 }

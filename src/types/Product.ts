@@ -12,7 +12,7 @@ export type ProductStatus =
   | "inactive";
 
 export interface Product {
-  id: number;
+  id: string;
 
   code: string;
   barcode?: string;

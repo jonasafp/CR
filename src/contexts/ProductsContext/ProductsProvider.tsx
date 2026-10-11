@@ -1,184 +1,232 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
-
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 
 import { STORAGE_KEYS } from "../../constants/storageKeys";
-
+import useCompany from "../CompanyContext/useCompany";
+import { useSettings } from "../../hooks/useSettings";
 import {
-  products as initialProducts,
-} from "../../data/mock";
-
-import {
-  readLocalStorage,
-  removeLocalStorage,
-  writeLocalStorage,
-} from "../../services/storage/localStorageService";
-
-import type {
-  Product,
-  ProductFormData,
-} from "../../types/Product";
-
-import {
-  ProductsContext,
-} from "./productsContext";
-
-import {
-  useSettings,
-} from "../../hooks/useSettings";
+  createProduct as createProductInDatabase,
+  deleteProduct as deleteProductInDatabase,
+  listProducts,
+  updateProduct as updateProductInDatabase,
+  updateProductFields,
+} from "../../repositories/products/SupabaseProductsRepository";
+import { writeLocalStorage } from "../../services/storage/localStorageService";
+import type { Product, ProductFormData } from "../../types/Product";
+import { getErrorMessage } from "../../utils/errors";
+import { ProductsContext } from "./productsContext";
 
 interface ProductsProviderProps {
   children: ReactNode;
 }
 
-function createProductId(
-  products: Product[],
-): number {
-  if (products.length === 0) {
-    return 1;
-  }
+export default function ProductsProvider({ children }: ProductsProviderProps) {
+  const { companyId } = useCompany();
+  const { settings } = useSettings();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  return (
-    Math.max(
-      ...products.map(
-        (product) => product.id,
-      ),
-    ) + 1
-  );
-}
+  const refreshProducts = useCallback(async () => {
+    if (!companyId) {
+      setProducts([]);
+      setError("");
+      setIsLoading(false);
+      return;
+    }
 
-export default function ProductsProvider({
-  children,
-}: ProductsProviderProps) {
-  const {
-    settings,
-  } = useSettings();
+    setIsLoading(true);
+    setError("");
 
-  const [products, setProducts] =
-    useState<Product[]>(() =>
-      readLocalStorage<Product[]>(
-        STORAGE_KEYS.products,
-        initialProducts,
-      ),
-    );
+    try {
+      setProducts(await listProducts(companyId));
+    } catch (loadError) {
+      setProducts([]);
+      setError(getErrorMessage(loadError));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [companyId]);
 
   useEffect(() => {
-    writeLocalStorage(
-      STORAGE_KEYS.products,
-      products,
-    );
+    void refreshProducts();
+  }, [refreshProducts]);
+
+  // Ponte temporária para vendas, compras e backup, que ainda usam o armazenamento local.
+  useEffect(() => {
+    writeLocalStorage(STORAGE_KEYS.products, products);
   }, [products]);
 
   useEffect(() => {
-    function handleProductsUpdated(
-      event: Event,
-    ) {
-      const customEvent =
-        event as CustomEvent<Product[]>;
+    function handleProductsUpdated(event: Event) {
+      if (!companyId) return;
 
-      if (
-        Array.isArray(
-          customEvent.detail,
-        )
-      ) {
-        setProducts(
-          customEvent.detail,
+      const nextProducts = (event as CustomEvent<Product[]>).detail;
+      if (!Array.isArray(nextProducts)) return;
+
+      setProducts((currentProducts) => {
+        const currentById = new Map(
+          currentProducts.map((product) => [product.id, product]),
         );
-      }
+
+        for (const product of nextProducts) {
+          const currentProduct = currentById.get(product.id);
+
+          if (
+            currentProduct &&
+            (currentProduct.stockQuantity !== product.stockQuantity ||
+              currentProduct.purchasePrice !== product.purchasePrice)
+          ) {
+            void updateProductFields(companyId, product.id, {
+              stock_quantity: product.stockQuantity,
+              purchase_price: product.purchasePrice,
+            }).catch(() => void refreshProducts());
+          }
+        }
+
+        return nextProducts;
+      });
     }
 
-    window.addEventListener(
-      "gestor-facil:products-updated",
-      handleProductsUpdated,
-    );
-
-    return () => {
+    window.addEventListener("gestor-facil:products-updated", handleProductsUpdated);
+    return () =>
       window.removeEventListener(
         "gestor-facil:products-updated",
         handleProductsUpdated,
       );
-    };
-  }, []);
+  }, [companyId, refreshProducts]);
 
   const createProduct = useCallback(
-    (data: ProductFormData): Product => {
-      const now = new Date().toISOString();
+    async (data: ProductFormData): Promise<Product> => {
+      if (!companyId) throw new Error("Nenhuma empresa ativa foi encontrada.");
 
-      const newProduct: Product = {
-        id: createProductId(products),
+      const newProduct = await createProductInDatabase(
+        companyId,
+        data,
+        settings.inventory.allowNegativeStock,
+      );
 
-        ...data,
-
-        soldQuantity: 0,
-
-        createdAt: now,
-        updatedAt: now,
-      };
-
-      setProducts((currentProducts) => [
-        newProduct,
-        ...currentProducts,
-      ]);
-
+      setProducts((currentProducts) =>
+        [newProduct, ...currentProducts].sort((a, b) =>
+          a.name.localeCompare(b.name, "pt-BR"),
+        ),
+      );
       return newProduct;
     },
-    [products],
+    [companyId, settings.inventory.allowNegativeStock],
   );
 
   const updateProduct = useCallback(
-    (
-      productId: number,
-      data: ProductFormData,
-    ) => {
-      setProducts((currentProducts) =>
-        currentProducts.map((product) =>
-          product.id === productId
-            ? {
-              ...product,
-              ...data,
-              updatedAt:
-                new Date().toISOString(),
-            }
-            : product,
-        ),
+    async (productId: string, data: ProductFormData): Promise<Product> => {
+      if (!companyId) throw new Error("Nenhuma empresa ativa foi encontrada.");
+
+      const updatedProduct = await updateProductInDatabase(
+        companyId,
+        productId,
+        data,
+        settings.inventory.allowNegativeStock,
       );
+
+      setProducts((currentProducts) =>
+        currentProducts
+          .map((product) =>
+            product.id === productId ? updatedProduct : product,
+          )
+          .sort((a, b) => a.name.localeCompare(b.name, "pt-BR")),
+      );
+      return updatedProduct;
     },
-    [],
+    [companyId, settings.inventory.allowNegativeStock],
   );
 
   const deleteProduct = useCallback(
-    (productId: number) => {
+    async (productId: string): Promise<void> => {
+      if (!companyId) throw new Error("Nenhuma empresa ativa foi encontrada.");
+
+      await deleteProductInDatabase(companyId, productId);
       setProducts((currentProducts) =>
-        currentProducts.filter(
-          (product) =>
-            product.id !== productId,
-        ),
+        currentProducts.filter((product) => product.id !== productId),
       );
     },
-    [],
+    [companyId],
   );
 
   const toggleProductStatus = useCallback(
-    (productId: number) => {
+    async (productId: string): Promise<void> => {
+      if (!companyId) throw new Error("Nenhuma empresa ativa foi encontrada.");
+
+      const product = products.find((item) => item.id === productId);
+      if (!product) throw new Error("Produto não encontrado.");
+
+      const nextStatus = product.status === "active" ? "inactive" : "active";
+      await updateProductFields(companyId, productId, { status: nextStatus });
+
+      setProducts((currentProducts) =>
+        currentProducts.map((item) =>
+          item.id === productId
+            ? { ...item, status: nextStatus, updatedAt: new Date().toISOString() }
+            : item,
+        ),
+      );
+    },
+    [companyId, products],
+  );
+
+  const updateProductStock = useCallback(
+    async (productId: string, stockQuantity: number): Promise<void> => {
+      if (!companyId) throw new Error("Nenhuma empresa ativa foi encontrada.");
+
+      const nextStockQuantity = settings.inventory.allowNegativeStock
+        ? stockQuantity
+        : Math.max(0, stockQuantity);
+
+      await updateProductFields(companyId, productId, {
+        stock_quantity: nextStockQuantity,
+      });
+
       setProducts((currentProducts) =>
         currentProducts.map((product) =>
           product.id === productId
             ? {
-              ...product,
+                ...product,
+                stockQuantity: nextStockQuantity,
+                updatedAt: new Date().toISOString(),
+              }
+            : product,
+        ),
+      );
+    },
+    [companyId, settings.inventory.allowNegativeStock],
+  );
 
-              status:
-                product.status === "active"
-                  ? "inactive"
-                  : "active",
+  const updateProductPurchasePrice = useCallback(
+    async (productId: string, purchasePrice: number): Promise<void> => {
+      if (!Number.isFinite(purchasePrice) || purchasePrice < 0) return;
+      if (!companyId) throw new Error("Nenhuma empresa ativa foi encontrada.");
 
-              updatedAt:
-                new Date().toISOString(),
-            }
+      await updateProductFields(companyId, productId, {
+        purchase_price: purchasePrice,
+      });
+
+      setProducts((currentProducts) =>
+        currentProducts.map((product) =>
+          product.id === productId
+            ? { ...product, purchasePrice, updatedAt: new Date().toISOString() }
+            : product,
+        ),
+      );
+    },
+    [companyId],
+  );
+
+  const incrementProductSoldQuantity = useCallback(
+    (productId: string, quantity: number): void => {
+      if (quantity <= 0) return;
+
+      setProducts((currentProducts) =>
+        currentProducts.map((product) =>
+          product.id === productId
+            ? { ...product, soldQuantity: product.soldQuantity + quantity }
             : product,
         ),
       );
@@ -186,127 +234,17 @@ export default function ProductsProvider({
     [],
   );
 
-  const updateProductStock = useCallback(
-    (
-      productId: number,
-      stockQuantity: number,
-    ) => {
-      setProducts((currentProducts) =>
-        currentProducts.map((product) =>
-          product.id === productId
-            ? {
-              ...product,
-
-              stockQuantity:
-                settings.inventory
-                  .allowNegativeStock
-                  ? stockQuantity
-                  : Math.max(
-                    0,
-                    stockQuantity,
-                  ),
-
-              updatedAt:
-                new Date().toISOString(),
-            }
-            : product,
-        ),
-      );
-    },
-    [
-      settings.inventory
-        .allowNegativeStock,
-    ],
-  );
-
-  const updateProductPurchasePrice =
-    useCallback(
-      (
-        productId: number,
-        purchasePrice: number,
-      ) => {
-        if (
-          !Number.isFinite(
-            purchasePrice,
-          ) ||
-          purchasePrice < 0
-        ) {
-          return;
-        }
-
-        setProducts(
-          (currentProducts) =>
-            currentProducts.map(
-              (product) =>
-                product.id ===
-                  productId
-                  ? {
-                    ...product,
-
-                    purchasePrice,
-
-                    updatedAt:
-                      new Date()
-                        .toISOString(),
-                  }
-                  : product,
-            ),
-        );
-      },
-      [],
-    );
-
-  const incrementProductSoldQuantity =
-    useCallback(
-      (
-        productId: number,
-        quantity: number,
-      ) => {
-        if (quantity <= 0) {
-          return;
-        }
-
-        setProducts((currentProducts) =>
-          currentProducts.map((product) =>
-            product.id === productId
-              ? {
-                ...product,
-
-                soldQuantity:
-                  product.soldQuantity +
-                  quantity,
-
-                updatedAt:
-                  new Date().toISOString(),
-              }
-              : product,
-          ),
-        );
-      },
-      [],
-    );
-
   const findProductById = useCallback(
-    (productId: number) =>
-      products.find(
-        (product) =>
-          product.id === productId,
-      ),
+    (productId: string) => products.find((product) => product.id === productId),
     [products],
   );
-
-  const resetProducts = useCallback(() => {
-    removeLocalStorage(
-      STORAGE_KEYS.products,
-    );
-
-    setProducts(initialProducts);
-  }, []);
 
   const contextValue = useMemo(
     () => ({
       products,
-
+      isLoading,
+      error,
+      refreshProducts,
       createProduct,
       updateProduct,
       deleteProduct,
@@ -314,11 +252,14 @@ export default function ProductsProvider({
       updateProductStock,
       updateProductPurchasePrice,
       findProductById,
-      resetProducts,
+      resetProducts: refreshProducts,
       incrementProductSoldQuantity,
     }),
     [
       products,
+      isLoading,
+      error,
+      refreshProducts,
       createProduct,
       updateProduct,
       deleteProduct,
@@ -326,15 +267,12 @@ export default function ProductsProvider({
       updateProductStock,
       updateProductPurchasePrice,
       findProductById,
-      resetProducts,
       incrementProductSoldQuantity,
     ],
   );
 
   return (
-    <ProductsContext.Provider
-      value={contextValue}
-    >
+    <ProductsContext.Provider value={contextValue}>
       {children}
     </ProductsContext.Provider>
   );

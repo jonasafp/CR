@@ -772,7 +772,7 @@ export default function Clientes() {
                               </strong>
 
                               <span>
-                                Código #{customer.id}
+                                Cliente cadastrado
                               </span>
                             </td>
 

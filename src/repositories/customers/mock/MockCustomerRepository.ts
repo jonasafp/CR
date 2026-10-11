@@ -161,22 +161,9 @@ function saveCustomers(
 }
 
 function createCustomerId(
-  customers: Customer[],
-): number {
-  if (
-    customers.length === 0
-  ) {
-    return 1;
-  }
-
-  return (
-    Math.max(
-      ...customers.map(
-        (customer) =>
-          customer.id,
-      ),
-    ) + 1
-  );
+  _customers: Customer[],
+): string {
+  return crypto.randomUUID();
 }
 
 function validateName(
@@ -235,7 +222,7 @@ function validateEmail(
 function ensureDocumentIsUnique(
   customers: Customer[],
   document: string,
-  ignoredCustomerId?: number,
+  ignoredCustomerId?: string,
 ): void {
   if (!document) {
     return;
@@ -269,7 +256,7 @@ function ensureDocumentIsUnique(
 
 function findCustomerOrThrow(
   customers: Customer[],
-  customerId: number,
+  customerId: string,
 ): Customer {
   const customer =
     customers.find(
@@ -468,7 +455,7 @@ export class MockCustomerRepository
   }
 
   async getById(
-    customerId: number,
+    customerId: string,
   ): Promise<Customer> {
     await delay();
 
@@ -651,7 +638,7 @@ export class MockCustomerRepository
       );
 
     if (
-      currentCustomer.id === 1 &&
+      currentCustomer.id === "1" &&
       input.status === "inactive"
     ) {
       throw new ApiError(

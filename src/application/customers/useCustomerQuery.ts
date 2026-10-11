@@ -44,7 +44,7 @@ export const customerQueryKeys = {
     ] as const,
 
   detail: (
-    customerId: number,
+    customerId: string,
   ) =>
     [
       ...customerQueryKeys.details(),
@@ -84,21 +84,20 @@ export function useActiveCustomersQuery() {
 
 export function useCustomerQuery(
   customerId:
-    number | null,
+    string | null,
 ) {
   return useQuery({
     queryKey:
       customerQueryKeys.detail(
-        customerId ?? 0,
+        customerId ?? "",
       ),
 
     queryFn: () =>
       customerService.getById(
-        customerId ?? 0,
+        customerId ?? "",
       ),
 
     enabled:
-      customerId !== null &&
-      customerId > 0,
+      Boolean(customerId),
   });
 }

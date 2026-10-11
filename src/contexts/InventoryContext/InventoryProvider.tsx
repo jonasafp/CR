@@ -1,120 +1,78 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
-
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 
 import { STORAGE_KEYS } from "../../constants/storageKeys";
-
-import {
-  initialInventoryMovements,
-} from "../../data/inventoryMock";
-
+import useCompany from "../CompanyContext/useCompany";
 import { useProducts } from "../../hooks/useProducts";
-
+import { useSettings } from "../../hooks/useSettings";
 import {
-  useSettings,
-} from "../../hooks/useSettings";
-
-import {
-  readLocalStorage,
-  removeLocalStorage,
-  writeLocalStorage,
-} from "../../services/storage/localStorageService";
-
+  createInventoryMovement,
+  listInventoryMovements,
+} from "../../repositories/inventory/SupabaseInventoryRepository";
+import { writeLocalStorage } from "../../services/storage/localStorageService";
+import { shouldUpdatePurchasePrice, validateInventoryMovementSettings } from
+  "../../services/inventory/inventorySettingsRules";
 import type {
   InventoryMovement,
   InventoryMovementFormData,
 } from "../../types/Inventory";
-
-import {
-  calculateStockAfterMovement,
-} from "../../utils/inventoryCalculations";
-
-import {
-  shouldUpdatePurchasePrice,
-  validateInventoryMovementSettings,
-} from "../../services/inventory/inventorySettingsRules";
-
-import {
-  InventoryContext,
-} from "./inventoryContext";
+import { getErrorMessage } from "../../utils/errors";
+import { InventoryContext } from "./inventoryContext";
 
 interface InventoryProviderProps {
   children: ReactNode;
 }
 
-function createMovementId(
-  movements: InventoryMovement[],
-): number {
-  if (movements.length === 0) {
-    return 1;
-  }
+export default function InventoryProvider({ children }: InventoryProviderProps) {
+  const { companyId } = useCompany();
+  const { products, refreshProducts } = useProducts();
+  const { settings } = useSettings();
+  const inventorySettings = settings.inventory;
 
-  return (
-    Math.max(
-      ...movements.map(
-        (movement) => movement.id,
-      ),
-    ) + 1
-  );
-}
+  const [movements, setMovements] = useState<InventoryMovement[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
 
-export default function InventoryProvider({
-  children,
-}: InventoryProviderProps) {
-  const {
-    products,
-    updateProductStock,
-    updateProductPurchasePrice,
-    incrementProductSoldQuantity,
-  } = useProducts();
+  const refreshMovements = useCallback(async () => {
+    if (!companyId) {
+      setMovements([]);
+      setError("");
+      setIsLoading(false);
+      return;
+    }
 
-  const {
-    settings,
-  } = useSettings();
+    setIsLoading(true);
+    setError("");
 
-  const inventorySettings =
-    settings.inventory;
-
-  const [movements, setMovements] =
-    useState<InventoryMovement[]>(() =>
-      readLocalStorage<
-        InventoryMovement[]
-      >(
-        STORAGE_KEYS.inventoryMovements,
-        initialInventoryMovements,
-      ),
-    );
+    try {
+      setMovements(await listInventoryMovements(companyId, products));
+    } catch (loadError) {
+      setMovements([]);
+      setError(getErrorMessage(loadError));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [companyId, products]);
 
   useEffect(() => {
-    writeLocalStorage(
-      STORAGE_KEYS.inventoryMovements,
-      movements,
-    );
+    void refreshMovements();
+  }, [refreshMovements]);
+
+  // Espelho temporário para relatórios, vendas, compras e backup ainda locais.
+  useEffect(() => {
+    writeLocalStorage(STORAGE_KEYS.inventoryMovements, movements);
   }, [movements]);
 
   useEffect(() => {
-    function handleMovementsUpdated(
-      event: Event,
-    ) {
-      const customEvent =
-        event as CustomEvent<
-          InventoryMovement[]
-        >;
+    function handleMovementsUpdated(event: Event) {
+      const nextMovements = (event as CustomEvent<InventoryMovement[]>).detail;
 
-      if (
-        Array.isArray(
-          customEvent.detail,
-        )
-      ) {
-        setMovements(
-          customEvent.detail,
-        );
-      }
+      if (!Array.isArray(nextMovements)) return;
+
+      const validProductIds = new Set(products.map((product) => product.id));
+      setMovements(
+        nextMovements.filter((movement) => validProductIds.has(movement.productId)),
+      );
     }
 
     window.addEventListener(
@@ -122,171 +80,62 @@ export default function InventoryProvider({
       handleMovementsUpdated,
     );
 
-    return () => {
+    return () =>
       window.removeEventListener(
         "gestor-facil:inventory-movements-updated",
         handleMovementsUpdated,
       );
-    };
-  }, []);
+  }, [products]);
 
   const createMovement = useCallback(
-    (
-      data: InventoryMovementFormData,
-    ): InventoryMovement | null => {
-      if (data.productId === null) {
-        return null;
-      }
+    async (data: InventoryMovementFormData): Promise<InventoryMovement> => {
+      if (!companyId) throw new Error("Nenhuma empresa ativa foi encontrada.");
+      if (!data.productId) throw new Error("Selecione um produto.");
 
-      const product = products.find(
-        (currentProduct) =>
-          currentProduct.id ===
-          data.productId,
-      );
-
-      if (!product) {
-        return null;
-      }
-
+      const product = products.find((item) => item.id === data.productId);
+      if (!product) throw new Error("Produto não encontrado.");
       if (product.status === "inactive") {
-        return null;
+        throw new Error("Não é possível movimentar um produto inativo.");
       }
-
       if (data.quantity <= 0) {
-        return null;
+        throw new Error("A quantidade deve ser maior que zero.");
       }
 
-      const previousStock =
-        product.stockQuantity;
+      const settingsError = validateInventoryMovementSettings(
+        data,
+        product.stockQuantity,
+        inventorySettings,
+      );
+      if (settingsError) throw new Error(settingsError);
 
-      const settingsError =
-        validateInventoryMovementSettings(
-          data,
-          previousStock,
-          inventorySettings,
-        );
-
-      if (settingsError) {
-        return null;
-      }
-
-      const currentStock =
-        calculateStockAfterMovement(
-          previousStock,
-          data.quantity,
-          data.type,
-        );
-
-      if (
-        currentStock < 0 &&
-        !inventorySettings
-          .allowNegativeStock
-      ) {
-        return null;
-      }
-
-      const newMovement: InventoryMovement = {
-        id: createMovementId(movements),
-
-        productId: product.id,
-        productName: product.name,
-        productCode: product.code,
-
-        type: data.type,
-        reason: data.reason,
-
-        quantity: data.quantity,
-        unit: product.stockUnit,
-
-        previousStock,
-        currentStock,
-
-        unitCost: data.unitCost,
-
-        totalValue:
-          data.quantity * data.unitCost,
-
-        notes: data.notes.trim(),
-
-        createdAt:
-          new Date().toISOString(),
-
-        createdBy: "Administrador",
-      };
-
-      updateProductStock(
-        product.id,
-        currentStock,
+      const movement = await createInventoryMovement(
+        companyId,
+        product,
+        data,
+        shouldUpdatePurchasePrice(data, inventorySettings),
       );
 
-      if (
-        shouldUpdatePurchasePrice(
-          data,
-          inventorySettings,
-        )
-      ) {
-        updateProductPurchasePrice(
-          product.id,
-          data.unitCost,
-        );
-      }
-
-      if (
-        data.type === "exit" &&
-        data.reason === "sale"
-      ) {
-        incrementProductSoldQuantity(
-          product.id,
-          data.quantity,
-        );
-      }
-
-      setMovements(
-        (currentMovements) => [
-          newMovement,
-          ...currentMovements,
-        ],
-      );
-
-      return newMovement;
+      setMovements((currentMovements) => [movement, ...currentMovements]);
+      await refreshProducts();
+      return movement;
     },
-    [
-      movements,
-      products,
-      updateProductStock,
-    ],
+    [companyId, inventorySettings, products, refreshProducts],
   );
-
-  const resetMovements = useCallback(() => {
-    removeLocalStorage(
-      STORAGE_KEYS.inventoryMovements,
-    );
-
-    setMovements(
-      initialInventoryMovements,
-    );
-  }, []);
 
   const contextValue = useMemo(
     () => ({
       movements,
+      isLoading,
+      error,
+      refreshMovements,
       createMovement,
-      resetMovements,
+      resetMovements: refreshMovements,
     }),
-    [
-      movements,
-      products,
-      updateProductStock,
-      updateProductPurchasePrice,
-      incrementProductSoldQuantity,
-      inventorySettings,
-    ],
+    [movements, isLoading, error, refreshMovements, createMovement],
   );
 
   return (
-    <InventoryContext.Provider
-      value={contextValue}
-    >
+    <InventoryContext.Provider value={contextValue}>
       {children}
     </InventoryContext.Provider>
   );

@@ -16,9 +16,9 @@ export type PaymentMethod =
   | "other";
 
 export interface SaleItem {
-  id: number;
+  id: string;
 
-  productId: number;
+  productId: string;
   productCode: string;
   productName: string;
 
@@ -36,13 +36,13 @@ export interface SaleItem {
 }
 
 export interface Sale {
-  id: number;
+  id: string;
   number: string;
 
   status: SaleStatus;
   paymentMethod: PaymentMethod;
 
-  customerId?: number;
+  customerId?: string | number;
   customerName?: string;
 
   items: SaleItem[];
@@ -66,7 +66,7 @@ export interface Sale {
 }
 
 export interface SaleCartItem {
-  productId: number;
+  productId: string;
   quantity: number;
 
   unitPrice: number;
@@ -76,7 +76,7 @@ export interface SaleCartItem {
 export interface CreateSaleInput {
   paymentMethod: PaymentMethod;
 
-  customerId?: number;
+  customerId?: string | number;
   customerName?: string;
 
   items: SaleCartItem[];
@@ -86,7 +86,7 @@ export interface CreateSaleInput {
 }
 
 export interface CancelSaleInput {
-  saleId: number;
+  saleId: string;
   reason: string;
 }
 

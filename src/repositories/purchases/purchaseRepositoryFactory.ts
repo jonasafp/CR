@@ -1,6 +1,8 @@
 import {
   MockPurchaseRepository,
 } from "./mock/MockPurchaseRepository";
+import { apiConfig } from "../../api/apiConfig";
+import { SupabasePurchaseRepository } from "./supabase/SupabasePurchaseRepository";
 
 import type {
   PurchaseRepository,
@@ -8,7 +10,9 @@ import type {
 
 function createPurchaseRepository():
   PurchaseRepository {
-  return new MockPurchaseRepository();
+  return apiConfig.dataSource === "api"
+    ? new MockPurchaseRepository()
+    : new SupabasePurchaseRepository();
 }
 
 export const purchaseRepository =

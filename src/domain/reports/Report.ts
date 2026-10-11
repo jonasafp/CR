@@ -114,7 +114,7 @@ export interface ReportPaymentMethodItem {
 }
 
 export interface SalesReportRow {
-  id: number;
+  id: string;
   number: string;
 
   status: SaleStatus;
@@ -168,7 +168,7 @@ export interface FinancialReportRow {
 
   customerOrSupplier?: string;
 
-  saleId?: number;
+  saleId?: string | number;
   saleNumber?: string;
 
   createdAt: string;
@@ -176,7 +176,7 @@ export interface FinancialReportRow {
 }
 
 export interface ProductReportRow {
-  id: number;
+  id: string;
 
   code: string;
   name: string;
@@ -203,9 +203,9 @@ export interface ProductReportRow {
 }
 
 export interface InventoryReportRow {
-  id: number;
+  id: string;
 
-  productId: number;
+  productId: string;
   productCode: string;
   productName: string;
 

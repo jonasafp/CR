@@ -6,7 +6,7 @@ export const initialCustomers:
   Customer[] = [
   {
     id:
-      1,
+      "1",
 
     name:
       "Cliente balcão",

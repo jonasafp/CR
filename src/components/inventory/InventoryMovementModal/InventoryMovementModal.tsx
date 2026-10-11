@@ -52,7 +52,7 @@ interface InventoryMovementModalProps {
 
   onSubmit: (
     data: InventoryMovementFormData,
-  ) => void;
+  ) => void | Promise<void>;
 }
 
 interface FormErrors {
@@ -214,7 +214,7 @@ export default function InventoryMovementModal({
   }
 
   function handleProductChange(value: string) {
-    const productId = Number(value);
+    const productId = value;
 
     const product = products.find(
       (item) => item.id === productId,

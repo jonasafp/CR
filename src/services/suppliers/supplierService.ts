@@ -27,7 +27,7 @@ export const supplierService = {
   },
 
   getById(
-    supplierId: number,
+    supplierId: string | number,
   ) {
     return supplierRepository.getById(
       supplierId,

@@ -24,7 +24,7 @@ export const purchaseService = {
   },
 
   getById(
-    purchaseId: number,
+    purchaseId: string | number,
   ) {
     return purchaseRepository.getById(
       purchaseId,

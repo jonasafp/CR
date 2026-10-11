@@ -19,7 +19,7 @@ import {
 
 const baseMovement:
   InventoryMovementFormData = {
-  productId: 1,
+  productId: "1",
 
   type: "entry",
   reason: "purchase",

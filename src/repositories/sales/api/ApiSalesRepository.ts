@@ -128,7 +128,7 @@ export class ApiSalesRepository
   }
 
   async getById(
-    saleId: number,
+    saleId: string,
   ): Promise<Sale> {
     const response =
       await httpClient.get<unknown>(

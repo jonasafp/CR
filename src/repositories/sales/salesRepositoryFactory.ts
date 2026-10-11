@@ -1,7 +1,7 @@
 import { apiConfig } from "../../api/apiConfig";
 
 import { ApiSalesRepository } from "./api/ApiSalesRepository";
-import { MockSalesRepository } from "./mock/MockSalesRepository";
+import { SupabaseSalesRepository } from "./supabase/SupabaseSalesRepository";
 
 import type {
   SalesRepository,
@@ -14,7 +14,7 @@ function createSalesRepository(): SalesRepository {
     return new ApiSalesRepository();
   }
 
-  return new MockSalesRepository();
+  return new SupabaseSalesRepository();
 }
 
 export const salesRepository =

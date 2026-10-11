@@ -17,7 +17,7 @@ const validSaleInput = {
 
   items: [
     {
-      productId: 1,
+      productId: "1",
       quantity: 2,
       unitPrice: 15,
       discount: 0,

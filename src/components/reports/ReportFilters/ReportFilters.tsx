@@ -884,7 +884,7 @@ export default function ReportFilters({
 
               value === "all"
                 ? null
-                : Number(value),
+                : value,
             )
           }
         />

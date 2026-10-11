@@ -3,7 +3,7 @@ import type {
 } from "../sales/Sale";
 
 export interface CustomerSalesHistory {
-  customerId: number;
+  customerId: string;
 
   completedSales:
     Sale[];

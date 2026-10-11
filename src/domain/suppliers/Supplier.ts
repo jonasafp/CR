@@ -13,7 +13,7 @@ export interface SupplierAddress {
 }
 
 export interface Supplier {
-  id: number;
+  id: string | number;
 
   legalName: string;
   tradeName: string;
@@ -56,7 +56,7 @@ export interface CreateSupplierInput {
 }
 
 export interface UpdateSupplierInput {
-  id: number;
+  id: string | number;
 
   legalName: string;
   tradeName?: string;
@@ -79,7 +79,7 @@ export interface UpdateSupplierInput {
 }
 
 export interface ChangeSupplierStatusInput {
-  supplierId: number;
+  supplierId: string | number;
 
   status:
     SupplierStatus;

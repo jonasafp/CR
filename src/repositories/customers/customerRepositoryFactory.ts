@@ -1,6 +1,4 @@
-import {
-  MockCustomerRepository,
-} from "./mock/MockCustomerRepository";
+import { SupabaseCustomerRepository } from "./supabase/SupabaseCustomerRepository";
 
 import type {
   CustomerRepository,
@@ -8,14 +6,7 @@ import type {
 
 function createCustomerRepository():
   CustomerRepository {
-  /*
-   * Nesta primeira versão os dados são armazenados
-   * localmente no navegador.
-   *
-   * Quando o backend for implementado, a troca poderá
-   * ser feita aqui sem alterar páginas ou componentes.
-   */
-  return new MockCustomerRepository();
+  return new SupabaseCustomerRepository();
 }
 
 export const customerRepository =

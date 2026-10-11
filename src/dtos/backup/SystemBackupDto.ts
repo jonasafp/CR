@@ -30,13 +30,19 @@ const stockUnitSchema =
     "pct",
   ]);
 
+const productIdSchema =
+  z.preprocess(
+    (value) =>
+      typeof value === "number"
+        ? String(value)
+        : value,
+    z.string().trim().min(1),
+  );
+
 const productSchema =
   z.object({
     id:
-      z
-        .number()
-        .int()
-        .positive(),
+      productIdSchema,
 
     code:
       z
@@ -123,16 +129,10 @@ const productSchema =
 const inventoryMovementSchema =
   z.object({
     id:
-      z
-        .number()
-        .int()
-        .positive(),
+      productIdSchema,
 
     productId:
-      z
-        .number()
-        .int()
-        .positive(),
+      productIdSchema,
 
     productName:
       z
@@ -204,11 +204,7 @@ const inventoryMovementSchema =
         .optional(),
 
     saleId:
-      z
-        .number()
-        .int()
-        .positive()
-        .optional(),
+      productIdSchema.optional(),
 
     saleNumber:
       z
@@ -264,9 +260,7 @@ const customerAddressSchema =
 const customerSchema =
   z.object({
     id:
-      z.number()
-        .int()
-        .positive(),
+      productIdSchema,
 
     name:
       z.string()
@@ -393,9 +387,7 @@ const purchaseItemSchema =
         .positive(),
 
     productId:
-      z.number()
-        .int()
-        .positive(),
+      productIdSchema,
 
     productCode:
       z.string(),

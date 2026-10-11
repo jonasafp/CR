@@ -66,6 +66,7 @@ import {
 import {
   useProducts,
 } from "../../hooks/useProducts";
+import { useInventory } from "../../hooks/useInventory";
 
 import {
   getErrorMessage,
@@ -172,7 +173,10 @@ export default function Compras() {
 
   const {
     products,
+    refreshProducts,
   } = useProducts();
+
+  const { refreshMovements } = useInventory();
 
   const [
     filters,
@@ -424,9 +428,7 @@ export default function Compras() {
 
   function addProduct() {
     const productId =
-      Number(
-        selectedProductId,
-      );
+      selectedProductId;
 
     const product =
       activeProducts.find(
@@ -497,7 +499,7 @@ export default function Compras() {
   }
 
   function updateCartItem(
-    productId: number,
+    productId: string,
     field:
       | "quantity"
       | "unitCost",
@@ -526,7 +528,7 @@ export default function Compras() {
   }
 
   function removeCartItem(
-    productId: number,
+    productId: string,
   ) {
     setCart(
       (
@@ -571,9 +573,7 @@ export default function Compras() {
     const commonInput:
       CreatePurchaseInput = {
       supplierId:
-        Number(
-          form.supplierId,
-        ),
+        form.supplierId,
 
       documentNumber:
         form.documentNumber,
@@ -611,9 +611,14 @@ export default function Compras() {
       updateMutation.mutate(
         input,
         {
-          onSuccess: (
+          onSuccess: async (
             purchase,
           ) => {
+            await Promise.all([
+              refreshProducts(),
+              refreshMovements(),
+            ]);
+
             resetAndCloseForm();
 
             notifications.success(
@@ -641,9 +646,14 @@ export default function Compras() {
     createMutation.mutate(
       commonInput,
       {
-        onSuccess: (
+        onSuccess: async (
           purchase,
         ) => {
+          await Promise.all([
+            refreshProducts(),
+            refreshMovements(),
+          ]);
+
           resetAndCloseForm();
 
           notifications.success(
@@ -683,9 +693,14 @@ export default function Compras() {
             confirmation.purchase.id,
         },
         {
-          onSuccess: (
+          onSuccess: async (
             purchase,
           ) => {
+            await Promise.all([
+              refreshProducts(),
+              refreshMovements(),
+            ]);
+
             setConfirmation(
               null,
             );
@@ -738,9 +753,14 @@ export default function Compras() {
         reason,
       },
       {
-        onSuccess: (
+        onSuccess: async (
           purchase,
         ) => {
+          await Promise.all([
+            refreshProducts(),
+            refreshMovements(),
+          ]);
+
           setConfirmation(
             null,
           );

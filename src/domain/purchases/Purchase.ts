@@ -8,9 +8,9 @@ export type PurchaseStatus =
   | "cancelled";
 
 export interface PurchaseItem {
-  id: number;
+  id: string | number;
 
-  productId: number;
+  productId: string;
   productCode: string;
   productName: string;
 
@@ -24,13 +24,13 @@ export interface PurchaseItem {
 }
 
 export interface Purchase {
-  id: number;
+  id: string | number;
   number: string;
 
   status:
     PurchaseStatus;
 
-  supplierId: number;
+  supplierId: string | number;
   supplierName: string;
 
   /*
@@ -63,14 +63,14 @@ export interface Purchase {
 }
 
 export interface PurchaseCartItem {
-  productId: number;
+  productId: string;
 
   quantity: number;
   unitCost: number;
 }
 
 export interface CreatePurchaseInput {
-  supplierId: number;
+  supplierId: string | number;
 
   documentNumber?: string;
   purchaseDate: string;
@@ -86,9 +86,9 @@ export interface CreatePurchaseInput {
 }
 
 export interface UpdatePurchaseInput {
-  purchaseId: number;
+  purchaseId: string | number;
 
-  supplierId: number;
+  supplierId: string | number;
 
   documentNumber?: string;
   purchaseDate: string;
@@ -104,11 +104,11 @@ export interface UpdatePurchaseInput {
 }
 
 export interface CompletePurchaseInput {
-  purchaseId: number;
+  purchaseId: string | number;
 }
 
 export interface CancelPurchaseInput {
-  purchaseId: number;
+  purchaseId: string | number;
   reason: string;
 }
 

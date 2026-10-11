@@ -25,7 +25,7 @@ export interface SupplierRepository {
     Promise<Supplier[]>;
 
   getById(
-    supplierId: number,
+    supplierId: string | number,
   ): Promise<Supplier>;
 
   create(

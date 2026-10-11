@@ -163,7 +163,7 @@ function createPurchaseId(
     Math.max(
       ...purchases.map(
         (purchase) =>
-          purchase.id,
+          Number(purchase.id),
       ),
     ) + 1
   );
@@ -179,28 +179,15 @@ function createPurchaseNumber(
 }
 
 function createMovementId(
-  movements:
+  _movements:
     InventoryMovement[],
-): number {
-  if (
-    movements.length === 0
-  ) {
-    return 1;
-  }
-
-  return (
-    Math.max(
-      ...movements.map(
-        (movement) =>
-          movement.id,
-      ),
-    ) + 1
-  );
+): string {
+  return crypto.randomUUID();
 }
 
 function findPurchaseOrThrow(
   purchases: Purchase[],
-  purchaseId: number,
+  purchaseId: string | number,
 ): Purchase {
   const purchase =
     purchases.find(
@@ -221,7 +208,7 @@ function findPurchaseOrThrow(
 }
 
 function findActiveSupplierOrThrow(
-  supplierId: number,
+  supplierId: string | number,
 ): Supplier {
   const supplier =
     readSuppliers().find(
@@ -294,7 +281,7 @@ function createPurchaseItems(
   }
 
   const usedProductIds =
-    new Set<number>();
+    new Set<string>();
 
   return inputItems.map(
     (
@@ -805,7 +792,7 @@ export class MockPurchaseRepository
   }
 
   async getById(
-    purchaseId: number,
+    purchaseId: string | number,
   ): Promise<Purchase> {
     await delay();
 
@@ -1057,11 +1044,6 @@ export class MockPurchaseRepository
       new Date()
         .toISOString();
 
-    let nextMovementId =
-      createMovementId(
-        movements,
-      );
-
     const newMovements:
       InventoryMovement[] = [];
 
@@ -1090,7 +1072,7 @@ export class MockPurchaseRepository
 
           newMovements.push({
             id:
-              nextMovementId++,
+              createMovementId(movements),
 
             productId:
               product.id,
@@ -1254,11 +1236,6 @@ export class MockPurchaseRepository
       purchase.status ===
       "completed"
     ) {
-      let nextMovementId =
-        createMovementId(
-          movements,
-        );
-
       const reversalMovements:
         InventoryMovement[] = [];
 
@@ -1300,7 +1277,7 @@ export class MockPurchaseRepository
 
             reversalMovements.push({
               id:
-                nextMovementId++,
+                createMovementId(movements),
 
               productId:
                 product.id,

@@ -10,7 +10,7 @@ export interface ReportFilterOptions {
   categories: string[];
 
   products: Array<{
-    id: number;
+    id: string;
     code: string;
     name: string;
   }>;

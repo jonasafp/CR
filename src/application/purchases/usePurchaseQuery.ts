@@ -38,7 +38,7 @@ export const purchaseQueryKeys = {
     ] as const,
 
   detail: (
-    purchaseId: number,
+    purchaseId: string | number,
   ) =>
     [
       ...purchaseQueryKeys.details(),
@@ -81,22 +81,22 @@ export function usePurchasesQuery(
 
 export function usePurchaseQuery(
   purchaseId:
-    number | null,
+    string | number | null,
 ) {
   return useQuery({
     queryKey:
       purchaseQueryKeys.detail(
-        purchaseId ?? 0,
+        purchaseId ?? "",
       ),
 
     queryFn: () =>
       purchaseService.getById(
-        purchaseId ?? 0,
+        purchaseId ?? "",
       ),
 
     enabled:
       purchaseId !== null &&
-      purchaseId > 0,
+      String(purchaseId).length > 0,
   });
 }
 

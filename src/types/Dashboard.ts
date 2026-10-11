@@ -55,7 +55,7 @@ export interface FinancialSummary {
 }
 
 export interface StockAlertItem {
-  productId: number;
+  productId: string;
   name: string;
   currentStock: number;
   minimumStock: number;
@@ -64,7 +64,7 @@ export interface StockAlertItem {
 }
 
 export interface TopSellingProduct {
-  productId: number;
+  productId: string;
   name: string;
   category: string;
   quantitySold: number;

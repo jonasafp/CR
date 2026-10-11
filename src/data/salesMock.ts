@@ -4,7 +4,7 @@ import type {
 
 export const initialSales: Sale[] = [
   {
-    id: 1,
+    id: "1",
     number: "VEN-000001",
 
     status: "completed",
@@ -14,9 +14,9 @@ export const initialSales: Sale[] = [
 
     items: [
       {
-        id: 1,
+        id: "1-1",
 
-        productId: 1,
+        productId: "1",
         productCode: "RAC-001",
         productName:
           "Ração Premium para Cães",
@@ -57,7 +57,7 @@ export const initialSales: Sale[] = [
   },
 
   {
-    id: 2,
+    id: "2",
     number: "VEN-000002",
 
     status: "completed",
@@ -67,9 +67,9 @@ export const initialSales: Sale[] = [
 
     items: [
       {
-        id: 2,
+        id: "2-1",
 
-        productId: 2,
+        productId: "2",
         productCode: "RAC-002",
         productName:
           "Ração Premium para Gatos",
@@ -88,9 +88,9 @@ export const initialSales: Sale[] = [
       },
 
       {
-        id: 3,
+        id: "2-2",
 
-        productId: 6,
+        productId: "6",
         productCode: "ACE-001",
         productName:
           "Areia Higiênica para Gatos",
