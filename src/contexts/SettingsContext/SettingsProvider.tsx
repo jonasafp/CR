@@ -166,7 +166,7 @@ export default function SettingsProvider({
       refetchSettings,
     }),
     [
-      settingsQuery.data,
+      currentSettings,
       settingsQuery.isLoading,
       settingsQuery.error,
       updateMutation.isPending,

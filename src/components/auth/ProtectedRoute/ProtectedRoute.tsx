@@ -1,19 +1,12 @@
 import {
-  useEffect,
-  useState,
-} from "react";
-
-import {
   Navigate,
   Outlet,
   useLocation,
 } from "react-router-dom";
 
 import useAuth from "../../../contexts/AuthContext/useAuth";
-
-import {
-  getCurrentCompanyMembership,
-} from "../../../services/auth/authService";
+import useCompany from "../../../contexts/CompanyContext/useCompany";
+import ErrorState from "../../common/ErrorState/ErrorState";
 
 type ProtectedRouteProps = {
   requireCompany?:
@@ -25,112 +18,26 @@ export default function ProtectedRoute({
 }: ProtectedRouteProps) {
   const {
     session,
-    isLoading,
+    isLoading: isAuthLoading,
   } =
     useAuth();
+
+  const {
+    membership,
+    isLoading: isCompanyLoading,
+    error: companyError,
+    refreshCompany,
+  } = useCompany();
 
   const location =
     useLocation();
 
-  const [
-    hasCompany,
-    setHasCompany,
-  ] =
-    useState<
-      boolean
-      | null
-    >(
-      requireCompany
-        ? null
-        : true,
-    );
-
-  const [
-    companyError,
-    setCompanyError,
-  ] =
-    useState("");
-
-  useEffect(
-    () => {
-      let isMounted =
-        true;
-
-      if (
-        isLoading ||
-        !session ||
-        !requireCompany
-      ) {
-        return () => {
-          isMounted =
-            false;
-        };
-      }
-
-      setHasCompany(
-        null,
-      );
-
-      setCompanyError(
-        "",
-      );
-
-      void getCurrentCompanyMembership()
-        .then(
-          (
-            membership,
-          ) => {
-            if (
-              !isMounted
-            ) {
-              return;
-            }
-
-            setHasCompany(
-              Boolean(
-                membership,
-              ),
-            );
-          },
-        )
-        .catch(
-          (
-            error:
-              unknown,
-          ) => {
-            if (
-              !isMounted
-            ) {
-              return;
-            }
-
-            setCompanyError(
-              error instanceof Error
-                ? error.message
-                : "Não foi possível verificar a empresa.",
-            );
-          },
-        );
-
-      return () => {
-        isMounted =
-          false;
-      };
-    },
-    [
-      isLoading,
-      session,
-      requireCompany,
-    ],
-  );
-
   if (
-    isLoading ||
+    isAuthLoading ||
     (
       session &&
       requireCompany &&
-      hasCompany ===
-        null &&
+      isCompanyLoading &&
       !companyError
     )
   ) {
@@ -174,36 +81,19 @@ export default function ProtectedRoute({
     companyError
   ) {
     return (
-      <div
-        style={{
-          padding:
-            "32px",
+      <ErrorState
+        title="Não foi possível carregar a empresa"
+        description={companyError}
+        onRetry={() => {
+          void refreshCompany();
         }}
-      >
-        <h1>
-          Não foi possível carregar a empresa
-        </h1>
-
-        <p>
-          {companyError}
-        </p>
-
-        <button
-          type="button"
-          onClick={() =>
-            window.location
-              .reload()
-          }
-        >
-          Tentar novamente
-        </button>
-      </div>
+      />
     );
   }
 
   if (
     requireCompany &&
-    !hasCompany
+    !membership
   ) {
     return (
       <Navigate

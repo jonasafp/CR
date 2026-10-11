@@ -5,6 +5,8 @@ import {
 } from "react-router-dom";
 
 import ProtectedRoute from "../components/auth/ProtectedRoute/ProtectedRoute";
+import RoleProtectedRoute from "../components/auth/RoleProtectedRoute/RoleProtectedRoute";
+import AccessDenied from "../components/auth/AccessDenied/AccessDenied";
 
 import DashboardLayout from "../layouts/DashboardLayout/DashboardLayout";
 
@@ -66,65 +68,88 @@ export default function AppRoutes() {
           />
 
           <Route
+            path="acesso-negado"
+            element={<AccessDenied />}
+          />
+
+          <Route
             path="estoque"
             element={
-              <Estoque />
+              <RoleProtectedRoute permission="manageInventory">
+                <Estoque />
+              </RoleProtectedRoute>
             }
           />
 
           <Route
             path="vendas"
             element={
-              <Vendas />
+              <RoleProtectedRoute permission="createSales">
+                <Vendas />
+              </RoleProtectedRoute>
             }
           />
 
           <Route
             path="produtos"
             element={
-              <Produtos />
+              <RoleProtectedRoute permission="manageProducts">
+                <Produtos />
+              </RoleProtectedRoute>
             }
           />
 
           <Route
             path="clientes"
             element={
-              <Clientes />
+              <RoleProtectedRoute permission="manageCustomers">
+                <Clientes />
+              </RoleProtectedRoute>
             }
           />
 
           <Route
             path="financeiro"
             element={
-              <Financeiro />
+              <RoleProtectedRoute permission="manageFinancial">
+                <Financeiro />
+              </RoleProtectedRoute>
             }
           />
 
           <Route
             path="relatorios"
             element={
-              <Relatorios />
+              <RoleProtectedRoute permission="viewReports">
+                <Relatorios />
+              </RoleProtectedRoute>
             }
           />
 
           <Route
             path="configuracoes"
             element={
-              <Configuracoes />
+              <RoleProtectedRoute permission="manageSettings">
+                <Configuracoes />
+              </RoleProtectedRoute>
             }
           />
 
           <Route
             path="compras"
             element={
-              <Compras />
+              <RoleProtectedRoute permission="managePurchases">
+                <Compras />
+              </RoleProtectedRoute>
             }
           />
 
           <Route
             path="fornecedores"
             element={
-              <Fornecedores />
+              <RoleProtectedRoute permission="manageSuppliers">
+                <Fornecedores />
+              </RoleProtectedRoute>
             }
           />
         </Route>

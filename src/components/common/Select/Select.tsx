@@ -4,6 +4,7 @@ import {
 } from "lucide-react";
 
 import {
+  useCallback,
   useEffect,
   useId,
   useRef,
@@ -152,7 +153,7 @@ export default function Select<Value extends string>({
     return currentIndex;
   }
 
-  function calculateDropdownDirection() {
+  const calculateDropdownDirection = useCallback(() => {
     const container =
       containerRef.current;
 
@@ -182,7 +183,7 @@ export default function Select<Value extends string>({
     }
 
     setDropdownDirection("down");
-  }
+  }, [options.length]);
 
   function openDropdown() {
     if (disabled || options.length === 0) {
@@ -381,7 +382,7 @@ export default function Select<Value extends string>({
         true,
       );
     };
-  }, [isOpen]);
+  }, [calculateDropdownDirection, isOpen]);
 
   useEffect(() => {
     if (
