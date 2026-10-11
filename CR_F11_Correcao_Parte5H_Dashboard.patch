@@ -1,0 +1,355 @@
+diff --git a/src/application/dashboard/useDashboardAnalyticsQuery.ts b/src/application/dashboard/useDashboardAnalyticsQuery.ts
+new file mode 100644
+index 0000000..0da57de
+--- /dev/null
++++ b/src/application/dashboard/useDashboardAnalyticsQuery.ts
+@@ -0,0 +1,6 @@
++import { useQuery } from "@tanstack/react-query";
++import { getDashboardAnalytics } from "../../repositories/dashboard/SupabaseDashboardRepository";
++import type { DashboardPeriod } from "../../types/Dashboard";
++import type { StockUnit } from "../../types/Product";
++
++export function useDashboardAnalyticsQuery(period:DashboardPeriod,principalUnit:StockUnit){return useQuery({queryKey:["dashboard","analytics",period,principalUnit],queryFn:()=>getDashboardAnalytics(period,principalUnit),staleTime:30_000});}
+diff --git a/src/pages/Dashboard/Dashboard.tsx b/src/pages/Dashboard/Dashboard.tsx
+index 03c8cdc..f783f98 100644
+--- a/src/pages/Dashboard/Dashboard.tsx
++++ b/src/pages/Dashboard/Dashboard.tsx
+@@ -25,6 +25,8 @@ import {
+ import {
+   useDashboardFinancialQuery,
+ } from "../../application/dashboard/useDashboardFinancialQuery";
++import { useDashboardAnalyticsQuery } from "../../application/dashboard/useDashboardAnalyticsQuery";
++import { useSettings } from "../../hooks/useSettings";
+ 
+ import EmptyState from "../../components/common/EmptyState/EmptyState";
+ import SectionCard from "../../components/common/SectionCard/SectionCard";
+@@ -79,6 +81,13 @@ export default function Dashboard() {
+     movements,
+   } = useInventory();
+ 
++  const { settings } = useSettings();
++
++  const dashboardAnalyticsQuery = useDashboardAnalyticsQuery(
++    selectedPeriod,
++    settings.general.principalStockUnit,
++  );
++
+   const financialSummaryQuery =
+     useDashboardFinancialQuery(
+       selectedPeriod,
+@@ -89,6 +98,7 @@ export default function Dashboard() {
+       products,
+       movements,
+       selectedPeriod,
++      dashboardAnalyticsQuery.data,
+     );
+ 
+   if (!currentDashboardData) {
+@@ -459,4 +469,4 @@ export default function Dashboard() {
+       </div>
+     </section>
+   );
+-}
+\ No newline at end of file
++}
+diff --git a/src/repositories/dashboard/SupabaseDashboardRepository.ts b/src/repositories/dashboard/SupabaseDashboardRepository.ts
+new file mode 100644
+index 0000000..8e752ee
+--- /dev/null
++++ b/src/repositories/dashboard/SupabaseDashboardRepository.ts
+@@ -0,0 +1,50 @@
++import { supabase } from "../../lib/supabase";
++import { getCurrentCompanyMembership } from "../../services/auth/authService";
++import type { CategoryPerformanceItem, DashboardPeriod, DashboardVariations, FinancialSummary, SalesPerformancePoint, TopSellingProduct } from "../../types/Dashboard";
++import type { StockUnit } from "../../types/Product";
++
++export interface DashboardAnalytics {
++  financialSummary: FinancialSummary;
++  totalSoldQuantity: number;
++  salesPerformance: SalesPerformancePoint[];
++  categoryPerformance: CategoryPerformanceItem[];
++  topSellingProducts: TopSellingProduct[];
++  variations: Partial<DashboardVariations>;
++}
++
++interface PeriodRange { start: Date; end: Date; previousStart: Date; }
++const round=(value:number)=>Math.round((value+Number.EPSILON)*100)/100;
++function getRange(period:DashboardPeriod):PeriodRange{const end=new Date(),start=new Date(end);start.setHours(0,0,0,0);if(period==="week"){const day=start.getDay();start.setDate(start.getDate()-(day===0?6:day-1));}else if(period==="month")start.setDate(1);else if(period==="year")start.setMonth(0,1);const previousStart=new Date(start.getTime()-(end.getTime()-start.getTime())-1);return{start,end,previousStart};}
++function bucketDefinitions(period:DashboardPeriod){if(period==="today")return Array.from({length:6},(_,index)=>({key:String(index),label:`${String(index*4).padStart(2,"0")}h`}));if(period==="week")return["Seg","Ter","Qua","Qui","Sex","Sáb","Dom"].map((label,index)=>({key:String(index),label}));if(period==="month")return Array.from({length:5},(_,index)=>({key:String(index),label:`Sem. ${index+1}`}));return["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"].map((label,index)=>({key:String(index),label}));}
++function bucketKey(value:string,period:DashboardPeriod){const date=new Date(value);if(period==="today")return String(Math.min(5,Math.floor(date.getHours()/4)));if(period==="week")return String((date.getDay()+6)%7);if(period==="month")return String(Math.min(4,Math.floor((date.getDate()-1)/7)));return String(date.getMonth());}
++function variation(current:number,previous:number){if(previous===0)return current===0?0:100;return round(((current-previous)/Math.abs(previous))*100);}
++
++export async function getDashboardAnalytics(period:DashboardPeriod,principalUnit:StockUnit):Promise<DashboardAnalytics>{
++  const membership=await getCurrentCompanyMembership();if(!membership)throw new Error("Nenhuma empresa ativa foi encontrada.");
++  const range=getRange(period);
++  const {data:sales,error:salesError}=await supabase.from("sales").select("id, completed_at").eq("company_id",membership.company_id).eq("status","completed").gte("completed_at",range.previousStart.toISOString()).lte("completed_at",range.end.toISOString());if(salesError)throw salesError;
++  const saleIds=sales.map(sale=>sale.id);
++  const [itemsResult,productsResult,categoriesResult]=await Promise.all([
++    saleIds.length?supabase.from("sale_items").select("sale_id, product_id, product_name, unit, quantity, unit_cost, total").eq("company_id",membership.company_id).in("sale_id",saleIds):Promise.resolve({data:[],error:null}),
++    supabase.from("products").select("id, name, unit, category_id").eq("company_id",membership.company_id),
++    supabase.from("product_categories").select("id, name").eq("company_id",membership.company_id),
++  ]);
++  if(itemsResult.error)throw itemsResult.error;if(productsResult.error)throw productsResult.error;if(categoriesResult.error)throw categoriesResult.error;
++  const saleDate=new Map(sales.map(sale=>[sale.id,sale.completed_at]));
++  const products=new Map(productsResult.data.map(product=>[product.id,product]));
++  const categories=new Map(categoriesResult.data.map(category=>[category.id,category.name]));
++  const currentItems=itemsResult.data.filter(item=>new Date(saleDate.get(item.sale_id)??0)>=range.start);
++  const previousItems=itemsResult.data.filter(item=>new Date(saleDate.get(item.sale_id)??0)<range.start);
++  const totals=(items:typeof currentItems)=>items.reduce((acc,item)=>{const quantity=Number(item.quantity),revenue=Number(item.total),cost=quantity*Number(item.unit_cost);acc.revenue+=revenue;acc.cost+=cost;if(item.unit===principalUnit)acc.quantity+=quantity;return acc;},{revenue:0,cost:0,quantity:0});
++  const current=totals(currentItems),previous=totals(previousItems),profit=current.revenue-current.cost,previousProfit=previous.revenue-previous.cost,currentMargin=current.revenue?profit/current.revenue*100:0,previousMargin=previous.revenue?previousProfit/previous.revenue*100:0;
++  const buckets=new Map(bucketDefinitions(period).map(bucket=>[bucket.key,{label:bucket.label,revenue:0,cost:0,profit:0}]));
++  const categoryMap=new Map<string,{revenue:number;profit:number}>(),productMap=new Map<string,TopSellingProduct>();
++  for(const item of currentItems){const quantity=Number(item.quantity),revenue=Number(item.total),cost=quantity*Number(item.unit_cost),saleAt=saleDate.get(item.sale_id);if(saleAt){const bucket=buckets.get(bucketKey(saleAt,period));if(bucket){bucket.revenue+=revenue;bucket.cost+=cost;bucket.profit+=revenue-cost;}}
++    const product=products.get(item.product_id),category=product?.category_id?categories.get(product.category_id)??"Sem categoria":"Sem categoria",categoryItem=categoryMap.get(category)??{revenue:0,profit:0};categoryItem.revenue+=revenue;categoryItem.profit+=revenue-cost;categoryMap.set(category,categoryItem);
++    const productItem=productMap.get(item.product_id)??{productId:item.product_id,name:product?.name??item.product_name,category,quantitySold:0,unit:(product?.unit??item.unit) as StockUnit,revenue:0,profit:0};productItem.quantitySold+=quantity;productItem.revenue+=revenue;productItem.profit+=revenue-cost;productMap.set(item.product_id,productItem);
++  }
++  const salesPerformance=[...buckets.values()].map(item=>({label:item.label,revenue:round(item.revenue),cost:round(item.cost),profit:round(item.profit)}));
++  const categoryPerformance=[...categoryMap.entries()].map(([category,value])=>({category,revenue:round(value.revenue),profit:round(value.profit),percentage:current.revenue?round(value.revenue/current.revenue*100):0})).sort((a,b)=>b.revenue-a.revenue);
++  const topSellingProducts=[...productMap.values()].sort((a,b)=>b.quantitySold-a.quantitySold).slice(0,5).map(item=>({...item,quantitySold:round(item.quantitySold),revenue:round(item.revenue),profit:round(item.profit)}));
++  return{financialSummary:{revenue:round(current.revenue),cost:round(current.cost),profit:round(profit),profitMargin:round(currentMargin)},totalSoldQuantity:round(current.quantity),salesPerformance,categoryPerformance,topSellingProducts,variations:{soldQuantity:variation(current.quantity,previous.quantity),revenue:variation(current.revenue,previous.revenue),profit:variation(profit,previousProfit),margin:round(currentMargin-previousMargin)}};
++}
+diff --git a/src/services/dashboard/dashboardService.ts b/src/services/dashboard/dashboardService.ts
+index 39b0026..01660e1 100644
+--- a/src/services/dashboard/dashboardService.ts
++++ b/src/services/dashboard/dashboardService.ts
+@@ -5,9 +5,7 @@ import {
+ import type {
+     DashboardData,
+     DashboardPeriod,
+-    FinancialSummary,
+     StockAlertItem,
+-    TopSellingProduct,
+ } from "../../types/Dashboard";
+ 
+ import type {
+@@ -25,9 +23,7 @@ import {
+     isProductOutOfStock,
+ } from "../../utils/productFilters";
+ 
+-import {
+-    getDashboardDataByPeriod,
+-} from "../../data/dashboardAnalytics";
++import type { DashboardAnalytics } from "../../repositories/dashboard/SupabaseDashboardRepository";
+ 
+ function roundValue(value: number): number {
+     return (
+@@ -37,79 +33,6 @@ function roundValue(value: number): number {
+     );
+ }
+ 
+-function getPeriodMultiplier(
+-    period: DashboardPeriod,
+-): number {
+-    const multipliers: Record<
+-        DashboardPeriod,
+-        number
+-    > = {
+-        today: 0.035,
+-        week: 0.22,
+-        month: 1,
+-        year: 10.7,
+-    };
+-
+-    return multipliers[period];
+-}
+-
+-function createFinancialSummary(
+-    products: Product[],
+-    period: DashboardPeriod,
+-): FinancialSummary {
+-    const multiplier =
+-        getPeriodMultiplier(period);
+-
+-    const totals = products.reduce(
+-        (accumulator, product) => {
+-            const financial =
+-                calculateProductFinancialData(product);
+-
+-            accumulator.revenue +=
+-                financial.realizedRevenue;
+-
+-            accumulator.cost +=
+-                financial.realizedCost;
+-
+-            accumulator.profit +=
+-                financial.realizedProfit;
+-
+-            return accumulator;
+-        },
+-        {
+-            revenue: 0,
+-            cost: 0,
+-            profit: 0,
+-        },
+-    );
+-
+-    const revenue = roundValue(
+-        totals.revenue * multiplier,
+-    );
+-
+-    const cost = roundValue(
+-        totals.cost * multiplier,
+-    );
+-
+-    const profit = roundValue(
+-        revenue - cost,
+-    );
+-
+-    const profitMargin =
+-        revenue > 0
+-            ? roundValue(
+-                (profit / revenue) * 100,
+-            )
+-            : 0;
+-
+-    return {
+-        revenue,
+-        cost,
+-        profit,
+-        profitMargin,
+-    };
+-}
+-
+ function createStockAlerts(
+     products: Product[],
+ ): StockAlertItem[] {
+@@ -157,54 +80,6 @@ function createStockAlerts(
+         }));
+ }
+ 
+-function createTopSellingProducts(
+-    products: Product[],
+-    period: DashboardPeriod,
+-): TopSellingProduct[] {
+-    const multiplier =
+-        getPeriodMultiplier(period);
+-
+-    return [...products]
+-        .filter(
+-            (product) =>
+-                product.status === "active" &&
+-                product.soldQuantity > 0,
+-        )
+-        .sort(
+-            (firstProduct, secondProduct) =>
+-                secondProduct.soldQuantity -
+-                firstProduct.soldQuantity,
+-        )
+-        .slice(0, 5)
+-        .map((product) => {
+-            const financial =
+-                calculateProductFinancialData(product);
+-
+-            return {
+-                productId: product.id,
+-                name: product.name,
+-                category: product.category,
+-
+-                quantitySold: roundValue(
+-                    product.soldQuantity *
+-                    multiplier,
+-                ),
+-
+-                unit: product.stockUnit,
+-
+-                revenue: roundValue(
+-                    financial.realizedRevenue *
+-                    multiplier,
+-                ),
+-
+-                profit: roundValue(
+-                    financial.realizedProfit *
+-                    multiplier,
+-                ),
+-            };
+-        });
+-}
+-
+ function getFeaturedProduct(
+     products: Product[],
+ ): Product | null {
+@@ -244,7 +119,8 @@ function countMovementQuantity(
+ export function createDashboardData(
+     products: Product[],
+     movements: InventoryMovement[],
+-    period: DashboardPeriod,
++    _period: DashboardPeriod,
++    analytics?: DashboardAnalytics,
+ ): DashboardData | null {
+     const principalStockUnit =
+         settingsStorageService
+@@ -259,14 +135,7 @@ export function createDashboardData(
+         return null;
+     }
+ 
+-    const periodData =
+-        getDashboardDataByPeriod(period);
+-
+-    const financialSummary =
+-        createFinancialSummary(
+-            products,
+-            period,
+-        );
++    const financialSummary = analytics?.financialSummary ?? { revenue: 0, cost: 0, profit: 0, profitMargin: 0 };
+ 
+     const productsWithPrincipalUnit =
+         products.filter(
+@@ -283,13 +152,7 @@ export function createDashboardData(
+             0,
+         );
+ 
+-    const totalSoldQuantity =
+-        productsWithPrincipalUnit.reduce(
+-            (total, product) =>
+-                total +
+-                product.soldQuantity,
+-            0,
+-        ) * getPeriodMultiplier(period);
++    const totalSoldQuantity = analytics?.totalSoldQuantity ?? 0;
+ 
+     const totalStockCost = products.reduce(
+         (total, product) => {
+@@ -412,24 +275,20 @@ export function createDashboardData(
+ 
+         lowStockProducts,
+ 
+-        topSellingProducts:
+-            createTopSellingProducts(
+-                products,
+-                period,
+-            ),
++        topSellingProducts: analytics?.topSellingProducts ?? [],
+ 
+         salesPerformance:
+-            periodData.salesPerformance,
++            analytics?.salesPerformance ?? [],
+ 
+         categoryPerformance:
+-            periodData.categoryPerformance,
++            analytics?.categoryPerformance ?? [],
+ 
+         variations:
+-            periodData.variations,
++            analytics?.variations,
+ 
+         inventorySummary: {
+             totalEntries,
+             totalExits,
+         },
+     };
+-}
+\ No newline at end of file
++}
+diff --git a/src/types/Dashboard.ts b/src/types/Dashboard.ts
+index 905a73d..5d3d424 100644
+--- a/src/types/Dashboard.ts
++++ b/src/types/Dashboard.ts
+@@ -107,7 +107,7 @@ export interface DashboardData {
+ 
+   salesPerformance?: SalesPerformancePoint[];
+   categoryPerformance?: CategoryPerformanceItem[];
+-  variations?: DashboardVariations;
++  variations?: Partial<DashboardVariations>;
+   inventorySummary?: DashboardInventorySummary;
+ }
+ 

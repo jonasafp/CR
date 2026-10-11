@@ -271,51 +271,78 @@ export type Database = {
       financial_transactions: {
         Row: {
           amount: number
+          cancellation_reason: string | null
           category_id: string | null
+          category_name: string
           company_id: string
           created_at: string
           created_by: string | null
+          customer_or_supplier: string | null
           description: string
           due_date: string | null
           id: string
+          inventory_movement_id: string | null
           notes: string | null
+          number: number
           paid_at: string | null
           payment_method: Database["public"]["Enums"]["payment_method"] | null
+          purchase_id: string | null
+          purchase_number: string | null
           sale_id: string | null
+          sale_number: string | null
+          source: string
           status: Database["public"]["Enums"]["financial_transaction_status"]
           transaction_type: Database["public"]["Enums"]["financial_transaction_type"]
           updated_at: string
         }
         Insert: {
           amount: number
+          cancellation_reason?: string | null
           category_id?: string | null
+          category_name?: string
           company_id: string
           created_at?: string
           created_by?: string | null
+          customer_or_supplier?: string | null
           description: string
           due_date?: string | null
           id?: string
+          inventory_movement_id?: string | null
           notes?: string | null
+          number?: never
           paid_at?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
+          purchase_id?: string | null
+          purchase_number?: string | null
           sale_id?: string | null
+          sale_number?: string | null
+          source?: string
           status?: Database["public"]["Enums"]["financial_transaction_status"]
           transaction_type: Database["public"]["Enums"]["financial_transaction_type"]
           updated_at?: string
         }
         Update: {
           amount?: number
+          cancellation_reason?: string | null
           category_id?: string | null
+          category_name?: string
           company_id?: string
           created_at?: string
           created_by?: string | null
+          customer_or_supplier?: string | null
           description?: string
           due_date?: string | null
           id?: string
+          inventory_movement_id?: string | null
           notes?: string | null
+          number?: never
           paid_at?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
+          purchase_id?: string | null
+          purchase_number?: string | null
           sale_id?: string | null
+          sale_number?: string | null
+          source?: string
           status?: Database["public"]["Enums"]["financial_transaction_status"]
           transaction_type?: Database["public"]["Enums"]["financial_transaction_type"]
           updated_at?: string
@@ -1089,10 +1116,14 @@ export type Database = {
         }
         Returns: Database["public"]["Tables"]["purchases"]["Row"]
       }
+      save_system_settings: {
+        Args: { p_company_id: string; p_settings: Json }
+        Returns: Database["public"]["Tables"]["system_settings"]["Row"]
+      }
     }
     Enums: {
       company_member_role: "owner" | "admin" | "manager" | "cashier" | "viewer"
-      financial_transaction_status: "pending" | "paid" | "cancelled"
+      financial_transaction_status: "pending" | "received" | "paid" | "cancelled"
       financial_transaction_type: "income" | "expense"
       inventory_movement_type:
         | "entry"
@@ -1106,6 +1137,7 @@ export type Database = {
         | "credit_card"
         | "debit_card"
         | "bank_transfer"
+        | "bank_slip"
         | "other"
       purchase_status: "draft" | "completed" | "cancelled"
       registration_status: "active" | "inactive"
@@ -1238,7 +1270,7 @@ export const Constants = {
   public: {
     Enums: {
       company_member_role: ["owner", "admin", "manager", "cashier", "viewer"],
-      financial_transaction_status: ["pending", "paid", "cancelled"],
+      financial_transaction_status: ["pending", "received", "paid", "cancelled"],
       financial_transaction_type: ["income", "expense"],
       inventory_movement_type: [
         "entry",
@@ -1253,6 +1285,7 @@ export const Constants = {
         "credit_card",
         "debit_card",
         "bank_transfer",
+        "bank_slip",
         "other",
       ],
       purchase_status: ["draft", "completed", "cancelled"],

@@ -31,6 +31,7 @@ import type {
 import {
   settingsStorageService,
 } from "../settings/settingsStorageService";
+import { synchronizeSaleFinancial } from "../../repositories/financial/supabase/SupabaseFinancialRepository";
 
 import {
   readLocalStorage,
@@ -114,7 +115,7 @@ function getNextTransactionId(
     Math.max(
       ...transactions.map(
         (transaction) =>
-          transaction.id,
+          Number(transaction.id),
       ),
     ) + 1
   );
@@ -438,7 +439,11 @@ function canUseLocalSynchronization(): boolean {
 
 export function synchronizeSaleWithFinancial(
   sale: Sale,
-): void {
+): Promise<void> | void {
+  if (apiConfig.dataSource !== "api") {
+    return synchronizeSaleFinancial(sale);
+  }
+
   if (
     !canUseLocalSynchronization()
   ) {

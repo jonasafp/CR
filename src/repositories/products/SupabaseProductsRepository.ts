@@ -25,6 +25,7 @@ function nullableText(value: string): string | null {
 function toProduct(
   row: ProductRow,
   categoryName: string,
+  soldQuantity = 0,
 ): Product {
   return {
     id: row.id,
@@ -36,7 +37,7 @@ function toProduct(
     stockUnit: row.unit as StockUnit,
     stockQuantity: Number(row.stock_quantity),
     minimumStock: Number(row.minimum_stock),
-    soldQuantity: 0,
+    soldQuantity,
     purchasePrice: Number(row.purchase_price),
     salePrice: Number(row.sale_price),
     status: row.status as ProductStatus,
@@ -101,7 +102,7 @@ async function findCategoryName(
 export async function listProducts(
   companyId: string,
 ): Promise<Product[]> {
-  const [productsResult, categoriesResult] = await Promise.all([
+  const [productsResult, categoriesResult, salesResult, saleItemsResult] = await Promise.all([
     supabase
       .from("products")
       .select("*")
@@ -111,6 +112,8 @@ export async function listProducts(
       .from("product_categories")
       .select("id, name")
       .eq("company_id", companyId),
+    supabase.from("sales").select("id").eq("company_id",companyId).eq("status","completed"),
+    supabase.from("sale_items").select("sale_id, product_id, quantity").eq("company_id",companyId),
   ]);
 
   if (productsResult.error) {
@@ -120,17 +123,23 @@ export async function listProducts(
   if (categoriesResult.error) {
     throw categoriesResult.error;
   }
+  if (salesResult.error) throw salesResult.error;
+  if (saleItemsResult.error) throw saleItemsResult.error;
 
   const categoriesById = new Map(
     (categoriesResult.data as Pick<CategoryRow, "id" | "name">[])
       .map((category) => [category.id, category.name]),
   );
+  const completedSaleIds=new Set(salesResult.data.map(sale=>sale.id));
+  const soldByProduct=new Map<string,number>();
+  for(const item of saleItemsResult.data){if(completedSaleIds.has(item.sale_id)){soldByProduct.set(item.product_id,(soldByProduct.get(item.product_id)??0)+Number(item.quantity));}}
 
   return Promise.all(
     productsResult.data.map(async (row) =>
       toProduct(
         row,
         await findCategoryName(row.category_id, categoriesById),
+        soldByProduct.get(row.id) ?? 0,
       ),
     ),
   );

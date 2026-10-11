@@ -40,7 +40,7 @@ export function useCreateSaleMutation() {
       ),
 
     onSuccess: async (sale) => {
-      synchronizeSaleWithFinancial(
+      await synchronizeSaleWithFinancial(
         sale,
       );
 

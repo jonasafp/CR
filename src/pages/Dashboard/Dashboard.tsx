@@ -25,6 +25,8 @@ import {
 import {
   useDashboardFinancialQuery,
 } from "../../application/dashboard/useDashboardFinancialQuery";
+import { useDashboardAnalyticsQuery } from "../../application/dashboard/useDashboardAnalyticsQuery";
+import { useSettings } from "../../hooks/useSettings";
 
 import EmptyState from "../../components/common/EmptyState/EmptyState";
 import SectionCard from "../../components/common/SectionCard/SectionCard";
@@ -79,6 +81,13 @@ export default function Dashboard() {
     movements,
   } = useInventory();
 
+  const { settings } = useSettings();
+
+  const dashboardAnalyticsQuery = useDashboardAnalyticsQuery(
+    selectedPeriod,
+    settings.general.principalStockUnit,
+  );
+
   const financialSummaryQuery =
     useDashboardFinancialQuery(
       selectedPeriod,
@@ -89,6 +98,7 @@ export default function Dashboard() {
       products,
       movements,
       selectedPeriod,
+      dashboardAnalyticsQuery.data,
     );
 
   if (!currentDashboardData) {

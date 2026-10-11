@@ -21,6 +21,7 @@ import type {
 import {
   settingsStorageService,
 } from "../settings/settingsStorageService";
+import { synchronizePurchaseFinancial } from "../../repositories/financial/supabase/SupabaseFinancialRepository";
 
 import {
   readLocalStorage,
@@ -89,7 +90,7 @@ function createTransactionId(
     Math.max(
       ...transactions.map(
         (transaction) =>
-          transaction.id,
+          Number(transaction.id),
       ),
     ) + 1
   );
@@ -332,7 +333,11 @@ function updateFromPurchase(
 
 export function synchronizePurchaseWithFinancial(
   purchase: Purchase,
-): void {
+): Promise<void> | void {
+  if (apiConfig.dataSource !== "api") {
+    return synchronizePurchaseFinancial(purchase);
+  }
+
   /*
    * A API futura será responsável pela própria transação.
    */

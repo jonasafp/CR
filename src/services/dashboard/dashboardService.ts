@@ -5,9 +5,7 @@ import {
 import type {
     DashboardData,
     DashboardPeriod,
-    FinancialSummary,
     StockAlertItem,
-    TopSellingProduct,
 } from "../../types/Dashboard";
 
 import type {
@@ -25,9 +23,7 @@ import {
     isProductOutOfStock,
 } from "../../utils/productFilters";
 
-import {
-    getDashboardDataByPeriod,
-} from "../../data/dashboardAnalytics";
+import type { DashboardAnalytics } from "../../repositories/dashboard/SupabaseDashboardRepository";
 
 function roundValue(value: number): number {
     return (
@@ -35,79 +31,6 @@ function roundValue(value: number): number {
             (value + Number.EPSILON) * 100,
         ) / 100
     );
-}
-
-function getPeriodMultiplier(
-    period: DashboardPeriod,
-): number {
-    const multipliers: Record<
-        DashboardPeriod,
-        number
-    > = {
-        today: 0.035,
-        week: 0.22,
-        month: 1,
-        year: 10.7,
-    };
-
-    return multipliers[period];
-}
-
-function createFinancialSummary(
-    products: Product[],
-    period: DashboardPeriod,
-): FinancialSummary {
-    const multiplier =
-        getPeriodMultiplier(period);
-
-    const totals = products.reduce(
-        (accumulator, product) => {
-            const financial =
-                calculateProductFinancialData(product);
-
-            accumulator.revenue +=
-                financial.realizedRevenue;
-
-            accumulator.cost +=
-                financial.realizedCost;
-
-            accumulator.profit +=
-                financial.realizedProfit;
-
-            return accumulator;
-        },
-        {
-            revenue: 0,
-            cost: 0,
-            profit: 0,
-        },
-    );
-
-    const revenue = roundValue(
-        totals.revenue * multiplier,
-    );
-
-    const cost = roundValue(
-        totals.cost * multiplier,
-    );
-
-    const profit = roundValue(
-        revenue - cost,
-    );
-
-    const profitMargin =
-        revenue > 0
-            ? roundValue(
-                (profit / revenue) * 100,
-            )
-            : 0;
-
-    return {
-        revenue,
-        cost,
-        profit,
-        profitMargin,
-    };
 }
 
 function createStockAlerts(
@@ -157,54 +80,6 @@ function createStockAlerts(
         }));
 }
 
-function createTopSellingProducts(
-    products: Product[],
-    period: DashboardPeriod,
-): TopSellingProduct[] {
-    const multiplier =
-        getPeriodMultiplier(period);
-
-    return [...products]
-        .filter(
-            (product) =>
-                product.status === "active" &&
-                product.soldQuantity > 0,
-        )
-        .sort(
-            (firstProduct, secondProduct) =>
-                secondProduct.soldQuantity -
-                firstProduct.soldQuantity,
-        )
-        .slice(0, 5)
-        .map((product) => {
-            const financial =
-                calculateProductFinancialData(product);
-
-            return {
-                productId: product.id,
-                name: product.name,
-                category: product.category,
-
-                quantitySold: roundValue(
-                    product.soldQuantity *
-                    multiplier,
-                ),
-
-                unit: product.stockUnit,
-
-                revenue: roundValue(
-                    financial.realizedRevenue *
-                    multiplier,
-                ),
-
-                profit: roundValue(
-                    financial.realizedProfit *
-                    multiplier,
-                ),
-            };
-        });
-}
-
 function getFeaturedProduct(
     products: Product[],
 ): Product | null {
@@ -244,7 +119,8 @@ function countMovementQuantity(
 export function createDashboardData(
     products: Product[],
     movements: InventoryMovement[],
-    period: DashboardPeriod,
+    _period: DashboardPeriod,
+    analytics?: DashboardAnalytics,
 ): DashboardData | null {
     const principalStockUnit =
         settingsStorageService
@@ -259,14 +135,7 @@ export function createDashboardData(
         return null;
     }
 
-    const periodData =
-        getDashboardDataByPeriod(period);
-
-    const financialSummary =
-        createFinancialSummary(
-            products,
-            period,
-        );
+    const financialSummary = analytics?.financialSummary ?? { revenue: 0, cost: 0, profit: 0, profitMargin: 0 };
 
     const productsWithPrincipalUnit =
         products.filter(
@@ -283,13 +152,7 @@ export function createDashboardData(
             0,
         );
 
-    const totalSoldQuantity =
-        productsWithPrincipalUnit.reduce(
-            (total, product) =>
-                total +
-                product.soldQuantity,
-            0,
-        ) * getPeriodMultiplier(period);
+    const totalSoldQuantity = analytics?.totalSoldQuantity ?? 0;
 
     const totalStockCost = products.reduce(
         (total, product) => {
@@ -412,20 +275,16 @@ export function createDashboardData(
 
         lowStockProducts,
 
-        topSellingProducts:
-            createTopSellingProducts(
-                products,
-                period,
-            ),
+        topSellingProducts: analytics?.topSellingProducts ?? [],
 
         salesPerformance:
-            periodData.salesPerformance,
+            analytics?.salesPerformance ?? [],
 
         categoryPerformance:
-            periodData.categoryPerformance,
+            analytics?.categoryPerformance ?? [],
 
         variations:
-            periodData.variations,
+            analytics?.variations,
 
         inventorySummary: {
             totalEntries,

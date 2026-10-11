@@ -6,9 +6,7 @@ import {
   ApiReportRepository,
 } from "./api/ApiReportRepository";
 
-import {
-  MockReportRepository,
-} from "./mock/MockReportRepository";
+import { SupabaseReportRepository } from "./supabase/SupabaseReportRepository";
 
 import type {
   ReportRepository,
@@ -23,7 +21,7 @@ function createReportRepository():
     return new ApiReportRepository();
   }
 
-  return new MockReportRepository();
+  return new SupabaseReportRepository();
 }
 
 export const reportRepository =

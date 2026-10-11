@@ -107,7 +107,7 @@ export interface DashboardData {
 
   salesPerformance?: SalesPerformancePoint[];
   categoryPerformance?: CategoryPerformanceItem[];
-  variations?: DashboardVariations;
+  variations?: Partial<DashboardVariations>;
   inventorySummary?: DashboardInventorySummary;
 }
 

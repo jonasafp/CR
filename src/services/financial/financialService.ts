@@ -34,7 +34,7 @@ export const financialService = {
   },
 
   getById(
-    transactionId: number,
+    transactionId: string | number,
   ) {
     ensureSalesSynchronization();
 

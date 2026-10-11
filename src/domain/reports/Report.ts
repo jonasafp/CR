@@ -143,7 +143,7 @@ export interface SalesReportRow {
 }
 
 export interface FinancialReportRow {
-  id: number;
+  id: string | number;
   number: string;
 
   type:

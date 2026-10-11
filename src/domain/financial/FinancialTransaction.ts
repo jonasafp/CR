@@ -25,7 +25,7 @@ export type FinancialPaymentMethod =
   | "other";
 
 export interface FinancialTransaction {
-  id: number;
+  id: string | number;
 
   number: string;
 
@@ -60,7 +60,7 @@ export interface FinancialTransaction {
   purchaseId?: string | number;
   purchaseNumber?: string;
 
-  inventoryMovementId?: number;
+  inventoryMovementId?: string | number;
 
   createdAt: string;
   updatedAt: string;
@@ -100,11 +100,11 @@ export interface CreateFinancialTransactionInput {
   purchaseId?: string | number;
   purchaseNumber?: string;
 
-  inventoryMovementId?: number;
+  inventoryMovementId?: string | number;
 }
 
 export interface UpdateFinancialTransactionInput {
-  transactionId: number;
+  transactionId: string | number;
 
   type:
   FinancialTransactionType;
@@ -130,7 +130,7 @@ export interface UpdateFinancialTransactionInput {
 }
 
 export interface SettleFinancialTransactionInput {
-  transactionId: number;
+  transactionId: string | number;
 
   paymentDate: string;
 
@@ -139,7 +139,7 @@ export interface SettleFinancialTransactionInput {
 }
 
 export interface CancelFinancialTransactionInput {
-  transactionId: number;
+  transactionId: string | number;
 
   reason: string;
 }

@@ -6,9 +6,7 @@ import {
   ApiSettingsRepository,
 } from "./api/ApiSettingsRepository";
 
-import {
-  MockSettingsRepository,
-} from "./mock/MockSettingsRepository";
+import { SupabaseSettingsRepository } from "./supabase/SupabaseSettingsRepository";
 
 import type {
   SettingsRepository,
@@ -23,7 +21,7 @@ function createSettingsRepository():
     return new ApiSettingsRepository();
   }
 
-  return new MockSettingsRepository();
+  return new SupabaseSettingsRepository();
 }
 
 export const settingsRepository =

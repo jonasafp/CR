@@ -69,7 +69,7 @@ function mapSale(row: SaleRow, itemRows: SaleItemRow[]): Sale {
     id: row.id,
     number: formatSaleNumber(row.number),
     status: row.status,
-    paymentMethod: row.payment_method,
+    paymentMethod: row.payment_method as Sale["paymentMethod"],
     customerId: row.customer_id ?? undefined,
     customerName: row.customer_name,
     items,

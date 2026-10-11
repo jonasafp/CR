@@ -6,9 +6,7 @@ import {
   ApiFinancialRepository,
 } from "./api/ApiFinancialRepository";
 
-import {
-  MockFinancialRepository,
-} from "./mock/MockFinancialRepository";
+import { SupabaseFinancialRepository } from "./supabase/SupabaseFinancialRepository";
 
 import type {
   FinancialRepository,
@@ -23,7 +21,7 @@ function createFinancialRepository():
     return new ApiFinancialRepository();
   }
 
-  return new MockFinancialRepository();
+  return new SupabaseFinancialRepository();
 }
 
 export const financialRepository =

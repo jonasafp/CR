@@ -132,7 +132,7 @@ function createTransactionId(
     Math.max(
       ...transactions.map(
         (transaction) =>
-          transaction.id,
+          Number(transaction.id),
       ),
     ) + 1
   );

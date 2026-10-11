@@ -187,10 +187,10 @@ export default function DataMaintenancePanel({
     ).format(date);
   }
 
-  function exportFullBackup() {
+  async function exportFullBackup() {
     try {
       const backup =
-        systemBackupService.create();
+        await systemBackupService.createFromDatabase();
 
       systemBackupService.download(
         backup,
@@ -551,7 +551,7 @@ export default function DataMaintenancePanel({
        * antes de iniciar qualquer alteração.
        */
       const safetyBackup =
-        systemBackupService.create();
+        await systemBackupService.createFromDatabase();
 
       systemBackupService.download(
         safetyBackup,

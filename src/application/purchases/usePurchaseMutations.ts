@@ -112,7 +112,7 @@ export function useCompletePurchaseMutation() {
     onSuccess: async (
       purchase,
     ) => {
-      synchronizePurchaseWithFinancial(
+      await synchronizePurchaseWithFinancial(
         purchase,
       );
 
@@ -160,7 +160,7 @@ export function useCancelPurchaseMutation() {
     onSuccess: async (
       purchase,
     ) => {
-      synchronizePurchaseWithFinancial(
+      await synchronizePurchaseWithFinancial(
         purchase,
       );
 

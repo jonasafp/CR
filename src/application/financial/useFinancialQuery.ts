@@ -38,7 +38,7 @@ export const financialQueryKeys = {
     ] as const,
 
   detail: (
-    transactionId: number,
+    transactionId: string | number,
   ) =>
     [
       ...financialQueryKeys.details(),
@@ -160,21 +160,21 @@ export function useFinancialQuery(
 
 export function useFinancialTransactionQuery(
   transactionId:
-    number | null,
+    string | number | null,
 ) {
   return useQuery({
     queryKey:
       financialQueryKeys.detail(
-        transactionId ?? 0,
+        transactionId ?? "",
       ),
 
     queryFn: () =>
       financialService.getById(
-        transactionId ?? 0,
+        transactionId ?? "",
       ),
 
     enabled:
       transactionId !== null &&
-      transactionId > 0,
+      String(transactionId).length > 0,
   });
 }

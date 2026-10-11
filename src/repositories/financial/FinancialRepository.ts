@@ -25,7 +25,7 @@ export interface FinancialRepository {
   >;
 
   getById(
-    transactionId: number,
+    transactionId: string | number,
   ): Promise<FinancialTransaction>;
 
   create(

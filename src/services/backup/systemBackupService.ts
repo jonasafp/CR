@@ -83,6 +83,21 @@ import {
 import type {
   Purchase,
 } from "../../domain/purchases/Purchase";
+import { createDefaultCustomerFilters } from "../../domain/customers/CustomerFilters";
+import { createDefaultSupplierFilters } from "../../domain/suppliers/SupplierFilters";
+import { createDefaultPurchaseFilters } from "../../domain/purchases/PurchaseFilters";
+import { defaultSaleFilters } from "../../domain/sales/SaleFilters";
+import { defaultFinancialFilters } from "../../domain/financial/FinancialFilters";
+import { getCurrentCompanyMembership } from "../auth/authService";
+import { customerRepository } from "../../repositories/customers/customerRepositoryFactory";
+import { supplierRepository } from "../../repositories/suppliers/supplierRepositoryFactory";
+import { purchaseRepository } from "../../repositories/purchases/purchaseRepositoryFactory";
+import { salesRepository } from "../../repositories/sales/salesRepositoryFactory";
+import { financialRepository } from "../../repositories/financial/financialRepositoryFactory";
+import { listProducts } from "../../repositories/products/SupabaseProductsRepository";
+import { listInventoryMovements } from "../../repositories/inventory/SupabaseInventoryRepository";
+import { settingsRepository } from "../../repositories/settings/settingsRepositoryFactory";
+import { writeLocalStorage } from "../storage/localStorageService";
 
 function readCurrentData(): SystemBackupData {
   return {
@@ -186,6 +201,30 @@ function create(): SystemBackup {
 
     data,
   };
+}
+
+async function createFromDatabase(): Promise<SystemBackup> {
+  const membership=await getCurrentCompanyMembership();
+  if(!membership) throw new Error("Nenhuma empresa ativa foi encontrada.");
+  const products=await listProducts(membership.company_id);
+  const [settings,customers,suppliers,purchases,sales,financial,movements]=await Promise.all([
+    settingsRepository.get(),
+    customerRepository.list({...createDefaultCustomerFilters(),status:"all",pageSize:10000}),
+    supplierRepository.list({...createDefaultSupplierFilters(),status:"all",pageSize:10000}),
+    purchaseRepository.list({...createDefaultPurchaseFilters(),pageSize:10000}),
+    salesRepository.list({...defaultSaleFilters,pageSize:10000}),
+    financialRepository.list({...defaultFinancialFilters,pageSize:10000}),
+    listInventoryMovements(membership.company_id,products),
+  ]);
+  writeLocalStorage(STORAGE_KEYS.settings,settings);
+  writeLocalStorage(STORAGE_KEYS.customers,customers.items);
+  writeLocalStorage(STORAGE_KEYS.suppliers,suppliers.items);
+  writeLocalStorage(STORAGE_KEYS.purchases,purchases.items);
+  writeLocalStorage(STORAGE_KEYS.products,products);
+  writeLocalStorage(STORAGE_KEYS.sales,sales.items);
+  writeLocalStorage(STORAGE_KEYS.financialTransactions,financial.items);
+  writeLocalStorage(STORAGE_KEYS.inventoryMovements,movements);
+  return create();
 }
 
 function serialize(
@@ -457,6 +496,7 @@ function restore(
 
 export const systemBackupService = {
   create,
+  createFromDatabase,
   serialize,
   parse,
   download,
