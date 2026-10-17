@@ -17,14 +17,9 @@ import {
   getAuthErrorMessage,
   getCurrentCompanyMembership,
   signIn,
-  signUp,
 } from "../../services/auth/authService";
 
 import "./Login.css";
-
-type AccessMode =
-  | "login"
-  | "register";
 
 export default function Login() {
   const navigate =
@@ -36,14 +31,6 @@ export default function Login() {
       isAuthLoading,
   } =
     useAuth();
-
-  const [
-    mode,
-    setMode,
-  ] =
-    useState<AccessMode>(
-      "login",
-    );
 
   const [
     email,
@@ -60,12 +47,6 @@ export default function Login() {
   const [
     errorMessage,
     setErrorMessage,
-  ] =
-    useState("");
-
-  const [
-    successMessage,
-    setSuccessMessage,
   ] =
     useState("");
 
@@ -118,10 +99,6 @@ export default function Login() {
       "",
     );
 
-    setSuccessMessage(
-      "",
-    );
-
     if (
       !email.trim() ||
       !password
@@ -149,37 +126,6 @@ export default function Login() {
     );
 
     try {
-      if (
-        mode ===
-        "register"
-      ) {
-        const result =
-          await signUp(
-            email,
-            password,
-          );
-
-        if (
-          !result.session
-        ) {
-          setSuccessMessage(
-            "Cadastro realizado. Verifique seu e-mail para confirmar a conta.",
-          );
-
-          return;
-        }
-
-        navigate(
-          "/configuracao-inicial",
-          {
-            replace:
-              true,
-          },
-        );
-
-        return;
-      }
-
       await signIn(
         email,
         password,
@@ -210,23 +156,6 @@ export default function Login() {
         false,
       );
     }
-  }
-
-  function changeMode(
-    nextMode:
-      AccessMode,
-  ) {
-    setMode(
-      nextMode,
-    );
-
-    setErrorMessage(
-      "",
-    );
-
-    setSuccessMessage(
-      "",
-    );
   }
 
   return (
@@ -290,55 +219,13 @@ export default function Login() {
             </span>
 
             <h2>
-              {mode ===
-              "login"
-                ? "Bem-vindo novamente"
-                : "Crie seu primeiro acesso"}
+              Bem-vindo novamente
             </h2>
 
             <p>
-              {mode ===
-              "login"
-                ? "Informe seus dados para acessar o painel."
-                : "Cadastre o proprietário responsável pela empresa."}
+              Informe seus dados para acessar o painel.
             </p>
           </header>
-
-          <div className="login-tabs">
-            <button
-              type="button"
-              className={
-                mode ===
-                "login"
-                  ? "is-active"
-                  : ""
-              }
-              onClick={() =>
-                changeMode(
-                  "login",
-                )
-              }
-            >
-              Entrar
-            </button>
-
-            <button
-              type="button"
-              className={
-                mode ===
-                "register"
-                  ? "is-active"
-                  : ""
-              }
-              onClick={() =>
-                changeMode(
-                  "register",
-                )
-              }
-            >
-              Primeiro acesso
-            </button>
-          </div>
 
           <form
             className="login-form"
@@ -384,12 +271,7 @@ export default function Login() {
                       .value,
                   )
                 }
-                autoComplete={
-                  mode ===
-                  "login"
-                    ? "current-password"
-                    : "new-password"
-                }
+                autoComplete="current-password"
                 placeholder="Mínimo de 6 caracteres"
                 disabled={
                   isSubmitting
@@ -403,12 +285,6 @@ export default function Login() {
               </p>
             )}
 
-            {successMessage && (
-              <p className="login-message login-message--success">
-                {successMessage}
-              </p>
-            )}
-
             <button
               type="submit"
               className="login-submit"
@@ -418,10 +294,7 @@ export default function Login() {
             >
               {isSubmitting
                 ? "Aguarde..."
-                : mode ===
-                    "login"
-                  ? "Entrar no sistema"
-                  : "Criar acesso"}
+                : "Entrar no sistema"}
             </button>
           </form>
 

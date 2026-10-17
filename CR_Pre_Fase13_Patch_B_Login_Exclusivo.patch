@@ -1,0 +1,275 @@
+diff --git a/src/pages/Login/Login.css b/src/pages/Login/Login.css
+index d0ab79c..5f58909 100644
+--- a/src/pages/Login/Login.css
++++ b/src/pages/Login/Login.css
+@@ -200,36 +200,6 @@
+   margin: 0;
+ }
+ 
+-.login-tabs {
+-  background: var(--background);
+-  border: 1px solid var(--border);
+-  border-radius: var(--radius-sm);
+-  display: grid;
+-  gap: 4px;
+-  grid-template-columns: 1fr 1fr;
+-  margin-bottom: 25px;
+-  padding: 4px;
+-}
+-
+-.login-tabs button {
+-  background: transparent;
+-  border: 0;
+-  border-radius: 6px;
+-  color: var(--text-secondary);
+-  cursor: pointer;
+-  font: inherit;
+-  font-size: 14px;
+-  font-weight: 600;
+-  padding: 10px;
+-  transition: var(--transition);
+-}
+-
+-.login-tabs button.is-active {
+-  background: var(--white);
+-  box-shadow: var(--shadow-xs);
+-  color: var(--primary);
+-}
+-
+ .login-form {
+   display: grid;
+   gap: 18px;
+@@ -351,4 +321,4 @@
+   .login-card__header h2 {
+     font-size: 25px;
+   }
+-}
+\ No newline at end of file
++}
+diff --git a/src/pages/Login/Login.tsx b/src/pages/Login/Login.tsx
+index 10916db..3c376f3 100644
+--- a/src/pages/Login/Login.tsx
++++ b/src/pages/Login/Login.tsx
+@@ -17,15 +17,10 @@ import {
+   getAuthErrorMessage,
+   getCurrentCompanyMembership,
+   signIn,
+-  signUp,
+ } from "../../services/auth/authService";
+ 
+ import "./Login.css";
+ 
+-type AccessMode =
+-  | "login"
+-  | "register";
+-
+ export default function Login() {
+   const navigate =
+     useNavigate();
+@@ -37,14 +32,6 @@ export default function Login() {
+   } =
+     useAuth();
+ 
+-  const [
+-    mode,
+-    setMode,
+-  ] =
+-    useState<AccessMode>(
+-      "login",
+-    );
+-
+   const [
+     email,
+     setEmail,
+@@ -63,12 +50,6 @@ export default function Login() {
+   ] =
+     useState("");
+ 
+-  const [
+-    successMessage,
+-    setSuccessMessage,
+-  ] =
+-    useState("");
+-
+   const [
+     isSubmitting,
+     setIsSubmitting,
+@@ -118,10 +99,6 @@ export default function Login() {
+       "",
+     );
+ 
+-    setSuccessMessage(
+-      "",
+-    );
+-
+     if (
+       !email.trim() ||
+       !password
+@@ -149,37 +126,6 @@ export default function Login() {
+     );
+ 
+     try {
+-      if (
+-        mode ===
+-        "register"
+-      ) {
+-        const result =
+-          await signUp(
+-            email,
+-            password,
+-          );
+-
+-        if (
+-          !result.session
+-        ) {
+-          setSuccessMessage(
+-            "Cadastro realizado. Verifique seu e-mail para confirmar a conta.",
+-          );
+-
+-          return;
+-        }
+-
+-        navigate(
+-          "/configuracao-inicial",
+-          {
+-            replace:
+-              true,
+-          },
+-        );
+-
+-        return;
+-      }
+-
+       await signIn(
+         email,
+         password,
+@@ -212,23 +158,6 @@ export default function Login() {
+     }
+   }
+ 
+-  function changeMode(
+-    nextMode:
+-      AccessMode,
+-  ) {
+-    setMode(
+-      nextMode,
+-    );
+-
+-    setErrorMessage(
+-      "",
+-    );
+-
+-    setSuccessMessage(
+-      "",
+-    );
+-  }
+-
+   return (
+     <main className="login-page">
+       <section className="login-shell">
+@@ -290,56 +219,14 @@ export default function Login() {
+             </span>
+ 
+             <h2>
+-              {mode ===
+-              "login"
+-                ? "Bem-vindo novamente"
+-                : "Crie seu primeiro acesso"}
++              Bem-vindo novamente
+             </h2>
+ 
+             <p>
+-              {mode ===
+-              "login"
+-                ? "Informe seus dados para acessar o painel."
+-                : "Cadastre o proprietário responsável pela empresa."}
++              Informe seus dados para acessar o painel.
+             </p>
+           </header>
+ 
+-          <div className="login-tabs">
+-            <button
+-              type="button"
+-              className={
+-                mode ===
+-                "login"
+-                  ? "is-active"
+-                  : ""
+-              }
+-              onClick={() =>
+-                changeMode(
+-                  "login",
+-                )
+-              }
+-            >
+-              Entrar
+-            </button>
+-
+-            <button
+-              type="button"
+-              className={
+-                mode ===
+-                "register"
+-                  ? "is-active"
+-                  : ""
+-              }
+-              onClick={() =>
+-                changeMode(
+-                  "register",
+-                )
+-              }
+-            >
+-              Primeiro acesso
+-            </button>
+-          </div>
+-
+           <form
+             className="login-form"
+             onSubmit={
+@@ -384,12 +271,7 @@ export default function Login() {
+                       .value,
+                   )
+                 }
+-                autoComplete={
+-                  mode ===
+-                  "login"
+-                    ? "current-password"
+-                    : "new-password"
+-                }
++                autoComplete="current-password"
+                 placeholder="Mínimo de 6 caracteres"
+                 disabled={
+                   isSubmitting
+@@ -403,12 +285,6 @@ export default function Login() {
+               </p>
+             )}
+ 
+-            {successMessage && (
+-              <p className="login-message login-message--success">
+-                {successMessage}
+-              </p>
+-            )}
+-
+             <button
+               type="submit"
+               className="login-submit"
+@@ -418,10 +294,7 @@ export default function Login() {
+             >
+               {isSubmitting
+                 ? "Aguarde..."
+-                : mode ===
+-                    "login"
+-                  ? "Entrar no sistema"
+-                  : "Criar acesso"}
++                : "Entrar no sistema"}
+             </button>
+           </form>
+ 
+@@ -432,4 +305,4 @@ export default function Login() {
+       </section>
+     </main>
+   );
+-}
+\ No newline at end of file
++}
+
