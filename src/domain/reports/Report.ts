@@ -140,6 +140,12 @@ export interface SalesReportRow {
   cancelledAt?: string;
 
   createdBy: string;
+  items: Array<{
+    productName: string;
+    quantity: number;
+    unit: StockUnit;
+    total: number;
+  }>;
 }
 
 export interface FinancialReportRow {

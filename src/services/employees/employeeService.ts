@@ -13,6 +13,7 @@ import type {
 type EmployeeRow = {
   id: string;
   user_id: string;
+  internal_code: number;
   full_name: string | null;
   email: string | null;
   role: CompanyMemberRole;
@@ -25,6 +26,7 @@ function mapEmployee(row: EmployeeRow): Employee {
   return {
     id: row.id,
     userId: row.user_id,
+    internalCode: row.internal_code,
     fullName: row.full_name ?? "Usuário sem nome",
     email: row.email ?? "E-mail não disponível",
     role: row.role,
@@ -85,7 +87,7 @@ export const employeeService = {
     } = await supabase
       .from("company_members")
       .select(
-        "id, user_id, full_name, email, role, active, invited_at, created_at",
+        "id, user_id, internal_code, full_name, email, role, active, invited_at, created_at",
       )
       .eq("company_id", companyId)
       .order("full_name");

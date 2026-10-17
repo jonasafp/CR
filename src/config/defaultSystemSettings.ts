@@ -97,6 +97,9 @@ export const defaultSystemSettings:
 
       autoPrintReceipt:
         false,
+
+      quickUserSwitchAfterSale:
+        false,
     },
 
     inventory: {
@@ -159,6 +162,7 @@ export const defaultSystemSettings:
 
     receipt: {
       paperSize: "80mm",
+      printerName: "system-default",
 
       showLogo: true,
       showLegalName: true,

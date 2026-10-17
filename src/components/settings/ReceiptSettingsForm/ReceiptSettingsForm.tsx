@@ -4,7 +4,11 @@ import {
   MessageSquareText,
   ReceiptText,
   UserRound,
+  Printer,
+  RefreshCw,
 } from "lucide-react";
+
+import { useEffect, useState } from "react";
 
 import Select from "../../common/Select/Select";
 
@@ -23,6 +27,7 @@ import {
 } from "../../../utils/formatters";
 
 import SettingsSwitch from "../SettingsSwitch/SettingsSwitch";
+import { printerService } from "../../../services/printing/printerService";
 
 import styles from "./ReceiptSettingsForm.module.css";
 
@@ -87,6 +92,31 @@ export default function ReceiptSettingsForm({
   disabled = false,
   onChange,
 }: ReceiptSettingsFormProps) {
+  const [printerOptions, setPrinterOptions] = useState([
+    { value: "system-default", label: "Impressora escolhida no diálogo do sistema" },
+  ]);
+  const [loadingPrinters, setLoadingPrinters] = useState(false);
+
+  async function loadPrinters() {
+    setLoadingPrinters(true);
+    try {
+      const options = await printerService.list();
+      setPrinterOptions(
+        value.printerName !== "system-default" &&
+        !options.some((option) => option.value === value.printerName)
+          ? [...options, { value: value.printerName, label: value.printerName }]
+          : options,
+      );
+    } finally {
+      setLoadingPrinters(false);
+    }
+  }
+
+  useEffect(() => {
+    void loadPrinters();
+    // A lista é carregada ao abrir a aba; o botão permite atualizar sob demanda.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   function updateField<
     Key extends keyof ReceiptSettings,
   >(
@@ -137,6 +167,24 @@ export default function ReceiptSettingsForm({
           </div>
 
           <div className={styles.paperField}>
+            <Select
+              label="Impressora dos comprovantes e relatórios térmicos"
+              value={value.printerName}
+              options={printerOptions}
+              disabled={disabled || loadingPrinters}
+              onChange={(printerName) => updateField("printerName", printerName)}
+            />
+
+            <button
+              type="button"
+              className={styles.refreshPrinters}
+              disabled={disabled || loadingPrinters}
+              onClick={() => void loadPrinters()}
+            >
+              {loadingPrinters ? <RefreshCw size={16} /> : <Printer size={16} />}
+              {loadingPrinters ? "Buscando..." : "Atualizar impressoras"}
+            </button>
+
             <Select
               label="Tamanho do papel"
               value={value.paperSize}

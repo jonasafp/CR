@@ -265,6 +265,9 @@ export const salesSettingsSchema =
 
     autoPrintReceipt:
       z.boolean(),
+
+    quickUserSwitchAfterSale:
+      z.boolean(),
   });
 
 export const inventorySettingsSchema =
@@ -378,6 +381,9 @@ export const receiptSettingsSchema =
         "80mm",
         "a4",
       ]),
+
+    printerName:
+      z.string().min(1).max(200),
 
     showLogo:
       z.boolean(),

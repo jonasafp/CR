@@ -1,0 +1,1196 @@
+diff --git a/src/components/settings/ReceiptSettingsForm/ReceiptSettingsForm.module.css b/src/components/settings/ReceiptSettingsForm/ReceiptSettingsForm.module.css
+index a83d85b..36a0fb4 100644
+--- a/src/components/settings/ReceiptSettingsForm/ReceiptSettingsForm.module.css
++++ b/src/components/settings/ReceiptSettingsForm/ReceiptSettingsForm.module.css
+@@ -87,9 +87,37 @@
+ }
+ 
+ .paperField {
++  display: grid;
++  gap: 10px;
+   max-width: 480px;
+ }
+ 
++.refreshPrinters {
++  display: inline-flex;
++  width: fit-content;
++  min-height: 36px;
++  align-items: center;
++  gap: 7px;
++  padding: 0 12px;
++  color: var(--primary);
++  border: 1px solid var(--border);
++  border-radius: 10px;
++  background: var(--surface);
++  font: inherit;
++  font-size: 8px;
++  font-weight: 700;
++  cursor: pointer;
++}
++
++.refreshPrinters:hover:not(:disabled) {
++  background: var(--primary-light);
++}
++
++.refreshPrinters:disabled {
++  cursor: not-allowed;
++  opacity: 0.6;
++}
++
+ .switchGrid {
+   display: grid;
+   grid-template-columns:
+@@ -349,4 +377,4 @@
+   .switchGrid {
+     grid-template-columns: 1fr;
+   }
+-}
+\ No newline at end of file
++}
+diff --git a/src/components/settings/ReceiptSettingsForm/ReceiptSettingsForm.tsx b/src/components/settings/ReceiptSettingsForm/ReceiptSettingsForm.tsx
+index 9b34fde..492baec 100644
+--- a/src/components/settings/ReceiptSettingsForm/ReceiptSettingsForm.tsx
++++ b/src/components/settings/ReceiptSettingsForm/ReceiptSettingsForm.tsx
+@@ -4,8 +4,12 @@ import {
+   MessageSquareText,
+   ReceiptText,
+   UserRound,
++  Printer,
++  RefreshCw,
+ } from "lucide-react";
+ 
++import { useEffect, useState } from "react";
++
+ import Select from "../../common/Select/Select";
+ 
+ import type {
+@@ -23,6 +27,7 @@ import {
+ } from "../../../utils/formatters";
+ 
+ import SettingsSwitch from "../SettingsSwitch/SettingsSwitch";
++import { printerService } from "../../../services/printing/printerService";
+ 
+ import styles from "./ReceiptSettingsForm.module.css";
+ 
+@@ -87,6 +92,31 @@ export default function ReceiptSettingsForm({
+   disabled = false,
+   onChange,
+ }: ReceiptSettingsFormProps) {
++  const [printerOptions, setPrinterOptions] = useState([
++    { value: "system-default", label: "Impressora escolhida no diálogo do sistema" },
++  ]);
++  const [loadingPrinters, setLoadingPrinters] = useState(false);
++
++  async function loadPrinters() {
++    setLoadingPrinters(true);
++    try {
++      const options = await printerService.list();
++      setPrinterOptions(
++        value.printerName !== "system-default" &&
++        !options.some((option) => option.value === value.printerName)
++          ? [...options, { value: value.printerName, label: value.printerName }]
++          : options,
++      );
++    } finally {
++      setLoadingPrinters(false);
++    }
++  }
++
++  useEffect(() => {
++    void loadPrinters();
++    // A lista é carregada ao abrir a aba; o botão permite atualizar sob demanda.
++    // eslint-disable-next-line react-hooks/exhaustive-deps
++  }, []);
+   function updateField<
+     Key extends keyof ReceiptSettings,
+   >(
+@@ -137,6 +167,24 @@ export default function ReceiptSettingsForm({
+           </div>
+ 
+           <div className={styles.paperField}>
++            <Select
++              label="Impressora dos comprovantes e relatórios térmicos"
++              value={value.printerName}
++              options={printerOptions}
++              disabled={disabled || loadingPrinters}
++              onChange={(printerName) => updateField("printerName", printerName)}
++            />
++
++            <button
++              type="button"
++              className={styles.refreshPrinters}
++              disabled={disabled || loadingPrinters}
++              onClick={() => void loadPrinters()}
++            >
++              {loadingPrinters ? <RefreshCw size={16} /> : <Printer size={16} />}
++              {loadingPrinters ? "Buscando..." : "Atualizar impressoras"}
++            </button>
++
+             <Select
+               label="Tamanho do papel"
+               value={value.paperSize}
+@@ -440,4 +488,4 @@ export default function ReceiptSettingsForm({
+       </div>
+     </section>
+   );
+-}
+\ No newline at end of file
++}
+diff --git a/src/components/settings/SalesSettingsForm/SalesSettingsForm.tsx b/src/components/settings/SalesSettingsForm/SalesSettingsForm.tsx
+index 28530fc..708e69c 100644
+--- a/src/components/settings/SalesSettingsForm/SalesSettingsForm.tsx
++++ b/src/components/settings/SalesSettingsForm/SalesSettingsForm.tsx
+@@ -7,6 +7,7 @@ import {
+   ShoppingCart,
+   Tag,
+   UserRoundCheck,
++  UsersRound,
+ } from "lucide-react";
+ 
+ import Select from "../../common/Select/Select";
+@@ -407,14 +408,25 @@ export default function SalesSettingsForm({
+               )
+             }
+           />
++
++          <SettingsSwitch
++            checked={value.quickUserSwitchAfterSale}
++            title="Troca rápida após a venda"
++            description="Ao concluir cada venda, solicita o código e a senha do próximo funcionário sem sair do PDV."
++            icon={<UsersRound size={17} />}
++            disabled={disabled}
++            onChange={(checked) =>
++              updateField("quickUserSwitchAfterSale", checked)
++            }
++          />
+         </div>
+ 
+         <div
+           className={styles.notice}
+         >
+-          As permissões serão consumidas pela tela de vendas durante a integração final. A impressão automática utilizará a impressora configurada no ambiente desktop.
++          A troca rápida mantém a tela de vendas aberta e registra cada operação no nome do funcionário autenticado.
+         </div>
+       </div>
+     </section>
+   );
+-}
+\ No newline at end of file
++}
+diff --git a/src/config/defaultSystemSettings.ts b/src/config/defaultSystemSettings.ts
+index dd0c598..dcbf9ff 100644
+--- a/src/config/defaultSystemSettings.ts
++++ b/src/config/defaultSystemSettings.ts
+@@ -97,6 +97,9 @@ export const defaultSystemSettings:
+ 
+       autoPrintReceipt:
+         false,
++
++      quickUserSwitchAfterSale:
++        false,
+     },
+ 
+     inventory: {
+@@ -159,6 +162,7 @@ export const defaultSystemSettings:
+ 
+     receipt: {
+       paperSize: "80mm",
++      printerName: "system-default",
+ 
+       showLogo: true,
+       showLegalName: true,
+@@ -177,4 +181,4 @@ export const defaultSystemSettings:
+       "2026-08-10T00:00:00.000Z",
+ 
+     updatedBy: "Sistema",
+-  };
+\ No newline at end of file
++  };
+diff --git a/src/domain/reports/Report.ts b/src/domain/reports/Report.ts
+index ada58af..0f5d301 100644
+--- a/src/domain/reports/Report.ts
++++ b/src/domain/reports/Report.ts
+@@ -140,6 +140,12 @@ export interface SalesReportRow {
+   cancelledAt?: string;
+ 
+   createdBy: string;
++  items: Array<{
++    productName: string;
++    quantity: number;
++    unit: StockUnit;
++    total: number;
++  }>;
+ }
+ 
+ export interface FinancialReportRow {
+diff --git a/src/domain/sales/Sale.ts b/src/domain/sales/Sale.ts
+index 8725a1c..deb3b9b 100644
+--- a/src/domain/sales/Sale.ts
++++ b/src/domain/sales/Sale.ts
+@@ -63,6 +63,7 @@ export interface Sale {
+   cancelledAt?: string;
+ 
+   createdBy: string;
++  sellerName?: string;
+ }
+ 
+ export interface SaleCartItem {
+diff --git a/src/domain/settings/SystemSettings.ts b/src/domain/settings/SystemSettings.ts
+index 6f67d7a..def3978 100644
+--- a/src/domain/settings/SystemSettings.ts
++++ b/src/domain/settings/SystemSettings.ts
+@@ -112,6 +112,9 @@ export interface SalesSettings {
+ 
+   autoPrintReceipt:
+     boolean;
++
++  quickUserSwitchAfterSale:
++    boolean;
+ }
+ 
+ export interface InventorySettings {
+@@ -183,6 +186,8 @@ export interface ReceiptSettings {
+   paperSize:
+     ReceiptPaperSize;
+ 
++  printerName: string;
++
+   showLogo: boolean;
+   showLegalName: boolean;
+   showDocument: boolean;
+diff --git a/src/dtos/settings/SystemSettingsDto.ts b/src/dtos/settings/SystemSettingsDto.ts
+index 2c20e62..e8bf501 100644
+--- a/src/dtos/settings/SystemSettingsDto.ts
++++ b/src/dtos/settings/SystemSettingsDto.ts
+@@ -265,6 +265,9 @@ export const salesSettingsSchema =
+ 
+     autoPrintReceipt:
+       z.boolean(),
++
++    quickUserSwitchAfterSale:
++      z.boolean(),
+   });
+ 
+ export const inventorySettingsSchema =
+@@ -379,6 +382,9 @@ export const receiptSettingsSchema =
+         "a4",
+       ]),
+ 
++    printerName:
++      z.string().min(1).max(200),
++
+     showLogo:
+       z.boolean(),
+ 
+@@ -453,4 +459,4 @@ export const systemSettingsDtoSchema =
+           .string()
+           .trim()
+           .min(1),
+-    });
+\ No newline at end of file
++    });
+diff --git a/src/pages/Vendas/Vendas.tsx b/src/pages/Vendas/Vendas.tsx
+index 1eab8f8..a9a1f2e 100644
+--- a/src/pages/Vendas/Vendas.tsx
++++ b/src/pages/Vendas/Vendas.tsx
+@@ -29,6 +29,7 @@ import LoadingState from "../../components/common/LoadingState/LoadingState";
+ import Pagination from "../../components/common/Pagination/Pagination";
+ import SaleFilters from "../../components/sales/SaleFilters/SaleFilters";
+ import SalesTable from "../../components/sales/SalesTable/SalesTable";
++import QuickUserSwitchModal from "../../components/sales/QuickUserSwitchModal/QuickUserSwitchModal";
+ 
+ import {
+   getMaximumDiscount,
+@@ -240,6 +241,9 @@ export default function Vendas() {
+   const [notes, setNotes] =
+     useState("");
+ 
++  const [isQuickSwitchOpen, setIsQuickSwitchOpen] =
++    useState(false);
++
+   const [
+     localError,
+     setLocalError,
+@@ -932,6 +936,10 @@ export default function Vendas() {
+ 
+             `A venda ${sale.number} foi registrada com sucesso.`,
+           );
++
++          if (salesSettings.quickUserSwitchAfterSale) {
++            setIsQuickSwitchOpen(true);
++          }
+         },
+ 
+         onError: (
+@@ -2242,6 +2250,18 @@ export default function Vendas() {
+         }
+       />
+ 
++      <QuickUserSwitchModal
++        isOpen={isQuickSwitchOpen}
++        onSuccess={(employeeName) => {
++          setIsQuickSwitchOpen(false);
++          notifications.success(
++            "Usuário alterado",
++            `${employeeName} já pode iniciar a próxima venda.`,
++          );
++          window.setTimeout(() => searchRef.current?.focus(), 0);
++        }}
++      />
++
+       {selectedSale && (
+         <div
+           className={
+diff --git a/src/repositories/reports/mock/MockReportRepository.ts b/src/repositories/reports/mock/MockReportRepository.ts
+index 5d1a065..524b966 100644
+--- a/src/repositories/reports/mock/MockReportRepository.ts
++++ b/src/repositories/reports/mock/MockReportRepository.ts
+@@ -877,6 +877,13 @@ function createSalesRows(
+ 
+     createdBy:
+       sale.createdBy,
++
++    items: sale.items.map((item) => ({
++      productName: item.productName,
++      quantity: item.quantity,
++      unit: item.unit,
++      total: item.total,
++    })),
+   }));
+ }
+ 
+@@ -2217,4 +2224,4 @@ export class MockReportRepository
+           ),
+     };
+   }
+-}
+\ No newline at end of file
++}
+diff --git a/src/repositories/sales/supabase/SupabaseSalesRepository.ts b/src/repositories/sales/supabase/SupabaseSalesRepository.ts
+index 5176e09..6d18895 100644
+--- a/src/repositories/sales/supabase/SupabaseSalesRepository.ts
++++ b/src/repositories/sales/supabase/SupabaseSalesRepository.ts
+@@ -83,7 +83,8 @@ function mapSale(row: SaleRow, itemRows: SaleItemRow[]): Sale {
+     updatedAt: row.updated_at,
+     completedAt: row.completed_at,
+     cancelledAt: row.cancelled_at ?? undefined,
+-    createdBy: row.created_by ? "Usuário do sistema" : "Sistema",
++    createdBy: row.seller_name,
++    sellerName: row.seller_name,
+   };
+ }
+ 
+diff --git a/src/services/auth/authService.ts b/src/services/auth/authService.ts
+index 09a9927..51bc411 100644
+--- a/src/services/auth/authService.ts
++++ b/src/services/auth/authService.ts
+@@ -15,6 +15,9 @@ export type CurrentCompanyMembership = {
+ 
+   role:
+   CompanyMemberRole;
++
++  full_name: string;
++  internal_code: number;
+ };
+ 
+ type BootstrapCompanyInput = {
+@@ -120,7 +123,7 @@ export async function getCurrentCompanyMembership():
+         "company_members",
+       )
+       .select(
+-        "company_id, role",
++        "company_id, role, full_name, internal_code",
+       )
+       .eq(
+         "active",
+@@ -146,9 +149,59 @@ export async function getCurrentCompanyMembership():
+ 
+     role:
+       data.role,
++
++    full_name:
++      data.full_name ?? "Usuário do sistema",
++
++    internal_code:
++      data.internal_code,
+   };
+ }
+ 
++export async function quickSwitchUser(
++  companyId: string,
++  internalCode: number,
++  password: string,
++) {
++  const { data, error } = await supabase.functions.invoke(
++    "quick-switch-user",
++    {
++      body: { companyId, internalCode, password },
++    },
++  );
++
++  if (error) {
++    let message = error.message;
++    const context = (error as { context?: Response }).context;
++
++    if (context) {
++      try {
++        const payload = await context.clone().json() as { error?: string };
++        message = payload.error ?? message;
++      } catch {
++        // Mantém a mensagem original quando a resposta não contém JSON.
++      }
++    }
++
++    throw new Error(message);
++  }
++
++  if (!data?.accessToken || !data?.refreshToken) {
++    throw new Error(data?.error ?? "Não foi possível trocar o usuário.");
++  }
++
++  const { error: sessionError } = await supabase.auth.setSession({
++    access_token: data.accessToken,
++    refresh_token: data.refreshToken,
++  });
++
++  if (sessionError) {
++    throw sessionError;
++  }
++
++  return String(data.employeeName ?? "Usuário");
++}
++
+ type BootstrapCompanyRpc =
+   (
+     functionName:
+@@ -283,4 +336,4 @@ export function getAuthErrorMessage(
+   }
+ 
+   return error.message;
+-}
+\ No newline at end of file
++}
+diff --git a/src/services/reports/reportExportService.ts b/src/services/reports/reportExportService.ts
+index bc27484..c2e3e90 100644
+--- a/src/services/reports/reportExportService.ts
++++ b/src/services/reports/reportExportService.ts
+@@ -5,6 +5,7 @@ import type {
+   ProductReportRow,
+   ReportExportFormat,
+   ReportOverview,
++  ReportResult,
+   SalesReportRow,
+ } from "../../domain/reports/Report";
+ 
+@@ -37,6 +38,7 @@ import {
+ import {
+   settingsStorageService,
+ } from "../settings/settingsStorageService";
++import { getCurrentCompanyMembership } from "../auth/authService";
+ 
+ interface ExportColumn<Row> {
+   label: string;
+@@ -1266,6 +1268,62 @@ function createPrintableHtml(
+   `;
+ }
+ 
++function createThermalSalesHtml(
++  report: ReportResult<SalesReportRow>,
++  business: BusinessSettings,
++  paperSize: "58mm" | "80mm" | "a4",
++  printedBy: string,
++): string {
++  const width = paperSize === "58mm" ? "58mm" : "80mm";
++  const rows = report.rows.map((sale) => {
++    const items = sale.items.map((item) => `
++      <div class="item">
++        <span>${escapeHtml(item.productName)}</span>
++        <span>${escapeHtml(formatNumber(item.quantity))} ${escapeHtml(item.unit)} · ${escapeHtml(formatCurrency(item.total))}</span>
++      </div>
++    `).join("");
++
++    return `
++      <section class="sale">
++        <div class="line strong"><span>${escapeHtml(sale.number)}</span><span>${escapeHtml(formatCurrency(sale.total))}</span></div>
++        <div>${escapeHtml(formatDate(sale.completedAt ?? sale.createdAt))}</div>
++        <div>Vendedor: ${escapeHtml(sale.createdBy)}</div>
++        <div class="items">${items}</div>
++      </section>
++    `;
++  }).join("");
++
++  return `<!doctype html>
++    <html lang="pt-BR"><head><meta charset="UTF-8" />
++    <title>Relatório térmico de vendas</title>
++    <style>
++      @page { size: ${width} auto; margin: 3mm; }
++      * { box-sizing: border-box; }
++      body { width: ${width}; margin: 0; padding: 3mm; color: #000; font: 10px/1.35 "Courier New", monospace; }
++      h1 { margin: 0 0 3px; font-size: 14px; text-align: center; }
++      .center { text-align: center; }
++      .sale { padding: 8px 0; border-top: 1px dashed #000; }
++      .line, .item { display: flex; justify-content: space-between; gap: 8px; }
++      .item { margin-top: 3px; }
++      .item span:first-child { flex: 1; }
++      .item span:last-child { white-space: nowrap; }
++      .strong { font-weight: 700; }
++      .summary { margin-top: 8px; padding-top: 8px; border-top: 2px solid #000; }
++      @media print { body { padding: 0; } }
++    </style></head><body>
++      <h1>${escapeHtml(business.tradeName || business.legalName || "Estabelecimento")}</h1>
++      <div class="center">RELATÓRIO DE VENDAS</div>
++      <div class="center">${escapeHtml(getReportPeriodLabel(report.period))}</div>
++      ${rows}
++      <div class="summary">
++        <div class="line strong"><span>Vendas</span><span>${report.overview.completedSales}</span></div>
++        <div class="line strong"><span>Total</span><span>${escapeHtml(formatCurrency(report.overview.netRevenue))}</span></div>
++        <div>Impresso por: ${escapeHtml(printedBy)}</div>
++        <div>Em: ${escapeHtml(formatDate(new Date().toISOString()))}</div>
++      </div>
++    </body></html>`;
++}
++
+ async function getCompleteReport(
+   filters: ReportFilters,
+ ): Promise<AnyReportResult> {
+@@ -1314,5 +1372,6 @@ async function openPrintReport(
+ async function openPrintReport(
+   filters: ReportFilters,
++  format: Extract<ReportExportFormat, "print" | "pdf">,
+ ) {
+   const printWindow =
+     window.open(
+@@ -1342,14 +1401,20 @@ async function openPrintReport(
+     const settings =
+       settingsStorageService.read();
+ 
++    const membership =
++      await getCurrentCompanyMembership();
++
+     printWindow.document.open();
+ 
+     printWindow.document.write(
+-      createPrintableHtml(
+-        report,
+-        settings.business,
+-        settings.reports,
+-      ),
++      format === "print" && report.reportType === "sales"
++        ? createThermalSalesHtml(
++            report as ReportResult<SalesReportRow>,
++            settings.business,
++            settings.receipt.paperSize,
++            membership?.full_name ?? "Usuário do sistema",
++          )
++        : createPrintableHtml(report, settings.business, settings.reports),
+     );
+ 
+     printWindow.document.close();
+@@ -1385,4 +1450,5 @@ export const reportExportService = {
+       filters,
++      format,
+     );
+   },
+-};
+\ No newline at end of file
++};
+diff --git a/src/types/database.types.ts b/src/types/database.types.ts
+index b8a2a9f..9b75375 100644
+--- a/src/types/database.types.ts
++++ b/src/types/database.types.ts
+@@ -129,11 +129,12 @@ export type Database = {
+           active: boolean
+           company_id: string
+           created_at: string
+           email: string | null
+           full_name: string | null
+           id: string
++          internal_code: number
+           invited_at: string | null
+           invited_by: string | null
+           role: Database["public"]["Enums"]["company_member_role"]
+           updated_at: string
+           user_id: string
+@@ -143,11 +144,12 @@ export type Database = {
+           active?: boolean
+           company_id: string
+           created_at?: string
+           email?: string | null
+           full_name?: string | null
+           id?: string
++          internal_code?: number
+           invited_at?: string | null
+           invited_by?: string | null
+           role?: Database["public"]["Enums"]["company_member_role"]
+           updated_at?: string
+           user_id: string
+@@ -157,11 +159,12 @@ export type Database = {
+           active?: boolean
+           company_id?: string
+           created_at?: string
+           email?: string | null
+           full_name?: string | null
+           id?: string
++          internal_code?: number
+           invited_at?: string | null
+           invited_by?: string | null
+           role?: Database["public"]["Enums"]["company_member_role"]
+           updated_at?: string
+           user_id?: string
+@@ -803,6 +818,7 @@ export type Database = {
+           notes: string | null
+           number: number
+           payment_method: Database["public"]["Enums"]["payment_method"]
++          seller_name: string
+           status: Database["public"]["Enums"]["sale_status"]
+           subtotal: number
+           total: number
+@@ -822,6 +838,7 @@ export type Database = {
+           notes?: string | null
+           number?: never
+           payment_method: Database["public"]["Enums"]["payment_method"]
++          seller_name?: string
+           status?: Database["public"]["Enums"]["sale_status"]
+           subtotal?: number
+           total?: number
+@@ -841,6 +858,7 @@ export type Database = {
+           notes?: string | null
+           number?: never
+           payment_method?: Database["public"]["Enums"]["payment_method"]
++          seller_name?: string
+           status?: Database["public"]["Enums"]["sale_status"]
+           subtotal?: number
+           total?: number
+diff --git a/supabase/config.toml b/supabase/config.toml
+index 628aee4..0000000 100644
+--- a/supabase/config.toml
++++ b/supabase/config.toml
+@@ -397,6 +397,9 @@ backend = "postgres"
+ [functions.manage-company-members]
+ verify_jwt = true
+ 
++[functions.quick-switch-user]
++verify_jwt = true
++
+ # Experimental features may be deprecated any time
+ [experimental]
+ # Configures S3 bucket URL, eg. <bucket_name>.s3-<region>.amazonaws.com
+diff --git a/src/components/sales/QuickUserSwitchModal/QuickUserSwitchModal.tsx b/src/components/sales/QuickUserSwitchModal/QuickUserSwitchModal.tsx
+new file mode 100644
+index 0000000..f5f71c8
+--- /dev/null
++++ b/src/components/sales/QuickUserSwitchModal/QuickUserSwitchModal.tsx
+@@ -0,0 +1,113 @@
++import { KeyRound, LogIn, UserRound } from "lucide-react";
++import { useEffect, useRef, useState } from "react";
++import type { FormEvent } from "react";
++
++import useCompany from "../../../contexts/CompanyContext/useCompany";
++import { quickSwitchUser } from "../../../services/auth/authService";
++import { getErrorMessage } from "../../../utils/errors";
++
++import styles from "./QuickUserSwitchModal.module.css";
++
++interface QuickUserSwitchModalProps {
++  isOpen: boolean;
++  onSuccess: (employeeName: string) => void;
++}
++
++export default function QuickUserSwitchModal({
++  isOpen,
++  onSuccess,
++}: QuickUserSwitchModalProps) {
++  const { companyId, membership, refreshCompany } = useCompany();
++  const codeRef = useRef<HTMLInputElement>(null);
++  const [code, setCode] = useState("");
++  const [password, setPassword] = useState("");
++  const [error, setError] = useState("");
++  const [isSubmitting, setIsSubmitting] = useState(false);
++
++  useEffect(() => {
++    if (isOpen) {
++      setCode("");
++      setPassword("");
++      setError("");
++      window.setTimeout(() => codeRef.current?.focus(), 0);
++    }
++  }, [isOpen]);
++
++  if (!isOpen) return null;
++
++  async function handleSubmit(event: FormEvent) {
++    event.preventDefault();
++    const numericCode = Number(code);
++
++    if (!companyId || !Number.isSafeInteger(numericCode) || numericCode < 1) {
++      setError("Informe um código interno válido.");
++      return;
++    }
++
++    if (!password) {
++      setError("Informe a senha do funcionário.");
++      return;
++    }
++
++    setIsSubmitting(true);
++    setError("");
++
++    try {
++      const employeeName = await quickSwitchUser(companyId, numericCode, password);
++      await refreshCompany();
++      onSuccess(employeeName);
++    } catch (switchError) {
++      setError(getErrorMessage(switchError));
++    } finally {
++      setIsSubmitting(false);
++    }
++  }
++
++  return (
++    <div className={styles.overlay}>
++      <form className={styles.modal} onSubmit={(event) => void handleSubmit(event)}>
++        <div className={styles.icon}><UserRound size={25} /></div>
++        <span className={styles.eyebrow}>Próximo atendimento</span>
++        <h3>Troca rápida de usuário</h3>
++        <p>
++          Venda concluída por <strong>{membership?.full_name ?? "usuário atual"}</strong>.
++          Identifique o responsável pela próxima venda.
++        </p>
++
++        {error && <div className={styles.error}>{error}</div>}
++
++        <label>
++          <span>Código interno</span>
++          <div className={styles.inputWrap}>
++            <KeyRound size={17} />
++            <input
++              ref={codeRef}
++              inputMode="numeric"
++              pattern="[0-9]*"
++              value={code}
++              onChange={(event) => setCode(event.target.value.replace(/\D/g, ""))}
++              disabled={isSubmitting}
++              autoComplete="username"
++            />
++          </div>
++        </label>
++
++        <label>
++          <span>Senha</span>
++          <input
++            type="password"
++            value={password}
++            onChange={(event) => setPassword(event.target.value)}
++            disabled={isSubmitting}
++            autoComplete="current-password"
++          />
++        </label>
++
++        <button type="submit" disabled={isSubmitting}>
++          <LogIn size={17} />
++          {isSubmitting ? "Verificando..." : "Entrar e continuar vendendo"}
++        </button>
++      </form>
++    </div>
++  );
++}
+diff --git a/src/components/sales/QuickUserSwitchModal/QuickUserSwitchModal.module.css b/src/components/sales/QuickUserSwitchModal/QuickUserSwitchModal.module.css
+new file mode 100644
+index 0000000..c89881e
+--- /dev/null
++++ b/src/components/sales/QuickUserSwitchModal/QuickUserSwitchModal.module.css
+@@ -0,0 +1,51 @@
++.overlay {
++  position: fixed;
++  z-index: 1400;
++  inset: 0;
++  display: grid;
++  place-items: center;
++  padding: 20px;
++  background: rgba(15, 23, 42, 0.56);
++  backdrop-filter: blur(5px);
++}
++
++.modal {
++  width: min(100%, 430px);
++  padding: 28px;
++  border: 1px solid var(--border);
++  border-radius: 22px;
++  background: var(--surface);
++  box-shadow: 0 26px 75px rgba(15, 23, 42, 0.28);
++}
++
++.icon {
++  display: grid;
++  width: 52px;
++  height: 52px;
++  place-items: center;
++  color: var(--primary);
++  border-radius: 16px;
++  background: var(--primary-light);
++}
++
++.eyebrow {
++  display: block;
++  margin-top: 18px;
++  color: var(--primary);
++  font-size: 9px;
++  font-weight: 800;
++  letter-spacing: 0.08em;
++  text-transform: uppercase;
++}
++
++.modal h3 { margin-top: 6px; color: var(--text); font-size: 20px; }
++.modal p { margin: 8px 0 20px; color: var(--text-secondary); font-size: 11px; line-height: 1.6; }
++.modal label { display: grid; gap: 7px; margin-top: 13px; color: var(--text-secondary); font-size: 9px; font-weight: 700; }
++.modal input { width: 100%; min-height: 43px; padding: 0 12px; color: var(--text); border: 1px solid var(--border); border-radius: 11px; outline: 0; background: var(--surface); }
++.modal input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
++.inputWrap { position: relative; }
++.inputWrap svg { position: absolute; top: 13px; left: 12px; color: var(--text-light); }
++.inputWrap input { padding-left: 39px; }
++.modal button { display: flex; width: 100%; min-height: 45px; align-items: center; justify-content: center; gap: 8px; margin-top: 20px; color: #fff; border: 0; border-radius: 12px; background: var(--primary); font: inherit; font-size: 10px; font-weight: 800; cursor: pointer; }
++.modal button:disabled { cursor: wait; opacity: 0.7; }
++.error { padding: 11px 12px; color: #b91c1c; border: 1px solid #fecaca; border-radius: 10px; background: #fef2f2; font-size: 9px; }
+diff --git a/src/services/printing/printerService.ts b/src/services/printing/printerService.ts
+new file mode 100644
+index 0000000..9b909a3
+--- /dev/null
++++ b/src/services/printing/printerService.ts
+@@ -0,0 +1,37 @@
++export interface PrinterOption {
++  value: string;
++  label: string;
++}
++
++type DesktopPrintingBridge = {
++  getPrinters?: () => Promise<Array<{ name: string; displayName?: string }>>;
++};
++
++declare global {
++  interface Window {
++    gestorFacilPrinting?: DesktopPrintingBridge;
++  }
++}
++
++const systemDefault: PrinterOption = {
++  value: "system-default",
++  label: "Impressora escolhida no diálogo do sistema",
++};
++
++export const printerService = {
++  async list(): Promise<PrinterOption[]> {
++    const printers = await window.gestorFacilPrinting?.getPrinters?.();
++
++    if (!printers?.length) {
++      return [systemDefault];
++    }
++
++    return [
++      systemDefault,
++      ...printers.map((printer) => ({
++        value: printer.name,
++        label: printer.displayName || printer.name,
++      })),
++    ];
++  },
++};
+diff --git a/supabase/functions/quick-switch-user/index.ts b/supabase/functions/quick-switch-user/index.ts
+new file mode 100644
+index 0000000..c9be359
+--- /dev/null
++++ b/supabase/functions/quick-switch-user/index.ts
+@@ -0,0 +1,107 @@
++import "jsr:@supabase/functions-js/edge-runtime.d.ts";
++import { createClient } from "npm:@supabase/supabase-js@2.116.0";
++
++const corsHeaders = {
++  "Access-Control-Allow-Origin": "*",
++  "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
++};
++
++function json(body: unknown, status = 200) {
++  return new Response(JSON.stringify(body), {
++    status,
++    headers: { ...corsHeaders, "Content-Type": "application/json" },
++  });
++}
++
++Deno.serve(async (request) => {
++  if (request.method === "OPTIONS") {
++    return new Response("ok", { headers: corsHeaders });
++  }
++
++  if (request.method !== "POST") {
++    return json({ error: "Método não permitido." }, 405);
++  }
++
++  try {
++    const authorization = request.headers.get("Authorization");
++    const token = authorization?.replace(/^Bearer\s+/i, "");
++    const supabaseUrl = Deno.env.get("SUPABASE_URL");
++    const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
++    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
++
++    if (!token || !supabaseUrl || !anonKey || !serviceRoleKey) {
++      return json({ error: "Sessão ou configuração indisponível." }, 401);
++    }
++
++    const admin = createClient(supabaseUrl, serviceRoleKey, {
++      auth: { autoRefreshToken: false, persistSession: false },
++    });
++    const { data: callerData, error: callerError } =
++      await admin.auth.getUser(token);
++
++    if (callerError || !callerData.user) {
++      return json({ error: "Sessão inválida ou expirada." }, 401);
++    }
++
++    const body = await request.json();
++    const companyId = String(body.companyId ?? "");
++    const internalCode = Number(body.internalCode);
++    const password = String(body.password ?? "");
++
++    if (!companyId || !Number.isSafeInteger(internalCode) || internalCode < 1) {
++      return json({ error: "Informe um código interno válido." }, 400);
++    }
++
++    if (!password) {
++      return json({ error: "Informe a senha do funcionário." }, 400);
++    }
++
++    const { data: callerMembership } = await admin
++      .from("company_members")
++      .select("id")
++      .eq("company_id", companyId)
++      .eq("user_id", callerData.user.id)
++      .eq("active", true)
++      .maybeSingle();
++
++    if (!callerMembership) {
++      return json({ error: "Seu acesso a esta empresa não está ativo." }, 403);
++    }
++
++    const { data: target, error: targetError } = await admin
++      .from("company_members")
++      .select("user_id, email, full_name, active")
++      .eq("company_id", companyId)
++      .eq("internal_code", internalCode)
++      .maybeSingle();
++
++    if (targetError || !target?.active || !target.email) {
++      return json({ error: "Código ou senha inválidos." }, 401);
++    }
++
++    const authClient = createClient(supabaseUrl, anonKey, {
++      auth: { autoRefreshToken: false, persistSession: false },
++    });
++    const { data: signInData, error: signInError } =
++      await authClient.auth.signInWithPassword({
++        email: target.email,
++        password,
++      });
++
++    if (
++      signInError ||
++      !signInData.session ||
++      signInData.user.id !== target.user_id
++    ) {
++      return json({ error: "Código ou senha inválidos." }, 401);
++    }
++
++    return json({
++      accessToken: signInData.session.access_token,
++      refreshToken: signInData.session.refresh_token,
++      employeeName: target.full_name ?? target.email,
++    });
++  } catch {
++    return json({ error: "Não foi possível trocar o usuário." }, 500);
++  }
++});
+diff --git a/supabase/migrations/20261017090000_add_employee_codes_and_sale_sellers.sql b/supabase/migrations/20261017090000_add_employee_codes_and_sale_sellers.sql
+new file mode 100644
+index 0000000..3083089
+--- /dev/null
++++ b/supabase/migrations/20261017090000_add_employee_codes_and_sale_sellers.sql
+@@ -0,0 +1,130 @@
++alter table public.company_members
++  add column if not exists internal_code bigint;
++
++with numbered as (
++  select
++    id,
++    row_number() over (
++      partition by company_id
++      order by
++        case when role = 'owner' then 0 else 1 end,
++        created_at,
++        id
++    ) as code
++  from public.company_members
++)
++update public.company_members cm
++set internal_code = numbered.code
++from numbered
++where numbered.id = cm.id
++  and cm.internal_code is null;
++
++create table if not exists private.company_employee_counters (
++  company_id uuid primary key references public.companies(id) on delete cascade,
++  next_code bigint not null check (next_code > 0)
++);
++
++insert into private.company_employee_counters(company_id, next_code)
++select company_id, coalesce(max(internal_code), 0) + 1
++from public.company_members
++group by company_id
++on conflict (company_id) do update
++set next_code = greatest(
++  private.company_employee_counters.next_code,
++  excluded.next_code
++);
++
++create or replace function private.assign_company_member_code()
++returns trigger
++language plpgsql
++security definer
++set search_path = ''
++as $$
++begin
++  if new.internal_code is null then
++    insert into private.company_employee_counters(company_id, next_code)
++    values (new.company_id, 2)
++    on conflict (company_id) do update
++      set next_code = private.company_employee_counters.next_code + 1
++    returning next_code - 1 into new.internal_code;
++  end if;
++
++  return new;
++end;
++$$;
++
++drop trigger if exists assign_company_member_code
++  on public.company_members;
++
++create trigger assign_company_member_code
++before insert on public.company_members
++for each row execute function private.assign_company_member_code();
++
++alter table public.company_members
++  alter column internal_code set not null;
++
++create unique index if not exists company_members_company_internal_code_idx
++  on public.company_members(company_id, internal_code);
++
++alter table public.sales
++  add column if not exists seller_name text;
++
++update public.sales s
++set seller_name = coalesce(
++  nullif(trim(cm.full_name), ''),
++  nullif(trim(cm.email), ''),
++  'Usuário do sistema'
++)
++from public.company_members cm
++where cm.company_id = s.company_id
++  and cm.user_id = s.created_by
++  and s.seller_name is null;
++
++update public.sales
++set seller_name = 'Usuário do sistema'
++where seller_name is null;
++
++alter table public.sales
++  alter column seller_name set default 'Usuário do sistema',
++  alter column seller_name set not null;
++
++create or replace function private.assign_sale_seller()
++returns trigger
++language plpgsql
++security definer
++set search_path = ''
++as $$
++declare
++  v_user_id uuid := coalesce(new.created_by, (select auth.uid()));
++begin
++  new.created_by := v_user_id;
++
++  select coalesce(
++    nullif(trim(cm.full_name), ''),
++    nullif(trim(cm.email), ''),
++    'Usuário do sistema'
++  )
++  into new.seller_name
++  from public.company_members cm
++  where cm.company_id = new.company_id
++    and cm.user_id = v_user_id
++    and cm.active
++  limit 1;
++
++  new.seller_name := coalesce(new.seller_name, 'Usuário do sistema');
++  return new;
++end;
++$$;
++
++drop trigger if exists assign_sale_seller on public.sales;
++
++create trigger assign_sale_seller
++before insert on public.sales
++for each row execute function private.assign_sale_seller();
++
++revoke all on table private.company_employee_counters
++  from public, anon, authenticated;
++revoke all on function private.assign_company_member_code()
++  from public, anon, authenticated;
++revoke all on function private.assign_sale_seller()
++  from public, anon, authenticated;
+diff --git a/src/domain/employees/Employee.ts b/src/domain/employees/Employee.ts
+--- a/src/domain/employees/Employee.ts
++++ b/src/domain/employees/Employee.ts
+@@ -8,6 +8,7 @@ export type EmployeeRole = Exclude<
+ export interface Employee {
+   id: string;
+   userId: string;
++  internalCode: number;
+   fullName: string;
+   email: string;
+   role: CompanyMemberRole;
+diff --git a/src/services/employees/employeeService.ts b/src/services/employees/employeeService.ts
+--- a/src/services/employees/employeeService.ts
++++ b/src/services/employees/employeeService.ts
+@@ -13,6 +13,7 @@ import type {
+ type EmployeeRow = {
+   id: string;
+   user_id: string;
++  internal_code: number;
+   full_name: string | null;
+   email: string | null;
+   role: CompanyMemberRole;
+@@ -25,6 +26,7 @@ function mapEmployee(row: EmployeeRow): Employee {
+   return {
+     id: row.id,
+     userId: row.user_id,
++    internalCode: row.internal_code,
+     fullName: row.full_name ?? "Usuário sem nome",
+     email: row.email ?? "E-mail não disponível",
+     role: row.role,
+@@ -73,6 +75,6 @@ export const employeeService = {
+       .from("company_members")
+       .select(
+-        "id, user_id, full_name, email, role, active, invited_at, created_at",
++        "id, user_id, internal_code, full_name, email, role, active, invited_at, created_at",
+       )
+       .eq("company_id", companyId)
+       .order("full_name");
+diff --git a/src/components/settings/EmployeesSettingsPanel/EmployeesSettingsPanel.tsx b/src/components/settings/EmployeesSettingsPanel/EmployeesSettingsPanel.tsx
+--- a/src/components/settings/EmployeesSettingsPanel/EmployeesSettingsPanel.tsx
++++ b/src/components/settings/EmployeesSettingsPanel/EmployeesSettingsPanel.tsx
+@@ -267,6 +267,6 @@ export default function EmployeesSettingsPanel() {
+                 <strong>{employee.fullName}</strong>
+                 <span>{employee.email}</span>
+                 <small>
+-                  {employee.active ? "Acesso ativo" : "Acesso desativado"}
++                  Código {employee.internalCode} · {employee.active ? "Acesso ativo" : "Acesso desativado"}
+                 </small>
+               </div>
+
+

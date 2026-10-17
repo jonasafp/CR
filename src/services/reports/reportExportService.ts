@@ -5,6 +5,7 @@ import type {
   ProductReportRow,
   ReportExportFormat,
   ReportOverview,
+  ReportResult,
   SalesReportRow,
 } from "../../domain/reports/Report";
 
@@ -37,6 +38,7 @@ import {
 import {
   settingsStorageService,
 } from "../settings/settingsStorageService";
+import { getCurrentCompanyMembership } from "../auth/authService";
 
 interface ExportColumn<Row> {
   label: string;
@@ -1266,6 +1268,62 @@ function createPrintableHtml(
   `;
 }
 
+function createThermalSalesHtml(
+  report: ReportResult<SalesReportRow>,
+  business: BusinessSettings,
+  paperSize: "58mm" | "80mm" | "a4",
+  printedBy: string,
+): string {
+  const width = paperSize === "58mm" ? "58mm" : "80mm";
+  const rows = report.rows.map((sale) => {
+    const items = sale.items.map((item) => `
+      <div class="item">
+        <span>${escapeHtml(item.productName)}</span>
+        <span>${escapeHtml(formatNumber(item.quantity))} ${escapeHtml(item.unit)} · ${escapeHtml(formatCurrency(item.total))}</span>
+      </div>
+    `).join("");
+
+    return `
+      <section class="sale">
+        <div class="line strong"><span>${escapeHtml(sale.number)}</span><span>${escapeHtml(formatCurrency(sale.total))}</span></div>
+        <div>${escapeHtml(formatDate(sale.completedAt ?? sale.createdAt))}</div>
+        <div>Vendedor: ${escapeHtml(sale.createdBy)}</div>
+        <div class="items">${items}</div>
+      </section>
+    `;
+  }).join("");
+
+  return `<!doctype html>
+    <html lang="pt-BR"><head><meta charset="UTF-8" />
+    <title>Relatório térmico de vendas</title>
+    <style>
+      @page { size: ${width} auto; margin: 3mm; }
+      * { box-sizing: border-box; }
+      body { width: ${width}; margin: 0; padding: 3mm; color: #000; font: 10px/1.35 "Courier New", monospace; }
+      h1 { margin: 0 0 3px; font-size: 14px; text-align: center; }
+      .center { text-align: center; }
+      .sale { padding: 8px 0; border-top: 1px dashed #000; }
+      .line, .item { display: flex; justify-content: space-between; gap: 8px; }
+      .item { margin-top: 3px; }
+      .item span:first-child { flex: 1; }
+      .item span:last-child { white-space: nowrap; }
+      .strong { font-weight: 700; }
+      .summary { margin-top: 8px; padding-top: 8px; border-top: 2px solid #000; }
+      @media print { body { padding: 0; } }
+    </style></head><body>
+      <h1>${escapeHtml(business.tradeName || business.legalName || "Estabelecimento")}</h1>
+      <div class="center">RELATÓRIO DE VENDAS</div>
+      <div class="center">${escapeHtml(getReportPeriodLabel(report.period))}</div>
+      ${rows}
+      <div class="summary">
+        <div class="line strong"><span>Vendas</span><span>${report.overview.completedSales}</span></div>
+        <div class="line strong"><span>Total</span><span>${escapeHtml(formatCurrency(report.overview.netRevenue))}</span></div>
+        <div>Impresso por: ${escapeHtml(printedBy)}</div>
+        <div>Em: ${escapeHtml(formatDate(new Date().toISOString()))}</div>
+      </div>
+    </body></html>`;
+}
+
 async function getCompleteReport(
   filters: ReportFilters,
 ): Promise<AnyReportResult> {
@@ -1314,6 +1372,7 @@ async function exportCsv(
 
 async function openPrintReport(
   filters: ReportFilters,
+  format: Extract<ReportExportFormat, "print" | "pdf">,
 ) {
   const printWindow =
     window.open(
@@ -1342,14 +1401,20 @@ async function openPrintReport(
     const settings =
       settingsStorageService.read();
 
+    const membership =
+      await getCurrentCompanyMembership();
+
     printWindow.document.open();
 
     printWindow.document.write(
-      createPrintableHtml(
-        report,
-        settings.business,
-        settings.reports,
-      ),
+      format === "print" && report.reportType === "sales"
+        ? createThermalSalesHtml(
+            report as ReportResult<SalesReportRow>,
+            settings.business,
+            settings.receipt.paperSize,
+            membership?.full_name ?? "Usuário do sistema",
+          )
+        : createPrintableHtml(report, settings.business, settings.reports),
     );
 
     printWindow.document.close();
@@ -1383,6 +1448,7 @@ export const reportExportService = {
 
     return openPrintReport(
       filters,
+      format,
     );
   },
 };

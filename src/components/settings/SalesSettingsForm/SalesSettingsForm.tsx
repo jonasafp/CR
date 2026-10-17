@@ -7,6 +7,7 @@ import {
   ShoppingCart,
   Tag,
   UserRoundCheck,
+  UsersRound,
 } from "lucide-react";
 
 import Select from "../../common/Select/Select";
@@ -407,12 +408,23 @@ export default function SalesSettingsForm({
               )
             }
           />
+
+          <SettingsSwitch
+            checked={value.quickUserSwitchAfterSale}
+            title="Troca rápida após a venda"
+            description="Ao concluir cada venda, solicita o código e a senha do próximo funcionário sem sair do PDV."
+            icon={<UsersRound size={17} />}
+            disabled={disabled}
+            onChange={(checked) =>
+              updateField("quickUserSwitchAfterSale", checked)
+            }
+          />
         </div>
 
         <div
           className={styles.notice}
         >
-          As permissões serão consumidas pela tela de vendas durante a integração final. A impressão automática utilizará a impressora configurada no ambiente desktop.
+          A troca rápida mantém a tela de vendas aberta e registra cada operação no nome do funcionário autenticado.
         </div>
       </div>
     </section>

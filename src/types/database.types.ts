@@ -132,6 +132,7 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          internal_code: number
           invited_at: string | null
           invited_by: string | null
           role: Database["public"]["Enums"]["company_member_role"]
@@ -145,6 +146,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          internal_code?: number
           invited_at?: string | null
           invited_by?: string | null
           role?: Database["public"]["Enums"]["company_member_role"]
@@ -158,6 +160,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          internal_code?: number
           invited_at?: string | null
           invited_by?: string | null
           role?: Database["public"]["Enums"]["company_member_role"]
@@ -815,6 +818,7 @@ export type Database = {
           notes: string | null
           number: number
           payment_method: Database["public"]["Enums"]["payment_method"]
+          seller_name: string
           status: Database["public"]["Enums"]["sale_status"]
           subtotal: number
           total: number
@@ -834,6 +838,7 @@ export type Database = {
           notes?: string | null
           number?: never
           payment_method: Database["public"]["Enums"]["payment_method"]
+          seller_name?: string
           status?: Database["public"]["Enums"]["sale_status"]
           subtotal?: number
           total?: number
@@ -853,6 +858,7 @@ export type Database = {
           notes?: string | null
           number?: never
           payment_method?: Database["public"]["Enums"]["payment_method"]
+          seller_name?: string
           status?: Database["public"]["Enums"]["sale_status"]
           subtotal?: number
           total?: number

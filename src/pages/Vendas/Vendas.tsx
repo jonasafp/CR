@@ -29,6 +29,7 @@ import LoadingState from "../../components/common/LoadingState/LoadingState";
 import Pagination from "../../components/common/Pagination/Pagination";
 import SaleFilters from "../../components/sales/SaleFilters/SaleFilters";
 import SalesTable from "../../components/sales/SalesTable/SalesTable";
+import QuickUserSwitchModal from "../../components/sales/QuickUserSwitchModal/QuickUserSwitchModal";
 
 import {
   getMaximumDiscount,
@@ -239,6 +240,9 @@ export default function Vendas() {
 
   const [notes, setNotes] =
     useState("");
+
+  const [isQuickSwitchOpen, setIsQuickSwitchOpen] =
+    useState(false);
 
   const [
     localError,
@@ -932,6 +936,10 @@ export default function Vendas() {
 
             `A venda ${sale.number} foi registrada com sucesso.`,
           );
+
+          if (salesSettings.quickUserSwitchAfterSale) {
+            setIsQuickSwitchOpen(true);
+          }
         },
 
         onError: (
@@ -2240,6 +2248,18 @@ export default function Vendas() {
         onConfirm={
           handleConfirmCancel
         }
+      />
+
+      <QuickUserSwitchModal
+        isOpen={isQuickSwitchOpen}
+        onSuccess={(employeeName) => {
+          setIsQuickSwitchOpen(false);
+          notifications.success(
+            "Usuário alterado",
+            `${employeeName} já pode iniciar a próxima venda.`,
+          );
+          window.setTimeout(() => searchRef.current?.focus(), 0);
+        }}
       />
 
       {selectedSale && (

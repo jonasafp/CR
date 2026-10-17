@@ -284,7 +284,7 @@ export default function EmployeesSettingsPanel() {
                 <strong>{employee.fullName}</strong>
                 <span>{employee.email}</span>
                 <small>
-                  {employee.active ? "Acesso ativo" : "Acesso desativado"}
+                  Código {employee.internalCode} · {employee.active ? "Acesso ativo" : "Acesso desativado"}
                 </small>
               </div>
 

@@ -15,6 +15,9 @@ export type CurrentCompanyMembership = {
 
   role:
   CompanyMemberRole;
+
+  full_name: string;
+  internal_code: number;
 };
 
 type BootstrapCompanyInput = {
@@ -120,7 +123,7 @@ export async function getCurrentCompanyMembership():
         "company_members",
       )
       .select(
-        "company_id, role",
+        "company_id, role, full_name, internal_code",
       )
       .eq(
         "active",
@@ -146,7 +149,57 @@ export async function getCurrentCompanyMembership():
 
     role:
       data.role,
+
+    full_name:
+      data.full_name ?? "Usuário do sistema",
+
+    internal_code:
+      data.internal_code,
   };
+}
+
+export async function quickSwitchUser(
+  companyId: string,
+  internalCode: number,
+  password: string,
+) {
+  const { data, error } = await supabase.functions.invoke(
+    "quick-switch-user",
+    {
+      body: { companyId, internalCode, password },
+    },
+  );
+
+  if (error) {
+    let message = error.message;
+    const context = (error as { context?: Response }).context;
+
+    if (context) {
+      try {
+        const payload = await context.clone().json() as { error?: string };
+        message = payload.error ?? message;
+      } catch {
+        // Mantém a mensagem original quando a resposta não contém JSON.
+      }
+    }
+
+    throw new Error(message);
+  }
+
+  if (!data?.accessToken || !data?.refreshToken) {
+    throw new Error(data?.error ?? "Não foi possível trocar o usuário.");
+  }
+
+  const { error: sessionError } = await supabase.auth.setSession({
+    access_token: data.accessToken,
+    refresh_token: data.refreshToken,
+  });
+
+  if (sessionError) {
+    throw sessionError;
+  }
+
+  return String(data.employeeName ?? "Usuário");
 }
 
 type BootstrapCompanyRpc =

@@ -877,6 +877,13 @@ function createSalesRows(
 
     createdBy:
       sale.createdBy,
+
+    items: sale.items.map((item) => ({
+      productName: item.productName,
+      quantity: item.quantity,
+      unit: item.unit,
+      total: item.total,
+    })),
   }));
 }
 

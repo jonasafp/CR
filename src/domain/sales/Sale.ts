@@ -63,6 +63,7 @@ export interface Sale {
   cancelledAt?: string;
 
   createdBy: string;
+  sellerName?: string;
 }
 
 export interface SaleCartItem {

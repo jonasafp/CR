@@ -112,6 +112,9 @@ export interface SalesSettings {
 
   autoPrintReceipt:
     boolean;
+
+  quickUserSwitchAfterSale:
+    boolean;
 }
 
 export interface InventorySettings {
@@ -182,6 +185,8 @@ export interface ReportSettings {
 export interface ReceiptSettings {
   paperSize:
     ReceiptPaperSize;
+
+  printerName: string;
 
   showLogo: boolean;
   showLegalName: boolean;

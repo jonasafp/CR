@@ -83,7 +83,8 @@ function mapSale(row: SaleRow, itemRows: SaleItemRow[]): Sale {
     updatedAt: row.updated_at,
     completedAt: row.completed_at,
     cancelledAt: row.cancelled_at ?? undefined,
-    createdBy: row.created_by ? "Usuário do sistema" : "Sistema",
+    createdBy: row.seller_name,
+    sellerName: row.seller_name,
   };
 }
 

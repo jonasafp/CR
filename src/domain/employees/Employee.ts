@@ -10,6 +10,7 @@ export type EmployeeRole = Exclude<
 export interface Employee {
   id: string;
   userId: string;
+  internalCode: number;
   fullName: string;
   email: string;
   role: CompanyMemberRole;
