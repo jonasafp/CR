@@ -129,7 +129,11 @@ export type Database = {
           active: boolean
           company_id: string
           created_at: string
+          email: string | null
+          full_name: string | null
           id: string
+          invited_at: string | null
+          invited_by: string | null
           role: Database["public"]["Enums"]["company_member_role"]
           updated_at: string
           user_id: string
@@ -138,7 +142,11 @@ export type Database = {
           active?: boolean
           company_id: string
           created_at?: string
+          email?: string | null
+          full_name?: string | null
           id?: string
+          invited_at?: string | null
+          invited_by?: string | null
           role?: Database["public"]["Enums"]["company_member_role"]
           updated_at?: string
           user_id: string
@@ -147,7 +155,11 @@ export type Database = {
           active?: boolean
           company_id?: string
           created_at?: string
+          email?: string | null
+          full_name?: string | null
           id?: string
+          invited_at?: string | null
+          invited_by?: string | null
           role?: Database["public"]["Enums"]["company_member_role"]
           updated_at?: string
           user_id?: string

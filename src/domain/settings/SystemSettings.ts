@@ -239,4 +239,5 @@ export type SettingsSection =
   | "financial"
   | "reports"
   | "receipt"
+  | "employees"
   | "data";

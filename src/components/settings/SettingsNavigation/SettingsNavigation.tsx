@@ -7,6 +7,7 @@ import {
   ReceiptText,
   Settings2,
   ShoppingCart,
+  Users,
 } from "lucide-react";
 
 import type {
@@ -27,6 +28,8 @@ interface SettingsNavigationProps {
   onChange: (
     section: SettingsSection,
   ) => void;
+
+  showEmployees?: boolean;
 }
 
 interface NavigationItem {
@@ -110,6 +113,16 @@ const navigationItems: NavigationItem[] = [
     icon: ReceiptText,
   },
   {
+    section: "employees",
+
+    label: "Funcionários",
+
+    description:
+      "Acessos, funções e convites",
+
+    icon: Users,
+  },
+  {
     section: "data",
 
     label: "Dados e manutenção",
@@ -125,6 +138,7 @@ export default function SettingsNavigation({
   activeSection,
   changedSections = [],
   onChange,
+  showEmployees = false,
 }: SettingsNavigationProps) {
   return (
     <nav
@@ -142,7 +156,13 @@ export default function SettingsNavigation({
       </div>
 
       <div className={styles.items}>
-        {navigationItems.map(
+        {navigationItems
+          .filter(
+            (item) =>
+              item.section !== "employees" ||
+              showEmployees,
+          )
+          .map(
           (item) => {
             const Icon = item.icon;
 

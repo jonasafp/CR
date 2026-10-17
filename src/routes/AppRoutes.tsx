@@ -22,6 +22,7 @@ import Login from "../pages/Login/Login";
 import Produtos from "../pages/Produtos/Produtos";
 import Relatorios from "../pages/Relatorios/Relatorios";
 import Vendas from "../pages/Vendas/Vendas";
+import DefinirSenha from "../pages/DefinirSenha/DefinirSenha";
 
 export default function AppRoutes() {
   return (
@@ -47,6 +48,11 @@ export default function AppRoutes() {
           element={
             <ConfiguracaoInicial />
           }
+        />
+
+        <Route
+          path="definir-senha"
+          element={<DefinirSenha />}
         />
       </Route>
 

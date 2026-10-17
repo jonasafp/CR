@@ -25,6 +25,7 @@ import ReceiptSettingsForm from "../../components/settings/ReceiptSettingsForm/R
 import ReportSettingsForm from "../../components/settings/ReportSettingsForm/ReportSettingsForm";
 import SalesSettingsForm from "../../components/settings/SalesSettingsForm/SalesSettingsForm";
 import SettingsNavigation from "../../components/settings/SettingsNavigation/SettingsNavigation";
+import EmployeesSettingsPanel from "../../components/settings/EmployeesSettingsPanel/EmployeesSettingsPanel";
 
 import type {
   SettingsSection,
@@ -53,6 +54,7 @@ import {
 } from "../../utils/errors";
 
 import styles from "./Configuracoes.module.css";
+import useCompany from "../../contexts/CompanyContext/useCompany";
 
 function createEditableSettings(
   settings: SystemSettings,
@@ -89,6 +91,10 @@ function createEditableSettings(
 }
 
 export default function Configuracoes() {
+  const {
+    membership,
+  } = useCompany();
+
   const {
     settings,
     isLoading,
@@ -174,7 +180,7 @@ export default function Configuracoes() {
           Array<
             Exclude<
               SettingsSection,
-              "data"
+              "data" | "employees"
             >
           > = [
             "business",
@@ -536,6 +542,11 @@ export default function Configuracoes() {
             }
           />
         );
+
+      case "employees":
+        return (
+          <EmployeesSettingsPanel />
+        );
     }
   }
 
@@ -678,6 +689,10 @@ export default function Configuracoes() {
           }
           onChange={
             setActiveSection
+          }
+          showEmployees={
+            membership?.role === "owner" ||
+            membership?.role === "admin"
           }
         />
 
