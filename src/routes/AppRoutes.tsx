@@ -1,5 +1,4 @@
 import {
-  Navigate,
   Route,
   Routes,
 } from "react-router-dom";
@@ -12,7 +11,6 @@ import DashboardLayout from "../layouts/DashboardLayout/DashboardLayout";
 
 import Clientes from "../pages/Clientes/Clientes";
 import Compras from "../pages/Compras/Compras";
-import ConfiguracaoInicial from "../pages/ConfiguracaoInicial/ConfiguracaoInicial";
 import Configuracoes from "../pages/Configuracoes/Configuracoes";
 import Dashboard from "../pages/Dashboard/Dashboard";
 import Estoque from "../pages/Estoque/Estoque";
@@ -23,6 +21,7 @@ import Produtos from "../pages/Produtos/Produtos";
 import Relatorios from "../pages/Relatorios/Relatorios";
 import Vendas from "../pages/Vendas/Vendas";
 import DefinirSenha from "../pages/DefinirSenha/DefinirSenha";
+import NotFound from "../pages/NotFound/NotFound";
 
 export default function AppRoutes() {
   return (
@@ -43,13 +42,6 @@ export default function AppRoutes() {
           />
         }
       >
-        <Route
-          path="configuracao-inicial"
-          element={
-            <ConfiguracaoInicial />
-          }
-        />
-
         <Route
           path="definir-senha"
           element={<DefinirSenha />}
@@ -164,10 +156,7 @@ export default function AppRoutes() {
       <Route
         path="*"
         element={
-          <Navigate
-            to="/"
-            replace
-          />
+          <NotFound />
         }
       />
     </Routes>

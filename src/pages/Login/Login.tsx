@@ -17,6 +17,7 @@ import {
   getAuthErrorMessage,
   getCurrentCompanyMembership,
   signIn,
+  signOut,
 } from "../../services/auth/authService";
 
 import "./Login.css";
@@ -70,15 +71,13 @@ export default function Login() {
           (
             membership,
           ) => {
-            navigate(
-              membership
-                ? "/"
-                : "/configuracao-inicial",
-              {
-                replace:
-                  true,
-              },
-            );
+            if (membership) {
+              navigate("/", { replace: true });
+              return;
+            }
+
+            void signOut();
+            setErrorMessage("Esta conta não está vinculada a uma empresa ativa.");
           },
         );
     },
@@ -134,15 +133,13 @@ export default function Login() {
       const membership =
         await getCurrentCompanyMembership();
 
-      navigate(
-        membership
-          ? "/"
-          : "/configuracao-inicial",
-        {
-          replace:
-            true,
-        },
-      );
+      if (!membership) {
+        await signOut();
+        setErrorMessage("Esta conta não está vinculada a uma empresa ativa.");
+        return;
+      }
+
+      navigate("/", { replace: true });
     } catch (
       error
     ) {

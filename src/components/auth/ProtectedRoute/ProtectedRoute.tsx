@@ -97,7 +97,7 @@ export default function ProtectedRoute({
   ) {
     return (
       <Navigate
-        to="/configuracao-inicial"
+        to="/login"
         replace
       />
     );

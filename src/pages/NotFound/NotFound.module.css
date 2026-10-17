@@ -1,0 +1,72 @@
+.page {
+  display: grid;
+  min-height: 100vh;
+  padding: 24px;
+  place-items: center;
+  background: var(--background);
+}
+
+.card {
+  width: min(520px, 100%);
+  padding: 38px;
+  text-align: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+}
+
+.code {
+  display: block;
+  color: var(--primary);
+  font-size: 54px;
+  font-weight: 850;
+  letter-spacing: -0.06em;
+}
+
+.card h1 {
+  margin: 7px 0 9px;
+  color: var(--text);
+  font-size: 24px;
+}
+
+.card p {
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.actions button,
+.actions a {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 15px;
+  border-radius: 11px;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 750;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.actions button {
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.actions a {
+  color: #fff;
+  border: 1px solid var(--primary);
+  background: var(--primary);
+}

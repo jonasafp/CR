@@ -57,11 +57,11 @@ Use uma empresa de testes. Marque cada item somente depois de conferir o resulta
 
 ## 7. Permissões e multiempresa
 
-- [ ] Confirmar que o proprietário enxerga todos os módulos.
-- [ ] Confirmar que operador de caixa enxerga somente Resumo e Vendas.
-- [ ] Confirmar que usuário de consulta enxerga somente Resumo e Relatórios.
-- [ ] Tentar abrir diretamente uma URL não autorizada e confirmar a tela **Acesso não permitido**.
-- [ ] Com uma segunda empresa de testes, confirmar que nenhum cadastro da primeira empresa aparece.
+- [V] Confirmar que o proprietário enxerga todos os módulos.
+- [V] Confirmar que operador de caixa enxerga somente Resumo e Vendas.
+- [V] Confirmar que usuário de consulta enxerga somente Resumo e Relatórios.
+- [V] Tentar abrir diretamente uma URL não autorizada e confirmar a tela **Acesso não permitido**.
+- [V] Com uma segunda empresa de testes, confirmar que nenhum cadastro da primeira empresa aparece.
 
 ## 8. Validação técnica
 

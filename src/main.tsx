@@ -28,6 +28,7 @@ import ProductsProvider from "./contexts/ProductsContext/ProductsProvider";
 import SettingsProvider from "./contexts/SettingsContext/SettingsProvider";
 
 import AppErrorBoundary from "./components/common/AppErrorBoundary/AppErrorBoundary";
+import ConnectionStatus from "./components/common/ConnectionStatus/ConnectionStatus";
 
 import "./styles/reset.css";
 import "./styles/variables.css";
@@ -48,6 +49,7 @@ createRoot(
       >
         <NotificationProvider>
           <AppErrorBoundary>
+            <ConnectionStatus />
             <AuthProvider>
               <CompanyProvider>
                 <SettingsProvider>
