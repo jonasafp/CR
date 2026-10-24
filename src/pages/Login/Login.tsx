@@ -69,15 +69,24 @@ export default function Login({
 
   useEffect(
     () => {
+      let isActive = true;
+
       if (
         isAuthLoading ||
-        !session
+        !session ||
+        isSubmitting
       ) {
-        return;
+        return () => {
+          isActive = false;
+        };
       }
 
       void (async () => {
         const controlSession = await controlService.getSession();
+
+        if (!isActive) {
+          return;
+        }
 
         if (controlSession) {
           navigate("/controle", { replace: true });
@@ -92,6 +101,10 @@ export default function Login({
 
         const membership = await getCurrentCompanyMembership();
 
+        if (!isActive) {
+          return;
+        }
+
         if (membership) {
           navigate("/", { replace: true });
           return;
@@ -101,13 +114,22 @@ export default function Login({
         setErrorMessage("Esta conta não está vinculada a uma empresa ativa.");
       })()
         .catch(() => {
+          if (!isActive) {
+            return;
+          }
+
           void signOut();
           setErrorMessage("Não foi possível validar esta conta.");
         });
+
+      return () => {
+        isActive = false;
+      };
     },
     [
       session,
       isAuthLoading,
+      isSubmitting,
       navigate,
       controlMode,
     ],
