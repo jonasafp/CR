@@ -40,25 +40,15 @@ export default function AppRoutes() {
         element={<Login controlMode />}
       />
 
+      <Route
+        path="definir-senha"
+        element={<DefinirSenha />}
+      />
+
       <Route element={<ControlProtectedRoute />}>
         <Route
           path="controle"
           element={<Controle />}
-        />
-      </Route>
-
-      <Route
-        element={
-          <ProtectedRoute
-            requireCompany={
-              false
-            }
-          />
-        }
-      >
-        <Route
-          path="definir-senha"
-          element={<DefinirSenha />}
         />
       </Route>
 

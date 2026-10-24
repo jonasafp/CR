@@ -11,6 +11,10 @@ import {
   useNavigate,
 } from "react-router-dom";
 
+import useAuth from "../../contexts/AuthContext/useAuth";
+import {
+  getCurrentCompanyMembership,
+} from "../../services/auth/authService";
 import {
   supabase,
 } from "../../lib/supabase";
@@ -23,7 +27,11 @@ import styles from "./DefinirSenha.module.css";
 
 export default function DefinirSenha() {
   const navigate = useNavigate();
-  const { companyId, refreshCompany } = useCompany();
+  const {
+    session,
+    isLoading: isAuthLoading,
+  } = useAuth();
+  const { refreshCompany } = useCompany();
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
   const [error, setError] = useState("");
@@ -53,23 +61,29 @@ export default function DefinirSenha() {
         throw updateError;
       }
 
-      if (companyId) {
-        const { error: confirmError } = await supabase.functions.invoke(
-          "manage-company-members",
-          {
-            body: {
-              action: "confirm-password-change",
-              companyId,
-            },
-          },
+      const membership = await getCurrentCompanyMembership();
+
+      if (!membership) {
+        throw new Error(
+          "Este usuário não está vinculado a uma empresa ativa.",
         );
-
-        if (confirmError) {
-          throw confirmError;
-        }
-
-        await refreshCompany();
       }
+
+      const { error: confirmError } = await supabase.functions.invoke(
+        "manage-company-members",
+        {
+          body: {
+            action: "confirm-password-change",
+            companyId: membership.company_id,
+          },
+        },
+      );
+
+      if (confirmError) {
+        throw confirmError;
+      }
+
+      await refreshCompany();
 
       navigate("/", { replace: true });
     } catch (saveError) {
@@ -77,6 +91,43 @@ export default function DefinirSenha() {
     } finally {
       setIsSaving(false);
     }
+  }
+
+  if (isAuthLoading) {
+    return (
+      <main className={styles.page}>
+        <section className={styles.card}>
+          <div className={styles.icon}><KeyRound size={28} /></div>
+          <h1>Validando convite...</h1>
+          <p>Aguarde enquanto confirmamos seu acesso seguro.</p>
+        </section>
+      </main>
+    );
+  }
+
+  if (!session) {
+    const parameters = new URLSearchParams(
+      window.location.hash.replace(/^#/, ""),
+    );
+    const linkMessage = parameters.get("error_description");
+
+    return (
+      <main className={styles.page}>
+        <section className={styles.card}>
+          <div className={styles.icon}><KeyRound size={28} /></div>
+          <span className={styles.eyebrow}>Link indisponível</span>
+          <h1>Solicite um novo convite</h1>
+          <p>
+            {linkMessage
+              ? linkMessage.replace(/\+/g, " ")
+              : "Este link é inválido, já foi utilizado ou expirou."}
+          </p>
+          <button type="button" onClick={() => navigate("/login", { replace: true })}>
+            Voltar para o login
+          </button>
+        </section>
+      </main>
+    );
   }
 
   return (
