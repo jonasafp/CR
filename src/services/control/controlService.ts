@@ -1,6 +1,9 @@
 import {
   supabase,
 } from "../../lib/supabase";
+import {
+  getPasswordSetupUrl,
+} from "../../config/publicAppUrl";
 
 import type {
   ControlCompanyStatus,
@@ -128,7 +131,7 @@ export const controlService = {
     return invokeControl({
       action: "create-company",
       ...input,
-      redirectTo: `${window.location.origin}/definir-senha`,
+      redirectTo: getPasswordSetupUrl(),
     });
   },
 
@@ -136,7 +139,7 @@ export const controlService = {
     return invokeControl({
       action: "invite-company-user",
       ...input,
-      redirectTo: `${window.location.origin}/definir-senha`,
+      redirectTo: getPasswordSetupUrl(),
     });
   },
 
@@ -155,7 +158,7 @@ export const controlService = {
     return invokeControl({
       action: "request-password-change",
       memberId,
-      redirectTo: `${window.location.origin}/definir-senha`,
+      redirectTo: getPasswordSetupUrl(),
     });
   },
 

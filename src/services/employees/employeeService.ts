@@ -1,6 +1,9 @@
 import {
   supabase,
 } from "../../lib/supabase";
+import {
+  getPasswordSetupUrl,
+} from "../../config/publicAppUrl";
 import type {
   Employee,
   InviteEmployeeInput,
@@ -103,7 +106,7 @@ export const employeeService = {
     return invokeMemberManagement({
       action: "invite",
       ...input,
-      redirectTo: `${window.location.origin}/definir-senha`,
+      redirectTo: getPasswordSetupUrl(),
     });
   },
 
