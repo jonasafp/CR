@@ -656,6 +656,7 @@
 }
 
 .formGrid input,
+.formGrid select,
 .passwordModal input {
   border: 1px solid var(--border);
   border-radius: 9px;
@@ -667,6 +668,7 @@
 }
 
 .formGrid input:focus,
+.formGrid select:focus,
 .passwordModal input:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgb(37 99 235 / 10%);
@@ -718,6 +720,22 @@
   border-top: 1px solid #eef0f4;
   margin-top: 22px;
   padding-top: 20px;
+}
+
+.usersActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  justify-content: flex-end;
+}
+
+.primaryButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.nestedModal {
+  z-index: 1100;
 }
 
 .userList {
@@ -848,6 +866,7 @@
   .header { align-items: start; gap: 18px; }
   .headerActions { flex-direction: column; }
   .companyFacts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .usersHeader { align-items: flex-start; gap: 14px; }
   .userList article { grid-template-columns: auto 1fr; }
   .userList article > button, .userList article > i { grid-column: 2; justify-self: start; }
 }

@@ -78,3 +78,15 @@ export interface CreateControlCompanyInput {
   ownerName: string;
   ownerEmail: string;
 }
+
+export type ControlEmployeeRole = Exclude<
+  ControlCompanyUser["role"],
+  "owner"
+>;
+
+export interface InviteControlEmployeeInput {
+  companyId: string;
+  fullName: string;
+  email: string;
+  role: ControlEmployeeRole;
+}

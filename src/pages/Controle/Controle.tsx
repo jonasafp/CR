@@ -33,6 +33,7 @@ import type {
   ControlDashboardData,
   ControlSession,
   CreateControlCompanyInput,
+  InviteControlEmployeeInput,
 } from "../../domain/control/Control";
 import {
   supabase,
@@ -55,6 +56,12 @@ const emptyCompany: CreateControlCompanyInput = {
   ownerName: "",
   ownerEmail: "",
 };
+
+const emptyEmployee = {
+  fullName: "",
+  email: "",
+  role: "cashier",
+} satisfies Omit<InviteControlEmployeeInput, "companyId">;
 
 const roleLabels: Record<ControlCompanyUser["role"], string> = {
   owner: "Proprietário",
@@ -107,6 +114,7 @@ export default function Controle() {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [employeeCompany, setEmployeeCompany] = useState<ControlCompany | null>(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -195,6 +203,13 @@ export default function Controle() {
     } catch (requestError) {
       setError(getErrorMessage(requestError));
     }
+  }
+
+  async function handleEmployeeInvited(company: ControlCompany) {
+    setEmployeeCompany(null);
+    setMessage("Funcionário cadastrado. O convite para criação da senha foi enviado por e-mail.");
+    setCompanyUsers(await controlService.getCompanyUsers(company.id));
+    await loadDashboard();
   }
 
   async function handleLogout() {
@@ -515,6 +530,15 @@ export default function Controle() {
           onClose={() => setSelectedCompany(null)}
           onToggleStatus={() => void toggleCompanyStatus(selectedCompany)}
           onRequestPassword={(member) => void requestPasswordChange(member)}
+          onAddEmployee={() => setEmployeeCompany(selectedCompany)}
+        />
+      )}
+
+      {employeeCompany && (
+        <InviteEmployeeModal
+          company={employeeCompany}
+          onClose={() => setEmployeeCompany(null)}
+          onInvited={() => handleEmployeeInvited(employeeCompany)}
         />
       )}
 
@@ -641,6 +665,7 @@ function CompanyDetailsModal({
   onClose,
   onToggleStatus,
   onRequestPassword,
+  onAddEmployee,
 }: {
   company: ControlCompany;
   users: ControlCompanyUser[];
@@ -648,6 +673,7 @@ function CompanyDetailsModal({
   onClose: () => void;
   onToggleStatus: () => void;
   onRequestPassword: (member: ControlCompanyUser) => void;
+  onAddEmployee: () => void;
 }) {
   return (
     <div className={styles.modalBackdrop} role="presentation">
@@ -673,9 +699,14 @@ function CompanyDetailsModal({
             <h3>Usuários cadastrados</h3>
             <p>Solicite uma nova senha sem visualizar ou definir a senha atual.</p>
           </div>
-          <button type="button" className={company.status === "active" ? styles.dangerButton : styles.primaryButton} onClick={onToggleStatus}>
-            {company.status === "active" ? "Inativar empresa" : "Reativar empresa"}
-          </button>
+          <div className={styles.usersActions}>
+            <button type="button" className={styles.primaryButton} onClick={onAddEmployee} disabled={company.status !== "active"}>
+              <Plus size={16} /> Adicionar funcionário
+            </button>
+            <button type="button" className={company.status === "active" ? styles.dangerButton : styles.primaryButton} onClick={onToggleStatus}>
+              {company.status === "active" ? "Inativar empresa" : "Reativar empresa"}
+            </button>
+          </div>
         </div>
 
         {isLoading ? (
@@ -698,6 +729,89 @@ function CompanyDetailsModal({
           </div>
         )}
       </section>
+    </div>
+  );
+}
+
+function InviteEmployeeModal({
+  company,
+  onClose,
+  onInvited,
+}: {
+  company: ControlCompany;
+  onClose: () => void;
+  onInvited: () => Promise<void>;
+}) {
+  const [form, setForm] = useState(emptyEmployee);
+  const [error, setError] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  function setField(
+    field: keyof typeof emptyEmployee,
+    value: string,
+  ) {
+    setForm((current) => ({ ...current, [field]: value }));
+  }
+
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    setError("");
+    setIsSaving(true);
+
+    try {
+      await controlService.inviteCompanyUser({
+        companyId: company.id,
+        ...form,
+      });
+      await onInvited();
+    } catch (saveError) {
+      setError(getErrorMessage(saveError));
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  return (
+    <div className={`${styles.modalBackdrop} ${styles.nestedModal}`} role="presentation">
+      <form className={styles.modal} onSubmit={handleSubmit}>
+        <header>
+          <div>
+            <span>Novo funcionário</span>
+            <h2>Adicionar em {company.tradeName}</h2>
+            <p>O funcionário receberá um e-mail para criar a senha de acesso.</p>
+          </div>
+          <button type="button" onClick={onClose} aria-label="Fechar"><X /></button>
+        </header>
+
+        <div className={styles.formGrid}>
+          <label className={styles.fullField}>
+            <span>Nome completo *</span>
+            <input value={form.fullName} onChange={(event) => setField("fullName", event.target.value)} required minLength={3} autoFocus />
+          </label>
+          <label>
+            <span>E-mail *</span>
+            <input type="email" value={form.email} onChange={(event) => setField("email", event.target.value)} required />
+          </label>
+          <label>
+            <span>Função *</span>
+            <select value={form.role} onChange={(event) => setField("role", event.target.value)} required>
+              <option value="admin">Administrador</option>
+              <option value="manager">Gerente</option>
+              <option value="cashier">Caixa</option>
+              <option value="viewer">Consulta</option>
+            </select>
+          </label>
+        </div>
+
+        {error && <div className={styles.errorMessage}>{error}</div>}
+
+        <footer>
+          <button type="button" className={styles.secondaryButton} onClick={onClose}>Cancelar</button>
+          <button type="submit" className={styles.primaryButton} disabled={isSaving}>
+            {isSaving ? "Enviando convite..." : "Adicionar e enviar convite"}
+          </button>
+        </footer>
+      </form>
     </div>
   );
 }

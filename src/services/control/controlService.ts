@@ -8,6 +8,7 @@ import type {
   ControlDashboardData,
   ControlSession,
   CreateControlCompanyInput,
+  InviteControlEmployeeInput,
 } from "../../domain/control/Control";
 
 type RpcResult<T> = Promise<{
@@ -126,6 +127,14 @@ export const controlService = {
   async createCompany(input: CreateControlCompanyInput) {
     return invokeControl({
       action: "create-company",
+      ...input,
+      redirectTo: `${window.location.origin}/definir-senha`,
+    });
+  },
+
+  async inviteCompanyUser(input: InviteControlEmployeeInput) {
+    return invokeControl({
+      action: "invite-company-user",
       ...input,
       redirectTo: `${window.location.origin}/definir-senha`,
     });

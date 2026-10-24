@@ -1,0 +1,402 @@
+--- a/src/domain/control/Control.ts
++++ b/src/domain/control/Control.ts
+@@ -78,3 +78,15 @@
+   ownerName: string;
+   ownerEmail: string;
+ }
++
++export type ControlEmployeeRole = Exclude<
++  ControlCompanyUser["role"],
++  "owner"
++>;
++
++export interface InviteControlEmployeeInput {
++  companyId: string;
++  fullName: string;
++  email: string;
++  role: ControlEmployeeRole;
++}
+--- a/src/services/control/controlService.ts
++++ b/src/services/control/controlService.ts
+@@ -8,6 +8,7 @@
+   ControlDashboardData,
+   ControlSession,
+   CreateControlCompanyInput,
++  InviteControlEmployeeInput,
+ } from "../../domain/control/Control";
+ 
+ type RpcResult<T> = Promise<{
+@@ -131,6 +132,14 @@
+     });
+   },
+ 
++  async inviteCompanyUser(input: InviteControlEmployeeInput) {
++    return invokeControl({
++      action: "invite-company-user",
++      ...input,
++      redirectTo: `${window.location.origin}/definir-senha`,
++    });
++  },
++
+   async setCompanyStatus(
+     companyId: string,
+     status: ControlCompanyStatus,
+--- a/src/pages/Controle/Controle.tsx
++++ b/src/pages/Controle/Controle.tsx
+@@ -33,6 +33,7 @@
+   ControlDashboardData,
+   ControlSession,
+   CreateControlCompanyInput,
++  InviteControlEmployeeInput,
+ } from "../../domain/control/Control";
+ import {
+   supabase,
+@@ -55,6 +56,12 @@
+   ownerName: "",
+   ownerEmail: "",
+ };
++
++const emptyEmployee = {
++  fullName: "",
++  email: "",
++  role: "cashier",
++} satisfies Omit<InviteControlEmployeeInput, "companyId">;
+ 
+ const roleLabels: Record<ControlCompanyUser["role"], string> = {
+   owner: "Proprietário",
+@@ -107,6 +114,7 @@
+   const [isLoading, setIsLoading] = useState(true);
+   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+   const [isCreateOpen, setIsCreateOpen] = useState(false);
++  const [employeeCompany, setEmployeeCompany] = useState<ControlCompany | null>(null);
+   const [message, setMessage] = useState("");
+   const [error, setError] = useState("");
+ 
+@@ -195,6 +203,13 @@
+     } catch (requestError) {
+       setError(getErrorMessage(requestError));
+     }
++  }
++
++  async function handleEmployeeInvited(company: ControlCompany) {
++    setEmployeeCompany(null);
++    setMessage("Funcionário cadastrado. O convite para criação da senha foi enviado por e-mail.");
++    setCompanyUsers(await controlService.getCompanyUsers(company.id));
++    await loadDashboard();
+   }
+ 
+   async function handleLogout() {
+@@ -515,6 +530,15 @@
+           onClose={() => setSelectedCompany(null)}
+           onToggleStatus={() => void toggleCompanyStatus(selectedCompany)}
+           onRequestPassword={(member) => void requestPasswordChange(member)}
++          onAddEmployee={() => setEmployeeCompany(selectedCompany)}
++        />
++      )}
++
++      {employeeCompany && (
++        <InviteEmployeeModal
++          company={employeeCompany}
++          onClose={() => setEmployeeCompany(null)}
++          onInvited={() => handleEmployeeInvited(employeeCompany)}
+         />
+       )}
+ 
+@@ -641,6 +665,7 @@
+   onClose,
+   onToggleStatus,
+   onRequestPassword,
++  onAddEmployee,
+ }: {
+   company: ControlCompany;
+   users: ControlCompanyUser[];
+@@ -648,6 +673,7 @@
+   onClose: () => void;
+   onToggleStatus: () => void;
+   onRequestPassword: (member: ControlCompanyUser) => void;
++  onAddEmployee: () => void;
+ }) {
+   return (
+     <div className={styles.modalBackdrop} role="presentation">
+@@ -673,9 +699,14 @@
+             <h3>Usuários cadastrados</h3>
+             <p>Solicite uma nova senha sem visualizar ou definir a senha atual.</p>
+           </div>
+-          <button type="button" className={company.status === "active" ? styles.dangerButton : styles.primaryButton} onClick={onToggleStatus}>
+-            {company.status === "active" ? "Inativar empresa" : "Reativar empresa"}
+-          </button>
++          <div className={styles.usersActions}>
++            <button type="button" className={styles.primaryButton} onClick={onAddEmployee} disabled={company.status !== "active"}>
++              <Plus size={16} /> Adicionar funcionário
++            </button>
++            <button type="button" className={company.status === "active" ? styles.dangerButton : styles.primaryButton} onClick={onToggleStatus}>
++              {company.status === "active" ? "Inativar empresa" : "Reativar empresa"}
++            </button>
++          </div>
+         </div>
+ 
+         {isLoading ? (
+@@ -702,6 +733,89 @@
+   );
+ }
+ 
++function InviteEmployeeModal({
++  company,
++  onClose,
++  onInvited,
++}: {
++  company: ControlCompany;
++  onClose: () => void;
++  onInvited: () => Promise<void>;
++}) {
++  const [form, setForm] = useState(emptyEmployee);
++  const [error, setError] = useState("");
++  const [isSaving, setIsSaving] = useState(false);
++
++  function setField(
++    field: keyof typeof emptyEmployee,
++    value: string,
++  ) {
++    setForm((current) => ({ ...current, [field]: value }));
++  }
++
++  async function handleSubmit(event: FormEvent) {
++    event.preventDefault();
++    setError("");
++    setIsSaving(true);
++
++    try {
++      await controlService.inviteCompanyUser({
++        companyId: company.id,
++        ...form,
++      });
++      await onInvited();
++    } catch (saveError) {
++      setError(getErrorMessage(saveError));
++    } finally {
++      setIsSaving(false);
++    }
++  }
++
++  return (
++    <div className={`${styles.modalBackdrop} ${styles.nestedModal}`} role="presentation">
++      <form className={styles.modal} onSubmit={handleSubmit}>
++        <header>
++          <div>
++            <span>Novo funcionário</span>
++            <h2>Adicionar em {company.tradeName}</h2>
++            <p>O funcionário receberá um e-mail para criar a senha de acesso.</p>
++          </div>
++          <button type="button" onClick={onClose} aria-label="Fechar"><X /></button>
++        </header>
++
++        <div className={styles.formGrid}>
++          <label className={styles.fullField}>
++            <span>Nome completo *</span>
++            <input value={form.fullName} onChange={(event) => setField("fullName", event.target.value)} required minLength={3} autoFocus />
++          </label>
++          <label>
++            <span>E-mail *</span>
++            <input type="email" value={form.email} onChange={(event) => setField("email", event.target.value)} required />
++          </label>
++          <label>
++            <span>Função *</span>
++            <select value={form.role} onChange={(event) => setField("role", event.target.value)} required>
++              <option value="admin">Administrador</option>
++              <option value="manager">Gerente</option>
++              <option value="cashier">Caixa</option>
++              <option value="viewer">Consulta</option>
++            </select>
++          </label>
++        </div>
++
++        {error && <div className={styles.errorMessage}>{error}</div>}
++
++        <footer>
++          <button type="button" className={styles.secondaryButton} onClick={onClose}>Cancelar</button>
++          <button type="submit" className={styles.primaryButton} disabled={isSaving}>
++            {isSaving ? "Enviando convite..." : "Adicionar e enviar convite"}
++          </button>
++        </footer>
++      </form>
++    </div>
++  );
++}
++
+ function ChangePasswordModal({
+   onChanged,
+ }: {
+--- a/src/pages/Controle/Controle.module.css
++++ b/src/pages/Controle/Controle.module.css
+@@ -656,6 +656,7 @@
+ }
+ 
+ .formGrid input,
++.formGrid select,
+ .passwordModal input {
+   border: 1px solid var(--border);
+   border-radius: 9px;
+@@ -667,6 +668,7 @@
+ }
+ 
+ .formGrid input:focus,
++.formGrid select:focus,
+ .passwordModal input:focus {
+   border-color: var(--primary);
+   box-shadow: 0 0 0 3px rgb(37 99 235 / 10%);
+@@ -718,6 +720,22 @@
+   border-top: 1px solid #eef0f4;
+   margin-top: 22px;
+   padding-top: 20px;
++}
++
++.usersActions {
++  display: flex;
++  flex-wrap: wrap;
++  gap: 9px;
++  justify-content: flex-end;
++}
++
++.primaryButton:disabled {
++  cursor: not-allowed;
++  opacity: 0.55;
++}
++
++.nestedModal {
++  z-index: 1100;
+ }
+ 
+ .userList {
+@@ -848,6 +866,7 @@
+   .header { align-items: start; gap: 18px; }
+   .headerActions { flex-direction: column; }
+   .companyFacts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
++  .usersHeader { align-items: flex-start; gap: 14px; }
+   .userList article { grid-template-columns: auto 1fr; }
+   .userList article > button, .userList article > i { grid-column: 2; justify-self: start; }
+ }
+--- a/supabase/functions/control-admin/index.ts
++++ b/supabase/functions/control-admin/index.ts
+@@ -29,6 +29,13 @@
+ function isEmail(value: string) {
+   return /^\S+@\S+\.\S+$/.test(value);
+ }
++
++const employeeRoles = new Set([
++  "admin",
++  "manager",
++  "cashier",
++  "viewer",
++]);
+ 
+ Deno.serve(async (request) => {
+   if (request.method === "OPTIONS") {
+@@ -310,6 +317,108 @@
+       return json({ success: true, companyId: company.id });
+     }
+ 
++    if (action === "invite-company-user") {
++      const companyId = String(body.companyId ?? "");
++      const fullName = String(body.fullName ?? "").trim();
++      const email = String(body.email ?? "").trim().toLowerCase();
++      const role = String(body.role ?? "");
++      const redirectTo = String(body.redirectTo ?? "");
++
++      if (!companyId || fullName.length < 3 || !isEmail(email)) {
++        return json({ error: "Informe a empresa, o nome e um e-mail válido." }, 400);
++      }
++
++      if (!employeeRoles.has(role)) {
++        return json({ error: "A função selecionada é inválida." }, 400);
++      }
++
++      const {
++        data: company,
++        error: companyError,
++      } = await admin.from("companies")
++        .select("id, status")
++        .eq("id", companyId)
++        .maybeSingle();
++
++      if (companyError || !company) {
++        return json({ error: "Empresa não encontrada." }, 404);
++      }
++
++      if (company.status !== "active") {
++        return json({ error: "Reative a empresa antes de adicionar um funcionário." }, 409);
++      }
++
++      const {
++        data: existingMembership,
++        error: membershipLookupError,
++      } = await admin.from("company_members")
++        .select("id")
++        .ilike("email", email)
++        .maybeSingle();
++
++      if (membershipLookupError) {
++        throw membershipLookupError;
++      }
++
++      if (existingMembership) {
++        return json({ error: "Este e-mail já pertence a um usuário cadastrado." }, 409);
++      }
++
++      const {
++        data: usersData,
++        error: usersError,
++      } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
++
++      if (usersError) {
++        throw usersError;
++      }
++
++      if (usersData.users.some((user) => user.email?.toLowerCase() === email)) {
++        return json({ error: "Este e-mail já possui uma conta de acesso." }, 409);
++      }
++
++      const inviteOptions: {
++        data: { full_name: string };
++        redirectTo?: string;
++      } = {
++        data: { full_name: fullName },
++      };
++
++      if (/^https:\/\//i.test(redirectTo) || /^http:\/\/localhost(?::\d+)?/i.test(redirectTo)) {
++        inviteOptions.redirectTo = redirectTo;
++      }
++
++      const {
++        data: inviteData,
++        error: inviteError,
++      } = await admin.auth.admin.inviteUserByEmail(email, inviteOptions);
++
++      if (inviteError || !inviteData.user) {
++        throw inviteError ?? new Error("Não foi possível enviar o convite.");
++      }
++
++      const {
++        error: insertError,
++      } = await admin.from("company_members").insert({
++        company_id: companyId,
++        user_id: inviteData.user.id,
++        full_name: fullName,
++        email,
++        role,
++        active: true,
++        invited_at: new Date().toISOString(),
++        invited_by: userData.user.id,
++        must_change_password: true,
++      });
++
++      if (insertError) {
++        await admin.auth.admin.deleteUser(inviteData.user.id);
++        throw insertError;
++      }
++
++      return json({ success: true });
++    }
++
+     if (action === "set-company-status") {
+       const companyId = String(body.companyId ?? "");
+       const status = String(body.status ?? "");

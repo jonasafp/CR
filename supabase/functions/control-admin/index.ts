@@ -30,6 +30,13 @@ function isEmail(value: string) {
   return /^\S+@\S+\.\S+$/.test(value);
 }
 
+const employeeRoles = new Set([
+  "admin",
+  "manager",
+  "cashier",
+  "viewer",
+]);
+
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -308,6 +315,108 @@ Deno.serve(async (request) => {
       }
 
       return json({ success: true, companyId: company.id });
+    }
+
+    if (action === "invite-company-user") {
+      const companyId = String(body.companyId ?? "");
+      const fullName = String(body.fullName ?? "").trim();
+      const email = String(body.email ?? "").trim().toLowerCase();
+      const role = String(body.role ?? "");
+      const redirectTo = String(body.redirectTo ?? "");
+
+      if (!companyId || fullName.length < 3 || !isEmail(email)) {
+        return json({ error: "Informe a empresa, o nome e um e-mail válido." }, 400);
+      }
+
+      if (!employeeRoles.has(role)) {
+        return json({ error: "A função selecionada é inválida." }, 400);
+      }
+
+      const {
+        data: company,
+        error: companyError,
+      } = await admin.from("companies")
+        .select("id, status")
+        .eq("id", companyId)
+        .maybeSingle();
+
+      if (companyError || !company) {
+        return json({ error: "Empresa não encontrada." }, 404);
+      }
+
+      if (company.status !== "active") {
+        return json({ error: "Reative a empresa antes de adicionar um funcionário." }, 409);
+      }
+
+      const {
+        data: existingMembership,
+        error: membershipLookupError,
+      } = await admin.from("company_members")
+        .select("id")
+        .ilike("email", email)
+        .maybeSingle();
+
+      if (membershipLookupError) {
+        throw membershipLookupError;
+      }
+
+      if (existingMembership) {
+        return json({ error: "Este e-mail já pertence a um usuário cadastrado." }, 409);
+      }
+
+      const {
+        data: usersData,
+        error: usersError,
+      } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+
+      if (usersError) {
+        throw usersError;
+      }
+
+      if (usersData.users.some((user) => user.email?.toLowerCase() === email)) {
+        return json({ error: "Este e-mail já possui uma conta de acesso." }, 409);
+      }
+
+      const inviteOptions: {
+        data: { full_name: string };
+        redirectTo?: string;
+      } = {
+        data: { full_name: fullName },
+      };
+
+      if (/^https:\/\//i.test(redirectTo) || /^http:\/\/localhost(?::\d+)?/i.test(redirectTo)) {
+        inviteOptions.redirectTo = redirectTo;
+      }
+
+      const {
+        data: inviteData,
+        error: inviteError,
+      } = await admin.auth.admin.inviteUserByEmail(email, inviteOptions);
+
+      if (inviteError || !inviteData.user) {
+        throw inviteError ?? new Error("Não foi possível enviar o convite.");
+      }
+
+      const {
+        error: insertError,
+      } = await admin.from("company_members").insert({
+        company_id: companyId,
+        user_id: inviteData.user.id,
+        full_name: fullName,
+        email,
+        role,
+        active: true,
+        invited_at: new Date().toISOString(),
+        invited_by: userData.user.id,
+        must_change_password: true,
+      });
+
+      if (insertError) {
+        await admin.auth.admin.deleteUser(inviteData.user.id);
+        throw insertError;
+      }
+
+      return json({ success: true });
     }
 
     if (action === "set-company-status") {
