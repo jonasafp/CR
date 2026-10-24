@@ -1,4 +1,9 @@
 import {
+  useEffect,
+  useState,
+} from "react";
+
+import {
   Navigate,
   Outlet,
   useLocation,
@@ -7,6 +12,9 @@ import {
 import useAuth from "../../../contexts/AuthContext/useAuth";
 import useCompany from "../../../contexts/CompanyContext/useCompany";
 import ErrorState from "../../common/ErrorState/ErrorState";
+import {
+  controlService,
+} from "../../../services/control/controlService";
 
 type ProtectedRouteProps = {
   requireCompany?:
@@ -16,6 +24,8 @@ type ProtectedRouteProps = {
 export default function ProtectedRoute({
   requireCompany = true,
 }: ProtectedRouteProps) {
+  const [isCheckingControl, setIsCheckingControl] = useState(true);
+  const [isControlAdmin, setIsControlAdmin] = useState(false);
   const {
     session,
     isLoading: isAuthLoading,
@@ -32,8 +42,50 @@ export default function ProtectedRoute({
   const location =
     useLocation();
 
+  useEffect(() => {
+    let active = true;
+
+    if (isAuthLoading) {
+      return () => {
+        active = false;
+      };
+    }
+
+    if (!session) {
+      setIsControlAdmin(false);
+      setIsCheckingControl(false);
+      return () => {
+        active = false;
+      };
+    }
+
+    setIsCheckingControl(true);
+
+    void controlService.getSession()
+      .then((profile) => {
+        if (active) {
+          setIsControlAdmin(Boolean(profile));
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setIsControlAdmin(false);
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setIsCheckingControl(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [isAuthLoading, session]);
+
   if (
     isAuthLoading ||
+    isCheckingControl ||
     (
       session &&
       requireCompany &&
@@ -75,6 +127,17 @@ export default function ProtectedRoute({
         }}
       />
     );
+  }
+
+  if (isControlAdmin) {
+    return <Navigate to="/controle" replace />;
+  }
+
+  if (
+    membership?.must_change_password &&
+    location.pathname !== "/definir-senha"
+  ) {
+    return <Navigate to="/definir-senha" replace />;
   }
 
   if (

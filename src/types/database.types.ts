@@ -133,6 +133,8 @@ export type Database = {
           full_name: string | null
           id: string
           internal_code: number
+          must_change_password: boolean
+          password_change_requested_at: string | null
           invited_at: string | null
           invited_by: string | null
           role: Database["public"]["Enums"]["company_member_role"]
@@ -147,6 +149,8 @@ export type Database = {
           full_name?: string | null
           id?: string
           internal_code?: number
+          must_change_password?: boolean
+          password_change_requested_at?: string | null
           invited_at?: string | null
           invited_by?: string | null
           role?: Database["public"]["Enums"]["company_member_role"]
@@ -161,6 +165,8 @@ export type Database = {
           full_name?: string | null
           id?: string
           internal_code?: number
+          must_change_password?: boolean
+          password_change_requested_at?: string | null
           invited_at?: string | null
           invited_by?: string | null
           role?: Database["public"]["Enums"]["company_member_role"]

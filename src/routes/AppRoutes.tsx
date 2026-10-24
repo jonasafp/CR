@@ -4,6 +4,7 @@ import {
 } from "react-router-dom";
 
 import ProtectedRoute from "../components/auth/ProtectedRoute/ProtectedRoute";
+import ControlProtectedRoute from "../components/auth/ControlProtectedRoute/ControlProtectedRoute";
 import RoleProtectedRoute from "../components/auth/RoleProtectedRoute/RoleProtectedRoute";
 import AccessDenied from "../components/auth/AccessDenied/AccessDenied";
 
@@ -22,6 +23,7 @@ import Relatorios from "../pages/Relatorios/Relatorios";
 import Vendas from "../pages/Vendas/Vendas";
 import DefinirSenha from "../pages/DefinirSenha/DefinirSenha";
 import NotFound from "../pages/NotFound/NotFound";
+import Controle from "../pages/Controle/Controle";
 
 export default function AppRoutes() {
   return (
@@ -32,6 +34,18 @@ export default function AppRoutes() {
           <Login />
         }
       />
+
+      <Route
+        path="controle/login"
+        element={<Login controlMode />}
+      />
+
+      <Route element={<ControlProtectedRoute />}>
+        <Route
+          path="controle"
+          element={<Controle />}
+        />
+      </Route>
 
       <Route
         element={

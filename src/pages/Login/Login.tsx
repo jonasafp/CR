@@ -20,9 +20,19 @@ import {
   signOut,
 } from "../../services/auth/authService";
 
+import {
+  controlService,
+} from "../../services/control/controlService";
+
 import "./Login.css";
 
-export default function Login() {
+type LoginProps = {
+  controlMode?: boolean;
+};
+
+export default function Login({
+  controlMode = false,
+}: LoginProps) {
   const navigate =
     useNavigate();
 
@@ -66,25 +76,40 @@ export default function Login() {
         return;
       }
 
-      void getCurrentCompanyMembership()
-        .then(
-          (
-            membership,
-          ) => {
-            if (membership) {
-              navigate("/", { replace: true });
-              return;
-            }
+      void (async () => {
+        const controlSession = await controlService.getSession();
 
-            void signOut();
-            setErrorMessage("Esta conta não está vinculada a uma empresa ativa.");
-          },
-        );
+        if (controlSession) {
+          navigate("/controle", { replace: true });
+          return;
+        }
+
+        if (controlMode) {
+          await signOut();
+          setErrorMessage("Esta conta não possui acesso ao sistema de controle.");
+          return;
+        }
+
+        const membership = await getCurrentCompanyMembership();
+
+        if (membership) {
+          navigate("/", { replace: true });
+          return;
+        }
+
+        await signOut();
+        setErrorMessage("Esta conta não está vinculada a uma empresa ativa.");
+      })()
+        .catch(() => {
+          void signOut();
+          setErrorMessage("Não foi possível validar esta conta.");
+        });
     },
     [
       session,
       isAuthLoading,
       navigate,
+      controlMode,
     ],
   );
 
@@ -103,15 +128,17 @@ export default function Login() {
       !password
     ) {
       setErrorMessage(
-        "Informe o e-mail e a senha.",
+        controlMode
+          ? "Informe o usuário e a senha."
+          : "Informe o e-mail e a senha.",
       );
 
       return;
     }
 
     if (
-      password.length <
-      6
+      !controlMode &&
+      password.length < 6
     ) {
       setErrorMessage(
         "A senha deve possuir pelo menos 6 caracteres.",
@@ -125,10 +152,20 @@ export default function Login() {
     );
 
     try {
-      await signIn(
-        email,
-        password,
-      );
+      if (controlMode) {
+        await controlService.signIn(email, password);
+        navigate("/controle", { replace: true });
+        return;
+      }
+
+      await signIn(email, password);
+
+      const controlSession = await controlService.getSession();
+
+      if (controlSession) {
+        navigate("/controle", { replace: true });
+        return;
+      }
 
       const membership =
         await getCurrentCompanyMembership();
@@ -136,6 +173,11 @@ export default function Login() {
       if (!membership) {
         await signOut();
         setErrorMessage("Esta conta não está vinculada a uma empresa ativa.");
+        return;
+      }
+
+      if (membership.must_change_password) {
+        navigate("/definir-senha", { replace: true });
         return;
       }
 
@@ -161,66 +203,69 @@ export default function Login() {
         <aside className="login-showcase">
           <div className="login-showcase__brand">
             <span className="login-showcase__logo">
-              GF
+              {controlMode ? "JC" : "GF"}
             </span>
 
             <div>
               <strong>
-                Gestor Fácil
+                {controlMode ? "Jiah Controle" : "Gestor Fácil"}
               </strong>
 
               <small>
-                Controle interno
+                {controlMode ? "Administração da plataforma" : "Controle interno"}
               </small>
             </div>
           </div>
 
           <div className="login-showcase__content">
             <span className="login-showcase__badge">
-              Gestão simplificada
+              {controlMode ? "Central administrativa" : "Gestão simplificada"}
             </span>
 
             <h1>
-              Seu negócio sob controle.
+              {controlMode ? "Gestão da plataforma." : "Seu negócio sob controle."}
             </h1>
 
             <p>
-              Acompanhe estoque, vendas, clientes e resultados
-              financeiros em um único lugar.
+              {controlMode
+                ? "Acompanhe empresas, usuários e o crescimento do Gestor Fácil."
+                : "Acompanhe estoque, vendas, clientes e resultados financeiros em um único lugar."}
             </p>
 
             <ul>
               <li>
-                Controle completo de estoque
+                {controlMode ? "Visão consolidada das empresas" : "Controle completo de estoque"}
               </li>
 
               <li>
-                Vendas rápidas e organizadas
+                {controlMode ? "Cadastro seguro de novos clientes" : "Vendas rápidas e organizadas"}
               </li>
 
               <li>
-                Informações protegidas por empresa
+                {controlMode ? "Operações administrativas auditáveis" : "Informações protegidas por empresa"}
               </li>
             </ul>
           </div>
 
           <p className="login-showcase__footer">
-            Sistema de controle interno
+            {controlMode ? "Acesso exclusivo Jiah" : "Sistema de controle interno"}
           </p>
         </aside>
 
         <section className="login-card">
           <header className="login-card__header">
             <span className="login-card__eyebrow">
-              Acesso ao sistema
+              {controlMode ? "Acesso administrativo" : "Acesso ao sistema"}
             </span>
 
             <h2>
-              Bem-vindo novamente
+              {controlMode ? "Sistema de controle" : "Bem-vindo novamente"}
             </h2>
 
             <p>
-              Informe seus dados para acessar o painel.
+              {controlMode
+                ? "Informe as credenciais exclusivas da Jiah."
+                : "Informe seus dados para acessar o painel."}
             </p>
           </header>
 
@@ -231,10 +276,10 @@ export default function Login() {
             }
           >
             <label>
-              E-mail
+              {controlMode ? "Usuário" : "E-mail"}
 
               <input
-                type="email"
+                type={controlMode ? "text" : "email"}
                 value={email}
                 onChange={(
                   event,
@@ -244,8 +289,8 @@ export default function Login() {
                       .value,
                   )
                 }
-                autoComplete="email"
-                placeholder="seu@email.com"
+                autoComplete={controlMode ? "username" : "email"}
+                placeholder={controlMode ? "Seu usuário" : "seu@email.com"}
                 disabled={
                   isSubmitting
                 }
@@ -269,7 +314,7 @@ export default function Login() {
                   )
                 }
                 autoComplete="current-password"
-                placeholder="Mínimo de 6 caracteres"
+                placeholder={controlMode ? "Sua senha" : "Mínimo de 6 caracteres"}
                 disabled={
                   isSubmitting
                 }
@@ -291,12 +336,16 @@ export default function Login() {
             >
               {isSubmitting
                 ? "Aguarde..."
-                : "Entrar no sistema"}
+                : controlMode
+                  ? "Entrar no controle"
+                  : "Entrar no sistema"}
             </button>
           </form>
 
           <footer className="login-card__footer">
-            Seus dados são protegidos e separados por empresa.
+            {controlMode
+              ? "Área restrita à administração da plataforma."
+              : "Seus dados são protegidos e separados por empresa."}
           </footer>
         </section>
       </section>

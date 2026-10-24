@@ -17,11 +17,13 @@ import {
 import {
   getErrorMessage,
 } from "../../utils/errors";
+import useCompany from "../../contexts/CompanyContext/useCompany";
 
 import styles from "./DefinirSenha.module.css";
 
 export default function DefinirSenha() {
   const navigate = useNavigate();
+  const { companyId, refreshCompany } = useCompany();
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
   const [error, setError] = useState("");
@@ -49,6 +51,24 @@ export default function DefinirSenha() {
 
       if (updateError) {
         throw updateError;
+      }
+
+      if (companyId) {
+        const { error: confirmError } = await supabase.functions.invoke(
+          "manage-company-members",
+          {
+            body: {
+              action: "confirm-password-change",
+              companyId,
+            },
+          },
+        );
+
+        if (confirmError) {
+          throw confirmError;
+        }
+
+        await refreshCompany();
       }
 
       navigate("/", { replace: true });

@@ -78,11 +78,30 @@ Deno.serve(async (request) => {
       .eq("user_id", userData.user.id)
       .maybeSingle();
 
-    if (
-      callerError ||
-      !callerMembership?.active ||
-      !["owner", "admin"].includes(callerMembership.role)
-    ) {
+    if (callerError || !callerMembership?.active) {
+      return response(
+        { error: "Seu acesso a esta empresa não está ativo." },
+        403,
+      );
+    }
+
+    if (body.action === "confirm-password-change") {
+      const {
+        error: confirmError,
+      } = await admin.from("company_members").update({
+        must_change_password: false,
+        password_change_requested_at: null,
+        updated_at: new Date().toISOString(),
+      }).eq("id", callerMembership.id);
+
+      if (confirmError) {
+        throw confirmError;
+      }
+
+      return response({ success: true });
+    }
+
+    if (!["owner", "admin"].includes(callerMembership.role)) {
       return response(
         { error: "Você não possui permissão para gerenciar funcionários." },
         403,

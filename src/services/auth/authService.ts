@@ -18,6 +18,7 @@ export type CurrentCompanyMembership = {
 
   full_name: string;
   internal_code: number;
+  must_change_password: boolean;
 };
 
 type BootstrapCompanyInput = {
@@ -123,7 +124,7 @@ export async function getCurrentCompanyMembership():
         "company_members",
       )
       .select(
-        "company_id, role, full_name, internal_code",
+        "company_id, role, full_name, internal_code, must_change_password",
       )
       .eq(
         "active",
@@ -155,6 +156,9 @@ export async function getCurrentCompanyMembership():
 
     internal_code:
       data.internal_code,
+
+    must_change_password:
+      data.must_change_password,
   };
 }
 

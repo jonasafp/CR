@@ -1,0 +1,3647 @@
+diff --git a/src/components/auth/ControlProtectedRoute/ControlProtectedRoute.tsx b/src/components/auth/ControlProtectedRoute/ControlProtectedRoute.tsx
+new file mode 100644
+index 0000000..1cd9a4e
+--- /dev/null
++++ b/src/components/auth/ControlProtectedRoute/ControlProtectedRoute.tsx
+@@ -0,0 +1,71 @@
++import {
++  useEffect,
++  useState,
++} from "react";
++
++import {
++  Navigate,
++  Outlet,
++} from "react-router-dom";
++
++import useAuth from "../../../contexts/AuthContext/useAuth";
++import {
++  controlService,
++} from "../../../services/control/controlService";
++
++export default function ControlProtectedRoute() {
++  const { session, isLoading: isAuthLoading } = useAuth();
++  const [isChecking, setIsChecking] = useState(true);
++  const [hasAccess, setHasAccess] = useState(false);
++
++  useEffect(() => {
++    let active = true;
++
++    if (isAuthLoading) {
++      return () => {
++        active = false;
++      };
++    }
++
++    if (!session) {
++      setHasAccess(false);
++      setIsChecking(false);
++      return () => {
++        active = false;
++      };
++    }
++
++    setIsChecking(true);
++
++    void controlService.getSession()
++      .then((profile) => {
++        if (active) {
++          setHasAccess(Boolean(profile));
++        }
++      })
++      .catch(() => {
++        if (active) {
++          setHasAccess(false);
++        }
++      })
++      .finally(() => {
++        if (active) {
++          setIsChecking(false);
++        }
++      });
++
++    return () => {
++      active = false;
++    };
++  }, [isAuthLoading, session]);
++
++  if (isAuthLoading || isChecking) {
++    return <div className="center" style={{ minHeight: "100vh" }}>Carregando...</div>;
++  }
++
++  if (!session || !hasAccess) {
++    return <Navigate to="/controle/login" replace />;
++  }
++
++  return <Outlet />;
++}
+diff --git a/src/components/auth/ProtectedRoute/ProtectedRoute.tsx b/src/components/auth/ProtectedRoute/ProtectedRoute.tsx
+index a5da156..301e753 100644
+--- a/src/components/auth/ProtectedRoute/ProtectedRoute.tsx
++++ b/src/components/auth/ProtectedRoute/ProtectedRoute.tsx
+@@ -1,3 +1,8 @@
++import {
++  useEffect,
++  useState,
++} from "react";
++
+ import {
+   Navigate,
+   Outlet,
+@@ -7,6 +12,9 @@ import {
+ import useAuth from "../../../contexts/AuthContext/useAuth";
+ import useCompany from "../../../contexts/CompanyContext/useCompany";
+ import ErrorState from "../../common/ErrorState/ErrorState";
++import {
++  controlService,
++} from "../../../services/control/controlService";
+ 
+ type ProtectedRouteProps = {
+   requireCompany?:
+@@ -16,6 +24,8 @@ type ProtectedRouteProps = {
+ export default function ProtectedRoute({
+   requireCompany = true,
+ }: ProtectedRouteProps) {
++  const [isCheckingControl, setIsCheckingControl] = useState(true);
++  const [isControlAdmin, setIsControlAdmin] = useState(false);
+   const {
+     session,
+     isLoading: isAuthLoading,
+@@ -32,8 +42,50 @@ export default function ProtectedRoute({
+   const location =
+     useLocation();
+ 
++  useEffect(() => {
++    let active = true;
++
++    if (isAuthLoading) {
++      return () => {
++        active = false;
++      };
++    }
++
++    if (!session) {
++      setIsControlAdmin(false);
++      setIsCheckingControl(false);
++      return () => {
++        active = false;
++      };
++    }
++
++    setIsCheckingControl(true);
++
++    void controlService.getSession()
++      .then((profile) => {
++        if (active) {
++          setIsControlAdmin(Boolean(profile));
++        }
++      })
++      .catch(() => {
++        if (active) {
++          setIsControlAdmin(false);
++        }
++      })
++      .finally(() => {
++        if (active) {
++          setIsCheckingControl(false);
++        }
++      });
++
++    return () => {
++      active = false;
++    };
++  }, [isAuthLoading, session]);
++
+   if (
+     isAuthLoading ||
++    isCheckingControl ||
+     (
+       session &&
+       requireCompany &&
+@@ -77,6 +129,17 @@ export default function ProtectedRoute({
+     );
+   }
+ 
++  if (isControlAdmin) {
++    return <Navigate to="/controle" replace />;
++  }
++
++  if (
++    membership?.must_change_password &&
++    location.pathname !== "/definir-senha"
++  ) {
++    return <Navigate to="/definir-senha" replace />;
++  }
++
+   if (
+     companyError
+   ) {
+diff --git a/src/domain/control/Control.ts b/src/domain/control/Control.ts
+new file mode 100644
+index 0000000..77c9bc2
+--- /dev/null
++++ b/src/domain/control/Control.ts
+@@ -0,0 +1,92 @@
++export type ControlCompanyStatus = "active" | "inactive";
++
++export interface ControlSession {
++  username: string;
++  companyId: string;
++  mustChangePassword: boolean;
++  lastLoginAt: string | null;
++}
++
++export interface ControlOverview {
++  companies: number;
++  activeCompanies: number;
++  users: number;
++  sales: number;
++  salesTotal: number;
++  products: number;
++}
++
++export interface ControlCompany {
++  id: string;
++  legalName: string;
++  tradeName: string;
++  document: string | null;
++  email: string | null;
++  phone: string | null;
++  city: string | null;
++  state: string | null;
++  status: ControlCompanyStatus;
++  createdAt: string;
++  users: number;
++  products: number;
++  sales: number;
++  salesTotal: number;
++}
++
++export interface ControlGrowthPoint {
++  month: string;
++  companies: number;
++  sales: number;
++}
++
++export interface ControlDatabaseSummary {
++  companies: number;
++  members: number;
++  products: number;
++  customers: number;
++  sales: number;
++  saleItems: number;
++  financialTransactions: number;
++  inventoryMovements: number;
++  purchases: number;
++  suppliers: number;
++}
++
++export interface ControlDashboardData {
++  overview: ControlOverview;
++  companies: ControlCompany[];
++  growth: ControlGrowthPoint[];
++  database: ControlDatabaseSummary;
++}
++
++export interface ControlCompanyUser {
++  id: string;
++  userId: string;
++  internalCode: number;
++  fullName: string | null;
++  email: string | null;
++  role: "owner" | "admin" | "manager" | "cashier" | "viewer";
++  active: boolean;
++  mustChangePassword: boolean;
++  createdAt: string;
++}
++
++export interface CreateControlCompanyInput {
++  legalName: string;
++  tradeName: string;
++  document: string;
++  ownerName: string;
++  ownerEmail: string;
++}
++
++export type ControlEmployeeRole = Exclude<
++  ControlCompanyUser["role"],
++  "owner"
++>;
++
++export interface InviteControlEmployeeInput {
++  companyId: string;
++  fullName: string;
++  email: string;
++  role: ControlEmployeeRole;
++}
+diff --git a/src/pages/Controle/Controle.module.css b/src/pages/Controle/Controle.module.css
+new file mode 100644
+index 0000000..a02a8cb
+--- /dev/null
++++ b/src/pages/Controle/Controle.module.css
+@@ -0,0 +1,882 @@
++.shell {
++  background: #f4f7fc;
++  display: grid;
++  grid-template-columns: 270px minmax(0, 1fr);
++  min-height: 100vh;
++}
++
++.sidebar {
++  background: linear-gradient(180deg, #172f6b 0%, #203d83 55%, #24489b 100%);
++  color: white;
++  display: flex;
++  flex-direction: column;
++  min-height: 100vh;
++  padding: 28px 20px 22px;
++}
++
++.brand,
++.environment,
++.profile {
++  align-items: center;
++  display: flex;
++  gap: 12px;
++}
++
++.brand > span,
++.profile > span {
++  align-items: center;
++  background: rgb(255 255 255 / 14%);
++  border: 1px solid rgb(255 255 255 / 18%);
++  border-radius: 12px;
++  display: flex;
++  font-weight: 800;
++  height: 46px;
++  justify-content: center;
++  width: 46px;
++}
++
++.brand div,
++.environment div,
++.profile div {
++  display: grid;
++  gap: 2px;
++}
++
++.brand strong {
++  font-size: 16px;
++}
++
++.brand small,
++.environment small,
++.profile small {
++  color: #a9c6ff;
++  font-size: 11px;
++}
++
++.environment {
++  background: rgb(255 255 255 / 9%);
++  border: 1px solid rgb(255 255 255 / 12%);
++  border-radius: 13px;
++  margin: 34px 0 26px;
++  padding: 13px;
++}
++
++.environment strong,
++.profile strong {
++  font-size: 13px;
++}
++
++.navigation {
++  display: grid;
++  gap: 7px;
++}
++
++.navigation button,
++.logout {
++  align-items: center;
++  background: transparent;
++  border: 0;
++  border-radius: 11px;
++  color: #c8d9ff;
++  cursor: pointer;
++  display: flex;
++  font: inherit;
++  font-size: 13px;
++  font-weight: 600;
++  gap: 11px;
++  padding: 13px 14px;
++  text-align: left;
++  transition: 0.2s ease;
++}
++
++.navigation button:hover,
++.navigation .activeNav {
++  background: rgb(255 255 255 / 13%);
++  color: white;
++}
++
++.profile {
++  border-top: 1px solid rgb(255 255 255 / 12%);
++  margin-top: auto;
++  padding: 24px 8px 14px;
++}
++
++.profile > span {
++  background: #2f6fed;
++  border-radius: 50%;
++  height: 40px;
++  width: 40px;
++}
++
++.logout:hover {
++  background: rgb(255 255 255 / 9%);
++  color: white;
++}
++
++.workspace {
++  min-width: 0;
++  padding: 34px clamp(24px, 4vw, 58px) 54px;
++}
++
++.header {
++  align-items: center;
++  display: flex;
++  justify-content: space-between;
++  margin-bottom: 28px;
++}
++
++.eyebrow {
++  color: var(--primary);
++  font-size: 11px;
++  font-weight: 800;
++  letter-spacing: 0.09em;
++  text-transform: uppercase;
++}
++
++.header h1 {
++  color: #172033;
++  font-size: 30px;
++  margin: 6px 0 3px;
++}
++
++.header p {
++  font-size: 13px;
++  margin: 0;
++}
++
++.headerActions {
++  display: flex;
++  gap: 10px;
++}
++
++.primaryButton,
++.refreshButton,
++.secondaryButton,
++.dangerButton,
++.detailButton {
++  align-items: center;
++  border: 0;
++  border-radius: 10px;
++  cursor: pointer;
++  display: inline-flex;
++  font: inherit;
++  font-size: 13px;
++  font-weight: 700;
++  gap: 8px;
++  justify-content: center;
++  min-height: 42px;
++  padding: 0 16px;
++}
++
++.primaryButton {
++  background: var(--primary);
++  color: white;
++}
++
++.primaryButton:hover {
++  background: var(--primary-hover);
++}
++
++.refreshButton,
++.secondaryButton {
++  background: white;
++  border: 1px solid var(--border);
++  color: var(--text);
++}
++
++.dangerButton {
++  background: var(--danger-light);
++  color: var(--danger);
++}
++
++.successMessage,
++.errorMessage {
++  border-radius: 10px;
++  font-size: 13px;
++  margin: 0 0 18px;
++  padding: 12px 14px;
++}
++
++.successMessage {
++  background: var(--success-light);
++  color: #166534;
++}
++
++.errorMessage {
++  background: var(--danger-light);
++  color: var(--danger);
++}
++
++.metrics {
++  display: grid;
++  gap: 17px;
++  grid-template-columns: repeat(4, minmax(0, 1fr));
++}
++
++.metricCard,
++.panel,
++.databaseNotice,
++.databaseGrid article {
++  background: white;
++  border: 1px solid #e7eaf0;
++  border-radius: 16px;
++  box-shadow: 0 5px 18px rgb(25 45 80 / 5%);
++}
++
++.metricCard {
++  overflow: hidden;
++  padding: 21px;
++  position: relative;
++}
++
++.metricCard > span {
++  align-items: center;
++  border-radius: 11px;
++  display: flex;
++  height: 42px;
++  justify-content: center;
++  margin-bottom: 18px;
++  width: 42px;
++}
++
++.metricCard svg {
++  height: 20px;
++  width: 20px;
++}
++
++.metricCard small {
++  color: var(--text-secondary);
++  display: block;
++  font-size: 12px;
++  font-weight: 700;
++}
++
++.metricCard > strong {
++  color: #172033;
++  display: block;
++  font-size: 29px;
++  margin: 5px 0 3px;
++}
++
++.metricCard p {
++  font-size: 11px;
++  margin: 0;
++}
++
++.blue > span { background: #eaf2ff; color: #2563eb; }
++.purple > span { background: #f0eaff; color: #7c3aed; }
++.green > span { background: #e8fbef; color: #16a34a; }
++.orange > span { background: #fff2e8; color: #ea580c; }
++
++.overviewGrid {
++  display: grid;
++  gap: 18px;
++  grid-template-columns: minmax(0, 1.1fr) minmax(350px, 0.9fr);
++  margin-top: 18px;
++}
++
++.panel {
++  padding: 22px;
++}
++
++.panelHeader,
++.usersHeader {
++  align-items: center;
++  display: flex;
++  justify-content: space-between;
++}
++
++.panelHeader h2,
++.usersHeader h3 {
++  color: #172033;
++  font-size: 17px;
++  margin: 0 0 3px;
++}
++
++.panelHeader p,
++.usersHeader p {
++  font-size: 12px;
++  margin: 0;
++}
++
++.panelHeader > button {
++  background: transparent;
++  border: 0;
++  color: var(--primary);
++  cursor: pointer;
++  font-size: 12px;
++  font-weight: 700;
++}
++
++.chart {
++  align-items: end;
++  display: flex;
++  gap: 18px;
++  height: 230px;
++  justify-content: space-around;
++  padding-top: 28px;
++}
++
++.chartColumn {
++  align-items: center;
++  display: flex;
++  flex: 1;
++  flex-direction: column;
++  height: 100%;
++}
++
++.chartColumn > strong {
++  color: #334155;
++  font-size: 12px;
++  margin-bottom: 7px;
++}
++
++.chartColumn > div {
++  align-items: end;
++  background: #f2f5fa;
++  border-radius: 7px 7px 3px 3px;
++  display: flex;
++  flex: 1;
++  max-width: 35px;
++  overflow: hidden;
++  width: 100%;
++}
++
++.chartColumn > div span {
++  background: linear-gradient(180deg, #3b82f6, #2459d6);
++  border-radius: 7px 7px 3px 3px;
++  display: block;
++  min-height: 12px;
++  width: 100%;
++}
++
++.chartColumn small {
++  color: var(--text-light);
++  font-size: 10px;
++  margin-top: 8px;
++}
++
++.recentList {
++  display: grid;
++  margin-top: 16px;
++}
++
++.recentList button {
++  align-items: center;
++  background: transparent;
++  border: 0;
++  border-bottom: 1px solid #eef0f4;
++  cursor: pointer;
++  display: grid;
++  gap: 10px;
++  grid-template-columns: auto 1fr auto auto;
++  padding: 13px 0;
++  text-align: left;
++}
++
++.recentList button:last-child {
++  border-bottom: 0;
++}
++
++.companyAvatar {
++  align-items: center;
++  background: #edf3ff;
++  border-radius: 10px;
++  color: #2459d6;
++  display: flex;
++  font-size: 11px;
++  font-weight: 800;
++  height: 38px;
++  justify-content: center;
++  width: 38px;
++}
++
++.recentList button > span:nth-child(2) {
++  display: grid;
++}
++
++.recentList strong {
++  color: #273247;
++  font-size: 12px;
++}
++
++.recentList small {
++  color: var(--text-light);
++  font-size: 10px;
++}
++
++.statusActive,
++.statusInactive {
++  border-radius: 999px;
++  display: inline-flex;
++  font-size: 10px;
++  font-style: normal;
++  font-weight: 700;
++  padding: 5px 9px;
++  white-space: nowrap;
++}
++
++.statusActive { background: var(--success-light); color: #15803d; }
++.statusInactive { background: var(--danger-light); color: #b91c1c; }
++
++.companyToolbar {
++  align-items: center;
++  display: flex;
++  justify-content: space-between;
++  margin-bottom: 18px;
++}
++
++.companyToolbar label {
++  align-items: center;
++  background: #f8fafc;
++  border: 1px solid var(--border);
++  border-radius: 10px;
++  display: flex;
++  gap: 9px;
++  max-width: 440px;
++  padding: 0 13px;
++  width: 100%;
++}
++
++.companyToolbar input {
++  background: transparent;
++  border: 0;
++  font: inherit;
++  font-size: 12px;
++  height: 43px;
++  outline: none;
++  width: 100%;
++}
++
++.companyToolbar > span {
++  color: var(--text-secondary);
++  font-size: 12px;
++}
++
++.tableWrap {
++  overflow-x: auto;
++}
++
++.tableWrap table {
++  border-collapse: collapse;
++  width: 100%;
++}
++
++.tableWrap th {
++  color: var(--text-light);
++  font-size: 10px;
++  letter-spacing: 0.05em;
++  padding: 11px;
++  text-align: left;
++  text-transform: uppercase;
++}
++
++.tableWrap td {
++  border-top: 1px solid #eef0f4;
++  color: #4b5563;
++  font-size: 12px;
++  padding: 14px 11px;
++}
++
++.tableWrap td:first-child {
++  display: grid;
++  min-width: 180px;
++}
++
++.tableWrap td:first-child strong {
++  color: #273247;
++}
++
++.tableWrap td:first-child small {
++  color: var(--text-light);
++  font-size: 10px;
++}
++
++.detailButton {
++  background: #edf3ff;
++  color: #2459d6;
++  min-height: 34px;
++  white-space: nowrap;
++}
++
++.databaseNotice {
++  align-items: center;
++  background: #eff6ff;
++  border-color: #bfdbfe;
++  display: flex;
++  gap: 13px;
++  margin-bottom: 18px;
++  padding: 17px 19px;
++}
++
++.databaseNotice > svg {
++  color: var(--primary);
++}
++
++.databaseNotice strong {
++  color: #1e3a8a;
++  font-size: 13px;
++}
++
++.databaseNotice p {
++  font-size: 11px;
++  margin: 2px 0 0;
++}
++
++.databaseGrid {
++  display: grid;
++  gap: 12px;
++  grid-template-columns: repeat(5, minmax(0, 1fr));
++  margin-bottom: 18px;
++}
++
++.databaseGrid article {
++  display: grid;
++  gap: 7px;
++  padding: 17px;
++}
++
++.databaseGrid svg {
++  color: var(--primary);
++}
++
++.databaseGrid span {
++  color: var(--text-secondary);
++  font-size: 10px;
++}
++
++.databaseGrid strong {
++  color: #172033;
++  font-size: 22px;
++}
++
++.safeActions {
++  display: grid;
++  gap: 12px;
++  grid-template-columns: repeat(2, minmax(0, 1fr));
++  list-style: none;
++  margin: 20px 0 0;
++  padding: 0;
++}
++
++.safeActions li {
++  align-items: center;
++  background: #f8fafc;
++  border-radius: 10px;
++  color: #475569;
++  display: flex;
++  font-size: 12px;
++  gap: 10px;
++  padding: 13px;
++}
++
++.safeActions svg {
++  color: var(--primary);
++}
++
++.modalBackdrop {
++  align-items: center;
++  background: rgb(15 23 42 / 55%);
++  display: flex;
++  inset: 0;
++  justify-content: center;
++  padding: 24px;
++  position: fixed;
++  z-index: 1000;
++}
++
++.modal {
++  background: white;
++  border-radius: 18px;
++  box-shadow: 0 24px 70px rgb(15 23 42 / 20%);
++  max-height: calc(100vh - 48px);
++  max-width: 680px;
++  overflow-y: auto;
++  padding: 27px;
++  width: 100%;
++}
++
++.modal > header {
++  align-items: start;
++  display: flex;
++  justify-content: space-between;
++  margin-bottom: 23px;
++}
++
++.modal > header span {
++  color: var(--primary);
++  font-size: 10px;
++  font-weight: 800;
++  letter-spacing: 0.08em;
++  text-transform: uppercase;
++}
++
++.modal > header h2 {
++  color: #172033;
++  font-size: 22px;
++  margin: 5px 0 3px;
++}
++
++.modal > header p {
++  font-size: 12px;
++  margin: 0;
++}
++
++.modal > header > button {
++  align-items: center;
++  background: #f1f5f9;
++  border: 0;
++  border-radius: 9px;
++  color: #64748b;
++  cursor: pointer;
++  display: flex;
++  height: 36px;
++  justify-content: center;
++  width: 36px;
++}
++
++.modal > header > button svg {
++  height: 18px;
++  width: 18px;
++}
++
++.formGrid {
++  display: grid;
++  gap: 15px;
++  grid-template-columns: repeat(2, minmax(0, 1fr));
++}
++
++.formGrid label,
++.passwordModal label {
++  color: #334155;
++  display: grid;
++  font-size: 11px;
++  font-weight: 700;
++  gap: 7px;
++}
++
++.formGrid input,
++.formGrid select,
++.passwordModal input {
++  border: 1px solid var(--border);
++  border-radius: 9px;
++  font: inherit;
++  font-size: 13px;
++  height: 44px;
++  outline: none;
++  padding: 0 12px;
++}
++
++.formGrid input:focus,
++.formGrid select:focus,
++.passwordModal input:focus {
++  border-color: var(--primary);
++  box-shadow: 0 0 0 3px rgb(37 99 235 / 10%);
++}
++
++.fullField {
++  grid-column: 1 / -1;
++}
++
++.modal > footer {
++  display: flex;
++  gap: 10px;
++  justify-content: flex-end;
++  margin-top: 22px;
++}
++
++.detailModal {
++  max-width: 850px;
++}
++
++.companyFacts {
++  display: grid;
++  gap: 10px;
++  grid-template-columns: repeat(4, minmax(0, 1fr));
++}
++
++.companyFacts > div {
++  background: #f8fafc;
++  border-radius: 10px;
++  display: grid;
++  gap: 4px;
++  padding: 12px;
++}
++
++.companyFacts small {
++  color: var(--text-light);
++  font-size: 9px;
++  text-transform: uppercase;
++}
++
++.companyFacts strong {
++  color: #334155;
++  font-size: 11px;
++  overflow: hidden;
++  text-overflow: ellipsis;
++}
++
++.usersHeader {
++  border-top: 1px solid #eef0f4;
++  margin-top: 22px;
++  padding-top: 20px;
++}
++
++.usersActions {
++  display: flex;
++  flex-wrap: wrap;
++  gap: 9px;
++  justify-content: flex-end;
++}
++
++.primaryButton:disabled {
++  cursor: not-allowed;
++  opacity: 0.55;
++}
++
++.nestedModal {
++  z-index: 1100;
++}
++
++.userList {
++  display: grid;
++  margin-top: 12px;
++}
++
++.userList article {
++  align-items: center;
++  border-bottom: 1px solid #eef0f4;
++  display: grid;
++  gap: 10px;
++  grid-template-columns: auto 1fr auto auto;
++  padding: 12px 0;
++}
++
++.userList article > span {
++  align-items: center;
++  background: #edf3ff;
++  border-radius: 50%;
++  color: #2459d6;
++  display: flex;
++  font-size: 10px;
++  font-weight: 800;
++  height: 36px;
++  justify-content: center;
++  width: 36px;
++}
++
++.userList article > div {
++  display: grid;
++}
++
++.userList strong {
++  color: #334155;
++  font-size: 12px;
++}
++
++.userList small {
++  color: var(--text-light);
++  font-size: 10px;
++}
++
++.userList i {
++  color: #b45309;
++  font-size: 10px;
++  font-style: normal;
++}
++
++.userList button {
++  align-items: center;
++  background: #f1f5f9;
++  border: 0;
++  border-radius: 8px;
++  color: #475569;
++  cursor: pointer;
++  display: flex;
++  font-size: 10px;
++  font-weight: 700;
++  gap: 6px;
++  padding: 8px 10px;
++}
++
++.modalLoading,
++.fullState {
++  align-items: center;
++  color: var(--text-secondary);
++  display: flex;
++  justify-content: center;
++  min-height: 180px;
++}
++
++.fullState {
++  min-height: 100vh;
++}
++
++.requiredModal {
++  z-index: 1200;
++}
++
++.passwordModal {
++  display: grid;
++  gap: 15px;
++  max-width: 440px;
++  text-align: center;
++}
++
++.passwordIcon {
++  align-items: center;
++  background: #edf3ff;
++  border-radius: 14px;
++  color: var(--primary);
++  display: flex;
++  height: 54px;
++  justify-content: center;
++  margin: 0 auto;
++  width: 54px;
++}
++
++.passwordModal h2 {
++  color: #172033;
++  font-size: 22px;
++  margin: -7px 0 0;
++}
++
++.passwordModal > p {
++  font-size: 12px;
++  margin: -8px 0 4px;
++}
++
++.passwordModal label {
++  text-align: left;
++}
++
++@media (max-width: 1150px) {
++  .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
++  .overviewGrid { grid-template-columns: 1fr; }
++  .databaseGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
++}
++
++@media (max-width: 820px) {
++  .shell { grid-template-columns: 1fr; }
++  .sidebar { min-height: auto; padding: 18px; }
++  .environment, .profile { display: none; }
++  .navigation { display: flex; margin-top: 18px; overflow-x: auto; }
++  .logout { position: absolute; right: 18px; top: 20px; }
++  .workspace { padding: 24px 16px 40px; }
++  .header { align-items: start; gap: 18px; }
++  .headerActions { flex-direction: column; }
++  .companyFacts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
++  .usersHeader { align-items: flex-start; gap: 14px; }
++  .userList article { grid-template-columns: auto 1fr; }
++  .userList article > button, .userList article > i { grid-column: 2; justify-self: start; }
++}
++
++@media (max-width: 560px) {
++  .header { flex-direction: column; }
++  .headerActions { flex-direction: row; width: 100%; }
++  .headerActions button { flex: 1; }
++  .metrics, .databaseGrid, .safeActions, .formGrid { grid-template-columns: 1fr; }
++  .fullField { grid-column: auto; }
++  .companyToolbar { align-items: stretch; flex-direction: column; gap: 10px; }
++  .companyFacts { grid-template-columns: 1fr; }
++}
+diff --git a/src/pages/Controle/Controle.tsx b/src/pages/Controle/Controle.tsx
+new file mode 100644
+index 0000000..d5e3c56
+--- /dev/null
++++ b/src/pages/Controle/Controle.tsx
+@@ -0,0 +1,880 @@
++import {
++  Activity,
++  Building2,
++  ChartNoAxesCombined,
++  ChevronRight,
++  Database,
++  KeyRound,
++  LogOut,
++  Plus,
++  RefreshCw,
++  Search,
++  ShieldCheck,
++  ShoppingCart,
++  Users,
++  X,
++} from "lucide-react";
++import {
++  useCallback,
++  useEffect,
++  useMemo,
++  useState,
++} from "react";
++import type {
++  FormEvent,
++} from "react";
++import {
++  useNavigate,
++} from "react-router-dom";
++
++import type {
++  ControlCompany,
++  ControlCompanyUser,
++  ControlDashboardData,
++  ControlSession,
++  CreateControlCompanyInput,
++  InviteControlEmployeeInput,
++} from "../../domain/control/Control";
++import {
++  supabase,
++} from "../../lib/supabase";
++import {
++  controlService,
++} from "../../services/control/controlService";
++import {
++  getErrorMessage,
++} from "../../utils/errors";
++
++import styles from "./Controle.module.css";
++
++type ControlTab = "overview" | "companies" | "database";
++
++const emptyCompany: CreateControlCompanyInput = {
++  legalName: "",
++  tradeName: "",
++  document: "",
++  ownerName: "",
++  ownerEmail: "",
++};
++
++const emptyEmployee = {
++  fullName: "",
++  email: "",
++  role: "cashier",
++} satisfies Omit<InviteControlEmployeeInput, "companyId">;
++
++const roleLabels: Record<ControlCompanyUser["role"], string> = {
++  owner: "Proprietário",
++  admin: "Administrador",
++  manager: "Gerente",
++  cashier: "Caixa",
++  viewer: "Consulta",
++};
++
++function formatCurrency(value: number) {
++  return new Intl.NumberFormat("pt-BR", {
++    style: "currency",
++    currency: "BRL",
++  }).format(Number(value) || 0);
++}
++
++function formatDate(value: string | null) {
++  if (!value) {
++    return "—";
++  }
++
++  return new Intl.DateTimeFormat("pt-BR", {
++    dateStyle: "short",
++  }).format(new Date(value));
++}
++
++function formatDocument(value: string | null) {
++  if (!value) {
++    return "Não informado";
++  }
++
++  if (value.length === 14) {
++    return value.replace(
++      /^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,
++      "$1.$2.$3/$4-$5",
++    );
++  }
++
++  return value;
++}
++
++export default function Controle() {
++  const navigate = useNavigate();
++  const [tab, setTab] = useState<ControlTab>("overview");
++  const [data, setData] = useState<ControlDashboardData | null>(null);
++  const [controlSession, setControlSession] = useState<ControlSession | null>(null);
++  const [selectedCompany, setSelectedCompany] = useState<ControlCompany | null>(null);
++  const [companyUsers, setCompanyUsers] = useState<ControlCompanyUser[]>([]);
++  const [search, setSearch] = useState("");
++  const [isLoading, setIsLoading] = useState(true);
++  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
++  const [isCreateOpen, setIsCreateOpen] = useState(false);
++  const [employeeCompany, setEmployeeCompany] = useState<ControlCompany | null>(null);
++  const [message, setMessage] = useState("");
++  const [error, setError] = useState("");
++
++  const loadDashboard = useCallback(async () => {
++    setIsLoading(true);
++    setError("");
++
++    try {
++      const [nextData, nextSession] = await Promise.all([
++        controlService.getDashboard(),
++        controlService.getSession(),
++      ]);
++
++      setData(nextData);
++      setControlSession(nextSession);
++    } catch (loadError) {
++      setError(getErrorMessage(loadError));
++    } finally {
++      setIsLoading(false);
++    }
++  }, []);
++
++  useEffect(() => {
++    void loadDashboard();
++  }, [loadDashboard]);
++
++  const filteredCompanies = useMemo(() => {
++    const normalized = search.trim().toLowerCase();
++
++    if (!normalized) {
++      return data?.companies ?? [];
++    }
++
++    return (data?.companies ?? []).filter((company) =>
++      [company.tradeName, company.legalName, company.document]
++        .filter(Boolean)
++        .some((value) => value?.toLowerCase().includes(normalized)),
++    );
++  }, [data?.companies, search]);
++
++  async function openCompany(company: ControlCompany) {
++    setSelectedCompany(company);
++    setCompanyUsers([]);
++    setIsLoadingUsers(true);
++    setError("");
++
++    try {
++      setCompanyUsers(await controlService.getCompanyUsers(company.id));
++    } catch (loadError) {
++      setError(getErrorMessage(loadError));
++    } finally {
++      setIsLoadingUsers(false);
++    }
++  }
++
++  async function toggleCompanyStatus(company: ControlCompany) {
++    const nextStatus = company.status === "active" ? "inactive" : "active";
++    setError("");
++    setMessage("");
++
++    try {
++      await controlService.setCompanyStatus(company.id, nextStatus);
++      setMessage(
++        nextStatus === "active"
++          ? "Empresa reativada com sucesso."
++          : "Empresa inativada com sucesso.",
++      );
++      setSelectedCompany(null);
++      await loadDashboard();
++    } catch (updateError) {
++      setError(getErrorMessage(updateError));
++    }
++  }
++
++  async function requestPasswordChange(member: ControlCompanyUser) {
++    setError("");
++    setMessage("");
++
++    try {
++      await controlService.requestPasswordChange(member.id);
++      setMessage("Solicitação registrada e enviada ao usuário quando houver e-mail válido.");
++
++      if (selectedCompany) {
++        setCompanyUsers(await controlService.getCompanyUsers(selectedCompany.id));
++      }
++    } catch (requestError) {
++      setError(getErrorMessage(requestError));
++    }
++  }
++
++  async function handleEmployeeInvited(company: ControlCompany) {
++    setEmployeeCompany(null);
++    setMessage("Funcionário cadastrado. O convite para criação da senha foi enviado por e-mail.");
++    setCompanyUsers(await controlService.getCompanyUsers(company.id));
++    await loadDashboard();
++  }
++
++  async function handleLogout() {
++    await supabase.auth.signOut({ scope: "local" });
++    navigate("/controle/login", { replace: true });
++  }
++
++  if (isLoading && !data) {
++    return <div className={styles.fullState}>Carregando sistema de controle...</div>;
++  }
++
++  return (
++    <main className={styles.shell}>
++      <aside className={styles.sidebar}>
++        <div className={styles.brand}>
++          <span>JC</span>
++          <div>
++            <strong>Jiah Controle</strong>
++            <small>Gestor Fácil</small>
++          </div>
++        </div>
++
++        <div className={styles.environment}>
++          <ShieldCheck size={18} />
++          <div>
++            <strong>Ambiente seguro</strong>
++            <small>Produção</small>
++          </div>
++        </div>
++
++        <nav className={styles.navigation} aria-label="Navegação do controle">
++          <button
++            type="button"
++            className={tab === "overview" ? styles.activeNav : ""}
++            onClick={() => setTab("overview")}
++          >
++            <ChartNoAxesCombined size={19} />
++            Visão geral
++          </button>
++
++          <button
++            type="button"
++            className={tab === "companies" ? styles.activeNav : ""}
++            onClick={() => setTab("companies")}
++          >
++            <Building2 size={19} />
++            Empresas
++          </button>
++
++          <button
++            type="button"
++            className={tab === "database" ? styles.activeNav : ""}
++            onClick={() => setTab("database")}
++          >
++            <Database size={19} />
++            Banco de dados
++          </button>
++        </nav>
++
++        <div className={styles.profile}>
++          <span>J</span>
++          <div>
++            <strong>{controlSession?.username ?? "Jiah"}</strong>
++            <small>Administrador mestre</small>
++          </div>
++        </div>
++
++        <button type="button" className={styles.logout} onClick={handleLogout}>
++          <LogOut size={18} />
++          Sair
++        </button>
++      </aside>
++
++      <section className={styles.workspace}>
++        <header className={styles.header}>
++          <div>
++            <span className={styles.eyebrow}>Sistema de controle</span>
++            <h1>
++              {tab === "overview" && "Visão geral da plataforma"}
++              {tab === "companies" && "Empresas cadastradas"}
++              {tab === "database" && "Controle do banco de dados"}
++            </h1>
++            <p>
++              {tab === "overview" && "Crescimento e desempenho do Gestor Fácil."}
++              {tab === "companies" && "Cadastros, acessos e situação de cada empresa."}
++              {tab === "database" && "Consultas operacionais seguras e indicadores de integridade."}
++            </p>
++          </div>
++
++          <div className={styles.headerActions}>
++            <button type="button" className={styles.refreshButton} onClick={loadDashboard}>
++              <RefreshCw size={18} />
++              Atualizar
++            </button>
++
++            <button type="button" className={styles.primaryButton} onClick={() => setIsCreateOpen(true)}>
++              <Plus size={18} />
++              Nova empresa
++            </button>
++          </div>
++        </header>
++
++        {message && <div className={styles.successMessage}>{message}</div>}
++        {error && <div className={styles.errorMessage}>{error}</div>}
++
++        {tab === "overview" && data && (
++          <>
++            <section className={styles.metrics}>
++              <MetricCard
++                icon={<Building2 />}
++                label="Empresas"
++                value={String(data.overview.companies)}
++                helper={`${data.overview.activeCompanies} ativas`}
++                tone="blue"
++              />
++              <MetricCard
++                icon={<Users />}
++                label="Usuários"
++                value={String(data.overview.users)}
++                helper="Acessos cadastrados"
++                tone="purple"
++              />
++              <MetricCard
++                icon={<ShoppingCart />}
++                label="Vendas processadas"
++                value={String(data.overview.sales)}
++                helper={formatCurrency(data.overview.salesTotal)}
++                tone="green"
++              />
++              <MetricCard
++                icon={<Activity />}
++                label="Produtos"
++                value={String(data.overview.products)}
++                helper="Em todas as empresas"
++                tone="orange"
++              />
++            </section>
++
++            <section className={styles.overviewGrid}>
++              <article className={styles.panel}>
++                <div className={styles.panelHeader}>
++                  <div>
++                    <h2>Crescimento</h2>
++                    <p>Empresas acumuladas nos últimos seis meses.</p>
++                  </div>
++                </div>
++
++                <div className={styles.chart}>
++                  {data.growth.map((point) => {
++                    const maximum = Math.max(
++                      ...data.growth.map((item) => Number(item.companies)),
++                      1,
++                    );
++
++                    return (
++                      <div className={styles.chartColumn} key={point.month}>
++                        <strong>{point.companies}</strong>
++                        <div>
++                          <span style={{ height: `${Math.max(12, (point.companies / maximum) * 100)}%` }} />
++                        </div>
++                        <small>{point.month.slice(5)}/{point.month.slice(2, 4)}</small>
++                      </div>
++                    );
++                  })}
++                </div>
++              </article>
++
++              <article className={styles.panel}>
++                <div className={styles.panelHeader}>
++                  <div>
++                    <h2>Empresas recentes</h2>
++                    <p>Últimos cadastros da plataforma.</p>
++                  </div>
++                  <button type="button" onClick={() => setTab("companies")}>Ver todas</button>
++                </div>
++
++                <div className={styles.recentList}>
++                  {data.companies.slice(-5).reverse().map((company) => (
++                    <button type="button" key={company.id} onClick={() => void openCompany(company)}>
++                      <span className={styles.companyAvatar}>{company.tradeName.slice(0, 2).toUpperCase()}</span>
++                      <span>
++                        <strong>{company.tradeName}</strong>
++                        <small>{company.users} usuário(s) · {formatDate(company.createdAt)}</small>
++                      </span>
++                      <i className={company.status === "active" ? styles.statusActive : styles.statusInactive}>
++                        {company.status === "active" ? "Ativa" : "Inativa"}
++                      </i>
++                      <ChevronRight size={18} />
++                    </button>
++                  ))}
++                </div>
++              </article>
++            </section>
++          </>
++        )}
++
++        {tab === "companies" && data && (
++          <article className={styles.panel}>
++            <div className={styles.companyToolbar}>
++              <label>
++                <Search size={18} />
++                <input
++                  value={search}
++                  onChange={(event) => setSearch(event.target.value)}
++                  placeholder="Pesquisar por nome ou CNPJ..."
++                />
++              </label>
++              <span>{filteredCompanies.length} empresa(s)</span>
++            </div>
++
++            <div className={styles.tableWrap}>
++              <table>
++                <thead>
++                  <tr>
++                    <th>Empresa</th>
++                    <th>Documento</th>
++                    <th>Usuários</th>
++                    <th>Vendas</th>
++                    <th>Movimentado</th>
++                    <th>Status</th>
++                    <th />
++                  </tr>
++                </thead>
++                <tbody>
++                  {filteredCompanies.map((company) => (
++                    <tr key={company.id}>
++                      <td>
++                        <strong>{company.tradeName}</strong>
++                        <small>{company.legalName}</small>
++                      </td>
++                      <td>{formatDocument(company.document)}</td>
++                      <td>{company.users}</td>
++                      <td>{company.sales}</td>
++                      <td>{formatCurrency(company.salesTotal)}</td>
++                      <td>
++                        <span className={company.status === "active" ? styles.statusActive : styles.statusInactive}>
++                          {company.status === "active" ? "Ativa" : "Inativa"}
++                        </span>
++                      </td>
++                      <td>
++                        <button type="button" className={styles.detailButton} onClick={() => void openCompany(company)}>
++                          Ver detalhes
++                        </button>
++                      </td>
++                    </tr>
++                  ))}
++                </tbody>
++              </table>
++            </div>
++          </article>
++        )}
++
++        {tab === "database" && data && (
++          <>
++            <div className={styles.databaseNotice}>
++              <ShieldCheck size={22} />
++              <div>
++                <strong>Operações protegidas</strong>
++                <p>Esta tela usa consultas predefinidas. SQL arbitrário permanece bloqueado para proteger os dados dos clientes.</p>
++              </div>
++            </div>
++
++            <section className={styles.databaseGrid}>
++              {Object.entries({
++                Empresas: data.database.companies,
++                Usuários: data.database.members,
++                Produtos: data.database.products,
++                Clientes: data.database.customers,
++                Vendas: data.database.sales,
++                "Itens vendidos": data.database.saleItems,
++                "Lançamentos financeiros": data.database.financialTransactions,
++                "Movimentos de estoque": data.database.inventoryMovements,
++                Compras: data.database.purchases,
++                Fornecedores: data.database.suppliers,
++              }).map(([label, value]) => (
++                <article key={label}>
++                  <Database size={18} />
++                  <span>{label}</span>
++                  <strong>{value}</strong>
++                </article>
++              ))}
++            </section>
++
++            <article className={styles.panel}>
++              <div className={styles.panelHeader}>
++                <div>
++                  <h2>Atualizações permitidas</h2>
++                  <p>Ações administrativas disponíveis sem acesso direto ao SQL.</p>
++                </div>
++              </div>
++              <ul className={styles.safeActions}>
++                <li><ShieldCheck size={18} /> Ativar ou inativar uma empresa.</li>
++                <li><KeyRound size={18} /> Solicitar troca de senha de um usuário.</li>
++                <li><Building2 size={18} /> Cadastrar empresa e proprietário com convite seguro.</li>
++                <li><RefreshCw size={18} /> Consultar contagens atualizadas das principais tabelas.</li>
++              </ul>
++            </article>
++          </>
++        )}
++      </section>
++
++      {isCreateOpen && (
++        <CreateCompanyModal
++          onClose={() => setIsCreateOpen(false)}
++          onCreated={async () => {
++            setIsCreateOpen(false);
++            setMessage("Empresa cadastrada e convite enviado ao proprietário.");
++            await loadDashboard();
++          }}
++        />
++      )}
++
++      {selectedCompany && (
++        <CompanyDetailsModal
++          company={selectedCompany}
++          users={companyUsers}
++          isLoading={isLoadingUsers}
++          onClose={() => setSelectedCompany(null)}
++          onToggleStatus={() => void toggleCompanyStatus(selectedCompany)}
++          onRequestPassword={(member) => void requestPasswordChange(member)}
++          onAddEmployee={() => setEmployeeCompany(selectedCompany)}
++        />
++      )}
++
++      {employeeCompany && (
++        <InviteEmployeeModal
++          company={employeeCompany}
++          onClose={() => setEmployeeCompany(null)}
++          onInvited={() => handleEmployeeInvited(employeeCompany)}
++        />
++      )}
++
++      {controlSession?.mustChangePassword && (
++        <ChangePasswordModal
++          onChanged={() => {
++            setControlSession({
++              ...controlSession,
++              mustChangePassword: false,
++            });
++            setMessage("Senha administrativa alterada com sucesso.");
++          }}
++        />
++      )}
++    </main>
++  );
++}
++
++function MetricCard({
++  icon,
++  label,
++  value,
++  helper,
++  tone,
++}: {
++  icon: React.ReactNode;
++  label: string;
++  value: string;
++  helper: string;
++  tone: "blue" | "purple" | "green" | "orange";
++}) {
++  return (
++    <article className={`${styles.metricCard} ${styles[tone]}`}>
++      <span>{icon}</span>
++      <small>{label}</small>
++      <strong>{value}</strong>
++      <p>{helper}</p>
++    </article>
++  );
++}
++
++function CreateCompanyModal({
++  onClose,
++  onCreated,
++}: {
++  onClose: () => void;
++  onCreated: () => Promise<void>;
++}) {
++  const [form, setForm] = useState(emptyCompany);
++  const [error, setError] = useState("");
++  const [isSaving, setIsSaving] = useState(false);
++
++  function setField(field: keyof CreateControlCompanyInput, value: string) {
++    setForm((current) => ({ ...current, [field]: value }));
++  }
++
++  async function handleSubmit(event: FormEvent) {
++    event.preventDefault();
++    setError("");
++    setIsSaving(true);
++
++    try {
++      await controlService.createCompany(form);
++      await onCreated();
++    } catch (saveError) {
++      setError(getErrorMessage(saveError));
++    } finally {
++      setIsSaving(false);
++    }
++  }
++
++  return (
++    <div className={styles.modalBackdrop} role="presentation">
++      <form className={styles.modal} onSubmit={handleSubmit}>
++        <header>
++          <div>
++            <span>Nova empresa</span>
++            <h2>Cadastrar cliente</h2>
++            <p>A empresa será criada e o proprietário receberá o convite de acesso.</p>
++          </div>
++          <button type="button" onClick={onClose} aria-label="Fechar"><X /></button>
++        </header>
++
++        <div className={styles.formGrid}>
++          <label className={styles.fullField}>
++            <span>Razão social *</span>
++            <input value={form.legalName} onChange={(event) => setField("legalName", event.target.value)} required />
++          </label>
++          <label>
++            <span>Nome fantasia *</span>
++            <input value={form.tradeName} onChange={(event) => setField("tradeName", event.target.value)} required />
++          </label>
++          <label>
++            <span>CNPJ ou CPF</span>
++            <input value={form.document} onChange={(event) => setField("document", event.target.value)} />
++          </label>
++          <label>
++            <span>Responsável *</span>
++            <input value={form.ownerName} onChange={(event) => setField("ownerName", event.target.value)} required />
++          </label>
++          <label>
++            <span>E-mail do responsável *</span>
++            <input type="email" value={form.ownerEmail} onChange={(event) => setField("ownerEmail", event.target.value)} required />
++          </label>
++        </div>
++
++        {error && <div className={styles.errorMessage}>{error}</div>}
++
++        <footer>
++          <button type="button" className={styles.secondaryButton} onClick={onClose}>Cancelar</button>
++          <button type="submit" className={styles.primaryButton} disabled={isSaving}>
++            {isSaving ? "Cadastrando..." : "Cadastrar empresa"}
++          </button>
++        </footer>
++      </form>
++    </div>
++  );
++}
++
++function CompanyDetailsModal({
++  company,
++  users,
++  isLoading,
++  onClose,
++  onToggleStatus,
++  onRequestPassword,
++  onAddEmployee,
++}: {
++  company: ControlCompany;
++  users: ControlCompanyUser[];
++  isLoading: boolean;
++  onClose: () => void;
++  onToggleStatus: () => void;
++  onRequestPassword: (member: ControlCompanyUser) => void;
++  onAddEmployee: () => void;
++}) {
++  return (
++    <div className={styles.modalBackdrop} role="presentation">
++      <section className={`${styles.modal} ${styles.detailModal}`}>
++        <header>
++          <div>
++            <span>Dados da empresa</span>
++            <h2>{company.tradeName}</h2>
++            <p>{company.legalName}</p>
++          </div>
++          <button type="button" onClick={onClose} aria-label="Fechar"><X /></button>
++        </header>
++
++        <div className={styles.companyFacts}>
++          <div><small>Documento</small><strong>{formatDocument(company.document)}</strong></div>
++          <div><small>E-mail</small><strong>{company.email ?? "Não informado"}</strong></div>
++          <div><small>Localização</small><strong>{[company.city, company.state].filter(Boolean).join(" - ") || "Não informada"}</strong></div>
++          <div><small>Cadastro</small><strong>{formatDate(company.createdAt)}</strong></div>
++        </div>
++
++        <div className={styles.usersHeader}>
++          <div>
++            <h3>Usuários cadastrados</h3>
++            <p>Solicite uma nova senha sem visualizar ou definir a senha atual.</p>
++          </div>
++          <div className={styles.usersActions}>
++            <button type="button" className={styles.primaryButton} onClick={onAddEmployee} disabled={company.status !== "active"}>
++              <Plus size={16} /> Adicionar funcionário
++            </button>
++            <button type="button" className={company.status === "active" ? styles.dangerButton : styles.primaryButton} onClick={onToggleStatus}>
++              {company.status === "active" ? "Inativar empresa" : "Reativar empresa"}
++            </button>
++          </div>
++        </div>
++
++        {isLoading ? (
++          <div className={styles.modalLoading}>Carregando usuários...</div>
++        ) : (
++          <div className={styles.userList}>
++            {users.map((member) => (
++              <article key={member.id}>
++                <span>{(member.fullName ?? "U").slice(0, 2).toUpperCase()}</span>
++                <div>
++                  <strong>{member.fullName ?? "Usuário sem nome"}</strong>
++                  <small>#{member.internalCode} · {member.email ?? "Sem e-mail"} · {roleLabels[member.role]}</small>
++                </div>
++                {member.mustChangePassword && <i>Troca pendente</i>}
++                <button type="button" onClick={() => onRequestPassword(member)}>
++                  <KeyRound size={16} /> Solicitar troca
++                </button>
++              </article>
++            ))}
++          </div>
++        )}
++      </section>
++    </div>
++  );
++}
++
++function InviteEmployeeModal({
++  company,
++  onClose,
++  onInvited,
++}: {
++  company: ControlCompany;
++  onClose: () => void;
++  onInvited: () => Promise<void>;
++}) {
++  const [form, setForm] = useState(emptyEmployee);
++  const [error, setError] = useState("");
++  const [isSaving, setIsSaving] = useState(false);
++
++  function setField(
++    field: keyof typeof emptyEmployee,
++    value: string,
++  ) {
++    setForm((current) => ({ ...current, [field]: value }));
++  }
++
++  async function handleSubmit(event: FormEvent) {
++    event.preventDefault();
++    setError("");
++    setIsSaving(true);
++
++    try {
++      await controlService.inviteCompanyUser({
++        companyId: company.id,
++        ...form,
++      });
++      await onInvited();
++    } catch (saveError) {
++      setError(getErrorMessage(saveError));
++    } finally {
++      setIsSaving(false);
++    }
++  }
++
++  return (
++    <div className={`${styles.modalBackdrop} ${styles.nestedModal}`} role="presentation">
++      <form className={styles.modal} onSubmit={handleSubmit}>
++        <header>
++          <div>
++            <span>Novo funcionário</span>
++            <h2>Adicionar em {company.tradeName}</h2>
++            <p>O funcionário receberá um e-mail para criar a senha de acesso.</p>
++          </div>
++          <button type="button" onClick={onClose} aria-label="Fechar"><X /></button>
++        </header>
++
++        <div className={styles.formGrid}>
++          <label className={styles.fullField}>
++            <span>Nome completo *</span>
++            <input value={form.fullName} onChange={(event) => setField("fullName", event.target.value)} required minLength={3} autoFocus />
++          </label>
++          <label>
++            <span>E-mail *</span>
++            <input type="email" value={form.email} onChange={(event) => setField("email", event.target.value)} required />
++          </label>
++          <label>
++            <span>Função *</span>
++            <select value={form.role} onChange={(event) => setField("role", event.target.value)} required>
++              <option value="admin">Administrador</option>
++              <option value="manager">Gerente</option>
++              <option value="cashier">Caixa</option>
++              <option value="viewer">Consulta</option>
++            </select>
++          </label>
++        </div>
++
++        {error && <div className={styles.errorMessage}>{error}</div>}
++
++        <footer>
++          <button type="button" className={styles.secondaryButton} onClick={onClose}>Cancelar</button>
++          <button type="submit" className={styles.primaryButton} disabled={isSaving}>
++            {isSaving ? "Enviando convite..." : "Adicionar e enviar convite"}
++          </button>
++        </footer>
++      </form>
++    </div>
++  );
++}
++
++function ChangePasswordModal({
++  onChanged,
++}: {
++  onChanged: () => void;
++}) {
++  const [password, setPassword] = useState("");
++  const [confirmation, setConfirmation] = useState("");
++  const [error, setError] = useState("");
++  const [isSaving, setIsSaving] = useState(false);
++
++  async function handleSubmit(event: FormEvent) {
++    event.preventDefault();
++
++    if (password.length < 8) {
++      setError("A nova senha deve possuir pelo menos 8 caracteres.");
++      return;
++    }
++
++    if (password !== confirmation) {
++      setError("A confirmação não corresponde à nova senha.");
++      return;
++    }
++
++    setIsSaving(true);
++    setError("");
++
++    try {
++      await controlService.changePassword(password);
++      onChanged();
++    } catch (saveError) {
++      setError(getErrorMessage(saveError));
++    } finally {
++      setIsSaving(false);
++    }
++  }
++
++  return (
++    <div className={`${styles.modalBackdrop} ${styles.requiredModal}`} role="presentation">
++      <form className={`${styles.modal} ${styles.passwordModal}`} onSubmit={handleSubmit}>
++        <span className={styles.passwordIcon}><KeyRound /></span>
++        <span className={styles.eyebrow}>Primeiro acesso</span>
++        <h2>Crie sua senha definitiva</h2>
++        <p>Por segurança, a senha inicial 1234 não poderá ser utilizada novamente.</p>
++
++        <label>
++          <span>Nova senha</span>
++          <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Mínimo de 8 caracteres" autoComplete="new-password" />
++        </label>
++        <label>
++          <span>Confirmar nova senha</span>
++          <input type="password" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} placeholder="Digite novamente" autoComplete="new-password" />
++        </label>
++
++        {error && <div className={styles.errorMessage}>{error}</div>}
++
++        <button type="submit" className={styles.primaryButton} disabled={isSaving}>
++          {isSaving ? "Salvando..." : "Salvar nova senha"}
++        </button>
++      </form>
++    </div>
++  );
++}
+diff --git a/src/pages/DefinirSenha/DefinirSenha.tsx b/src/pages/DefinirSenha/DefinirSenha.tsx
+index d8e4922..c041a99 100644
+--- a/src/pages/DefinirSenha/DefinirSenha.tsx
++++ b/src/pages/DefinirSenha/DefinirSenha.tsx
+@@ -17,11 +17,13 @@ import {
+ import {
+   getErrorMessage,
+ } from "../../utils/errors";
++import useCompany from "../../contexts/CompanyContext/useCompany";
+ 
+ import styles from "./DefinirSenha.module.css";
+ 
+ export default function DefinirSenha() {
+   const navigate = useNavigate();
++  const { companyId, refreshCompany } = useCompany();
+   const [password, setPassword] = useState("");
+   const [confirmation, setConfirmation] = useState("");
+   const [error, setError] = useState("");
+@@ -51,6 +53,24 @@ export default function DefinirSenha() {
+         throw updateError;
+       }
+ 
++      if (companyId) {
++        const { error: confirmError } = await supabase.functions.invoke(
++          "manage-company-members",
++          {
++            body: {
++              action: "confirm-password-change",
++              companyId,
++            },
++          },
++        );
++
++        if (confirmError) {
++          throw confirmError;
++        }
++
++        await refreshCompany();
++      }
++
+       navigate("/", { replace: true });
+     } catch (saveError) {
+       setError(getErrorMessage(saveError));
+diff --git a/src/pages/Login/Login.tsx b/src/pages/Login/Login.tsx
+index ab405f2..ecd6e97 100644
+--- a/src/pages/Login/Login.tsx
++++ b/src/pages/Login/Login.tsx
+@@ -20,9 +20,19 @@ import {
+   signOut,
+ } from "../../services/auth/authService";
+ 
++import {
++  controlService,
++} from "../../services/control/controlService";
++
+ import "./Login.css";
+ 
+-export default function Login() {
++type LoginProps = {
++  controlMode?: boolean;
++};
++
++export default function Login({
++  controlMode = false,
++}: LoginProps) {
+   const navigate =
+     useNavigate();
+ 
+@@ -66,25 +76,40 @@ export default function Login() {
+         return;
+       }
+ 
+-      void getCurrentCompanyMembership()
+-        .then(
+-          (
+-            membership,
+-          ) => {
+-            if (membership) {
+-              navigate("/", { replace: true });
+-              return;
+-            }
++      void (async () => {
++        const controlSession = await controlService.getSession();
++
++        if (controlSession) {
++          navigate("/controle", { replace: true });
++          return;
++        }
++
++        if (controlMode) {
++          await signOut();
++          setErrorMessage("Esta conta não possui acesso ao sistema de controle.");
++          return;
++        }
+ 
+-            void signOut();
+-            setErrorMessage("Esta conta não está vinculada a uma empresa ativa.");
+-          },
+-        );
++        const membership = await getCurrentCompanyMembership();
++
++        if (membership) {
++          navigate("/", { replace: true });
++          return;
++        }
++
++        await signOut();
++        setErrorMessage("Esta conta não está vinculada a uma empresa ativa.");
++      })()
++        .catch(() => {
++          void signOut();
++          setErrorMessage("Não foi possível validar esta conta.");
++        });
+     },
+     [
+       session,
+       isAuthLoading,
+       navigate,
++      controlMode,
+     ],
+   );
+ 
+@@ -103,15 +128,17 @@ export default function Login() {
+       !password
+     ) {
+       setErrorMessage(
+-        "Informe o e-mail e a senha.",
++        controlMode
++          ? "Informe o usuário e a senha."
++          : "Informe o e-mail e a senha.",
+       );
+ 
+       return;
+     }
+ 
+     if (
+-      password.length <
+-      6
++      !controlMode &&
++      password.length < 6
+     ) {
+       setErrorMessage(
+         "A senha deve possuir pelo menos 6 caracteres.",
+@@ -125,10 +152,20 @@ export default function Login() {
+     );
+ 
+     try {
+-      await signIn(
+-        email,
+-        password,
+-      );
++      if (controlMode) {
++        await controlService.signIn(email, password);
++        navigate("/controle", { replace: true });
++        return;
++      }
++
++      await signIn(email, password);
++
++      const controlSession = await controlService.getSession();
++
++      if (controlSession) {
++        navigate("/controle", { replace: true });
++        return;
++      }
+ 
+       const membership =
+         await getCurrentCompanyMembership();
+@@ -139,6 +176,11 @@ export default function Login() {
+         return;
+       }
+ 
++      if (membership.must_change_password) {
++        navigate("/definir-senha", { replace: true });
++        return;
++      }
++
+       navigate("/", { replace: true });
+     } catch (
+       error
+@@ -161,66 +203,69 @@ export default function Login() {
+         <aside className="login-showcase">
+           <div className="login-showcase__brand">
+             <span className="login-showcase__logo">
+-              GF
++              {controlMode ? "JC" : "GF"}
+             </span>
+ 
+             <div>
+               <strong>
+-                Gestor Fácil
++                {controlMode ? "Jiah Controle" : "Gestor Fácil"}
+               </strong>
+ 
+               <small>
+-                Controle interno
++                {controlMode ? "Administração da plataforma" : "Controle interno"}
+               </small>
+             </div>
+           </div>
+ 
+           <div className="login-showcase__content">
+             <span className="login-showcase__badge">
+-              Gestão simplificada
++              {controlMode ? "Central administrativa" : "Gestão simplificada"}
+             </span>
+ 
+             <h1>
+-              Seu negócio sob controle.
++              {controlMode ? "Gestão da plataforma." : "Seu negócio sob controle."}
+             </h1>
+ 
+             <p>
+-              Acompanhe estoque, vendas, clientes e resultados
+-              financeiros em um único lugar.
++              {controlMode
++                ? "Acompanhe empresas, usuários e o crescimento do Gestor Fácil."
++                : "Acompanhe estoque, vendas, clientes e resultados financeiros em um único lugar."}
+             </p>
+ 
+             <ul>
+               <li>
+-                Controle completo de estoque
++                {controlMode ? "Visão consolidada das empresas" : "Controle completo de estoque"}
+               </li>
+ 
+               <li>
+-                Vendas rápidas e organizadas
++                {controlMode ? "Cadastro seguro de novos clientes" : "Vendas rápidas e organizadas"}
+               </li>
+ 
+               <li>
+-                Informações protegidas por empresa
++                {controlMode ? "Operações administrativas auditáveis" : "Informações protegidas por empresa"}
+               </li>
+             </ul>
+           </div>
+ 
+           <p className="login-showcase__footer">
+-            Sistema de controle interno
++            {controlMode ? "Acesso exclusivo Jiah" : "Sistema de controle interno"}
+           </p>
+         </aside>
+ 
+         <section className="login-card">
+           <header className="login-card__header">
+             <span className="login-card__eyebrow">
+-              Acesso ao sistema
++              {controlMode ? "Acesso administrativo" : "Acesso ao sistema"}
+             </span>
+ 
+             <h2>
+-              Bem-vindo novamente
++              {controlMode ? "Sistema de controle" : "Bem-vindo novamente"}
+             </h2>
+ 
+             <p>
+-              Informe seus dados para acessar o painel.
++              {controlMode
++                ? "Informe as credenciais exclusivas da Jiah."
++                : "Informe seus dados para acessar o painel."}
+             </p>
+           </header>
+ 
+@@ -231,10 +276,10 @@ export default function Login() {
+             }
+           >
+             <label>
+-              E-mail
++              {controlMode ? "Usuário" : "E-mail"}
+ 
+               <input
+-                type="email"
++                type={controlMode ? "text" : "email"}
+                 value={email}
+                 onChange={(
+                   event,
+@@ -244,8 +289,8 @@ export default function Login() {
+                       .value,
+                   )
+                 }
+-                autoComplete="email"
+-                placeholder="seu@email.com"
++                autoComplete={controlMode ? "username" : "email"}
++                placeholder={controlMode ? "Seu usuário" : "seu@email.com"}
+                 disabled={
+                   isSubmitting
+                 }
+@@ -269,7 +314,7 @@ export default function Login() {
+                   )
+                 }
+                 autoComplete="current-password"
+-                placeholder="Mínimo de 6 caracteres"
++                placeholder={controlMode ? "Sua senha" : "Mínimo de 6 caracteres"}
+                 disabled={
+                   isSubmitting
+                 }
+@@ -291,12 +336,16 @@ export default function Login() {
+             >
+               {isSubmitting
+                 ? "Aguarde..."
+-                : "Entrar no sistema"}
++                : controlMode
++                  ? "Entrar no controle"
++                  : "Entrar no sistema"}
+             </button>
+           </form>
+ 
+           <footer className="login-card__footer">
+-            Seus dados são protegidos e separados por empresa.
++            {controlMode
++              ? "Área restrita à administração da plataforma."
++              : "Seus dados são protegidos e separados por empresa."}
+           </footer>
+         </section>
+       </section>
+diff --git a/src/routes/AppRoutes.tsx b/src/routes/AppRoutes.tsx
+index 5ce64ef..d92f499 100644
+--- a/src/routes/AppRoutes.tsx
++++ b/src/routes/AppRoutes.tsx
+@@ -4,6 +4,7 @@ import {
+ } from "react-router-dom";
+ 
+ import ProtectedRoute from "../components/auth/ProtectedRoute/ProtectedRoute";
++import ControlProtectedRoute from "../components/auth/ControlProtectedRoute/ControlProtectedRoute";
+ import RoleProtectedRoute from "../components/auth/RoleProtectedRoute/RoleProtectedRoute";
+ import AccessDenied from "../components/auth/AccessDenied/AccessDenied";
+ 
+@@ -22,6 +23,7 @@ import Relatorios from "../pages/Relatorios/Relatorios";
+ import Vendas from "../pages/Vendas/Vendas";
+ import DefinirSenha from "../pages/DefinirSenha/DefinirSenha";
+ import NotFound from "../pages/NotFound/NotFound";
++import Controle from "../pages/Controle/Controle";
+ 
+ export default function AppRoutes() {
+   return (
+@@ -33,6 +35,18 @@ export default function AppRoutes() {
+         }
+       />
+ 
++      <Route
++        path="controle/login"
++        element={<Login controlMode />}
++      />
++
++      <Route element={<ControlProtectedRoute />}>
++        <Route
++          path="controle"
++          element={<Controle />}
++        />
++      </Route>
++
+       <Route
+         element={
+           <ProtectedRoute
+diff --git a/src/services/auth/authService.ts b/src/services/auth/authService.ts
+index 51bc411..0f6b490 100644
+--- a/src/services/auth/authService.ts
++++ b/src/services/auth/authService.ts
+@@ -18,6 +18,7 @@ export type CurrentCompanyMembership = {
+ 
+   full_name: string;
+   internal_code: number;
++  must_change_password: boolean;
+ };
+ 
+ type BootstrapCompanyInput = {
+@@ -123,7 +124,7 @@ export async function getCurrentCompanyMembership():
+         "company_members",
+       )
+       .select(
+-        "company_id, role, full_name, internal_code",
++        "company_id, role, full_name, internal_code, must_change_password",
+       )
+       .eq(
+         "active",
+@@ -155,6 +156,9 @@ export async function getCurrentCompanyMembership():
+ 
+     internal_code:
+       data.internal_code,
++
++    must_change_password:
++      data.must_change_password,
+   };
+ }
+ 
+diff --git a/src/services/control/controlService.ts b/src/services/control/controlService.ts
+new file mode 100644
+index 0000000..9157b5d
+--- /dev/null
++++ b/src/services/control/controlService.ts
+@@ -0,0 +1,168 @@
++import {
++  supabase,
++} from "../../lib/supabase";
++
++import type {
++  ControlCompanyStatus,
++  ControlCompanyUser,
++  ControlDashboardData,
++  ControlSession,
++  CreateControlCompanyInput,
++  InviteControlEmployeeInput,
++} from "../../domain/control/Control";
++
++type RpcResult<T> = Promise<{
++  data: T | null;
++  error: { message: string } | null;
++}>;
++
++type ControlRpc = (
++  name:
++    | "get_control_session"
++    | "control_get_dashboard"
++    | "control_get_company_users",
++  parameters?: Record<string, unknown>,
++) => RpcResult<unknown>;
++
++async function invokeControl(
++  body: Record<string, unknown>,
++) {
++  const {
++    data,
++    error,
++  } = await supabase.functions.invoke(
++    "control-admin",
++    { body },
++  );
++
++  if (error) {
++    let message = error.message;
++    const context = (error as { context?: Response }).context;
++
++    if (context) {
++      try {
++        const payload = await context.clone().json() as { error?: string };
++        message = payload.error ?? message;
++      } catch {
++        // Mantém a mensagem original quando não existe JSON na resposta.
++      }
++    }
++
++    throw new Error(message);
++  }
++
++  if (data && typeof data === "object" && "error" in data) {
++    throw new Error(String(data.error));
++  }
++
++  return data as Record<string, unknown>;
++}
++
++async function rpc<T>(
++  name: Parameters<ControlRpc>[0],
++  parameters?: Record<string, unknown>,
++) {
++  const execute = supabase.rpc.bind(supabase) as unknown as ControlRpc;
++  const { data, error } = await execute(name, parameters);
++
++  if (error) {
++    throw new Error(error.message);
++  }
++
++  return data as T | null;
++}
++
++export const controlService = {
++  async signIn(username: string, password: string) {
++    const result = await invokeControl({
++      action: "login",
++      username: username.trim().toLowerCase(),
++      password,
++    });
++
++    const tokenHash = String(result.tokenHash ?? "");
++
++    if (!tokenHash) {
++      throw new Error("Não foi possível iniciar a sessão de controle.");
++    }
++
++    const {
++      data,
++      error,
++    } = await supabase.auth.verifyOtp({
++      token_hash: tokenHash,
++      type: "email",
++    });
++
++    if (error || !data.session) {
++      throw error ?? new Error("Sessão de controle não criada.");
++    }
++
++    return data.session;
++  },
++
++  async getSession() {
++    return rpc<ControlSession>("get_control_session");
++  },
++
++  async getDashboard() {
++    const data = await rpc<ControlDashboardData>("control_get_dashboard");
++
++    if (!data) {
++      throw new Error("Não foi possível carregar o sistema de controle.");
++    }
++
++    return data;
++  },
++
++  async getCompanyUsers(companyId: string) {
++    return (
++      await rpc<ControlCompanyUser[]>(
++        "control_get_company_users",
++        { p_company_id: companyId },
++      )
++    ) ?? [];
++  },
++
++  async createCompany(input: CreateControlCompanyInput) {
++    return invokeControl({
++      action: "create-company",
++      ...input,
++      redirectTo: `${window.location.origin}/definir-senha`,
++    });
++  },
++
++  async inviteCompanyUser(input: InviteControlEmployeeInput) {
++    return invokeControl({
++      action: "invite-company-user",
++      ...input,
++      redirectTo: `${window.location.origin}/definir-senha`,
++    });
++  },
++
++  async setCompanyStatus(
++    companyId: string,
++    status: ControlCompanyStatus,
++  ) {
++    return invokeControl({
++      action: "set-company-status",
++      companyId,
++      status,
++    });
++  },
++
++  async requestPasswordChange(memberId: string) {
++    return invokeControl({
++      action: "request-password-change",
++      memberId,
++      redirectTo: `${window.location.origin}/definir-senha`,
++    });
++  },
++
++  async changePassword(password: string) {
++    return invokeControl({
++      action: "change-password",
++      password,
++    });
++  },
++};
+diff --git a/src/types/database.types.ts b/src/types/database.types.ts
+index 9b75375..a70fdc0 100644
+--- a/src/types/database.types.ts
++++ b/src/types/database.types.ts
+@@ -133,6 +133,8 @@ export type Database = {
+           full_name: string | null
+           id: string
+           internal_code: number
++          must_change_password: boolean
++          password_change_requested_at: string | null
+           invited_at: string | null
+           invited_by: string | null
+           role: Database["public"]["Enums"]["company_member_role"]
+@@ -147,6 +149,8 @@ export type Database = {
+           full_name?: string | null
+           id?: string
+           internal_code?: number
++          must_change_password?: boolean
++          password_change_requested_at?: string | null
+           invited_at?: string | null
+           invited_by?: string | null
+           role?: Database["public"]["Enums"]["company_member_role"]
+@@ -161,6 +165,8 @@ export type Database = {
+           full_name?: string | null
+           id?: string
+           internal_code?: number
++          must_change_password?: boolean
++          password_change_requested_at?: string | null
+           invited_at?: string | null
+           invited_by?: string | null
+           role?: Database["public"]["Enums"]["company_member_role"]
+diff --git a/supabase/functions/control-admin/index.ts b/supabase/functions/control-admin/index.ts
+new file mode 100644
+index 0000000..395c49c
+--- /dev/null
++++ b/supabase/functions/control-admin/index.ts
+@@ -0,0 +1,496 @@
++import "jsr:@supabase/functions-js/edge-runtime.d.ts";
++import {
++  createClient,
++} from "npm:@supabase/supabase-js@2.116.0";
++
++const corsHeaders = {
++  "Access-Control-Allow-Origin": "*",
++  "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
++};
++
++type JsonRecord = Record<string, unknown>;
++
++function json(body: unknown, status = 200) {
++  return new Response(JSON.stringify(body), {
++    status,
++    headers: {
++      ...corsHeaders,
++      "Content-Type": "application/json",
++      "Cache-Control": "no-store",
++    },
++  });
++}
++
++function normalizeDocument(value: unknown) {
++  const document = String(value ?? "").replace(/\D/g, "");
++  return document || null;
++}
++
++function isEmail(value: string) {
++  return /^\S+@\S+\.\S+$/.test(value);
++}
++
++const employeeRoles = new Set([
++  "admin",
++  "manager",
++  "cashier",
++  "viewer",
++]);
++
++Deno.serve(async (request) => {
++  if (request.method === "OPTIONS") {
++    return new Response("ok", { headers: corsHeaders });
++  }
++
++  if (request.method !== "POST") {
++    return json({ error: "Método não permitido." }, 405);
++  }
++
++  const supabaseUrl = Deno.env.get("SUPABASE_URL");
++  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
++
++  if (!supabaseUrl || !serviceRoleKey) {
++    return json({ error: "Configuração segura indisponível." }, 500);
++  }
++
++  const admin = createClient(supabaseUrl, serviceRoleKey, {
++    auth: {
++      autoRefreshToken: false,
++      persistSession: false,
++    },
++  });
++
++  try {
++    const body = await request.json() as JsonRecord;
++    const action = String(body.action ?? "");
++
++    if (action === "login") {
++      const username = String(body.username ?? "").trim().toLowerCase();
++      const password = String(body.password ?? "");
++
++      if (!username || !password) {
++        return json({ error: "Informe o usuário e a senha." }, 400);
++      }
++
++      const {
++        data: credential,
++        error: credentialError,
++      } = await admin.rpc("control_verify_credentials", {
++        p_username: username,
++        p_password: password,
++      });
++
++      if (credentialError) {
++        throw credentialError;
++      }
++
++      if (!credential) {
++        return json({ error: "Usuário ou senha inválidos." }, 401);
++      }
++
++      if (credential.locked) {
++        return json({
++          error: "Acesso temporariamente bloqueado. Tente novamente em 15 minutos.",
++        }, 429);
++      }
++
++      let userId = credential.userId as string | null;
++      const email = String(credential.email);
++
++      if (!userId) {
++        const bootstrapPassword = `${crypto.randomUUID()}Aa1!`;
++        const {
++          data: createData,
++          error: createError,
++        } = await admin.auth.admin.createUser({
++          email,
++          password: bootstrapPassword,
++          email_confirm: true,
++          app_metadata: {
++            account_type: "control_admin",
++          },
++          user_metadata: {
++            full_name: "Administrador Jiah",
++          },
++        });
++
++        if (createError || !createData.user) {
++          throw createError ?? new Error("Não foi possível inicializar o administrador.");
++        }
++
++        userId = createData.user.id;
++
++        const {
++          error: linkError,
++        } = await admin.rpc("control_link_bootstrap_user", {
++          p_control_admin_id: credential.id,
++          p_user_id: userId,
++        });
++
++        if (linkError) {
++          await admin.auth.admin.deleteUser(userId);
++          throw linkError;
++        }
++      }
++
++      const {
++        data: linkData,
++        error: linkError,
++      } = await admin.auth.admin.generateLink({
++        type: "magiclink",
++        email,
++      });
++
++      if (linkError || !linkData.properties?.hashed_token) {
++        throw linkError ?? new Error("Não foi possível gerar a sessão de controle.");
++      }
++
++      await admin.rpc("control_mark_login", {
++        p_user_id: userId,
++      });
++
++      return json({
++        email,
++        tokenHash: linkData.properties.hashed_token,
++        mustChangePassword: credential.mustChangePassword === true,
++      });
++    }
++
++    const authorization = request.headers.get("Authorization");
++    const token = authorization?.replace(/^Bearer\s+/i, "");
++
++    if (!token) {
++      return json({ error: "Sessão não encontrada." }, 401);
++    }
++
++    const {
++      data: userData,
++      error: userError,
++    } = await admin.auth.getUser(token);
++
++    if (userError || !userData.user) {
++      return json({ error: "Sessão inválida ou expirada." }, 401);
++    }
++
++    const {
++      data: isControlAdmin,
++      error: permissionError,
++    } = await admin.rpc("control_is_admin_user", {
++      p_user_id: userData.user.id,
++    });
++
++    if (permissionError || !isControlAdmin) {
++      return json({ error: "Acesso restrito ao sistema de controle." }, 403);
++    }
++
++    if (action === "change-password") {
++      const password = String(body.password ?? "");
++
++      if (password.length < 8) {
++        return json({ error: "A nova senha deve possuir pelo menos 8 caracteres." }, 400);
++      }
++
++      const {
++        error: authUpdateError,
++      } = await admin.auth.admin.updateUserById(
++        userData.user.id,
++        { password },
++      );
++
++      if (authUpdateError) {
++        throw authUpdateError;
++      }
++
++      const {
++        error: passwordError,
++      } = await admin.rpc("control_set_password", {
++        p_user_id: userData.user.id,
++        p_password: password,
++      });
++
++      if (passwordError) {
++        throw passwordError;
++      }
++
++      return json({ success: true });
++    }
++
++    if (action === "create-company") {
++      const legalName = String(body.legalName ?? "").trim();
++      const tradeName = String(body.tradeName ?? "").trim();
++      const document = normalizeDocument(body.document);
++      const ownerName = String(body.ownerName ?? "").trim();
++      const ownerEmail = String(body.ownerEmail ?? "").trim().toLowerCase();
++      const redirectTo = String(body.redirectTo ?? "");
++
++      if (legalName.length < 2 || tradeName.length < 2) {
++        return json({ error: "Informe a razão social e o nome fantasia." }, 400);
++      }
++
++      if (ownerName.length < 3 || !isEmail(ownerEmail)) {
++        return json({ error: "Informe o nome e o e-mail do responsável." }, 400);
++      }
++
++      if (document && ![11, 14].includes(document.length)) {
++        return json({ error: "Informe um CPF ou CNPJ válido." }, 400);
++      }
++
++      const {
++        data: existingCompany,
++      } = document
++        ? await admin.from("companies").select("id").eq("document", document).maybeSingle()
++        : { data: null };
++
++      if (existingCompany) {
++        return json({ error: "Já existe uma empresa com este documento." }, 409);
++      }
++
++      const {
++        data: usersData,
++        error: usersError,
++      } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
++
++      if (usersError) {
++        throw usersError;
++      }
++
++      if (usersData.users.some((user) => user.email?.toLowerCase() === ownerEmail)) {
++        return json({ error: "Este e-mail já pertence a outro usuário." }, 409);
++      }
++
++      const inviteOptions: {
++        data: { full_name: string };
++        redirectTo?: string;
++      } = {
++        data: { full_name: ownerName },
++      };
++
++      if (/^https:\/\//i.test(redirectTo) || /^http:\/\/localhost(?::\d+)?/i.test(redirectTo)) {
++        inviteOptions.redirectTo = redirectTo;
++      }
++
++      const {
++        data: inviteData,
++        error: inviteError,
++      } = await admin.auth.admin.inviteUserByEmail(ownerEmail, inviteOptions);
++
++      if (inviteError || !inviteData.user) {
++        throw inviteError ?? new Error("Não foi possível convidar o responsável.");
++      }
++
++      const {
++        data: company,
++        error: companyError,
++      } = await admin.from("companies").insert({
++        legal_name: legalName,
++        trade_name: tradeName,
++        document,
++        email: ownerEmail,
++        status: "active",
++      }).select("id").single();
++
++      if (companyError || !company) {
++        await admin.auth.admin.deleteUser(inviteData.user.id);
++        throw companyError ?? new Error("Não foi possível cadastrar a empresa.");
++      }
++
++      const {
++        error: membershipError,
++      } = await admin.from("company_members").insert({
++        company_id: company.id,
++        user_id: inviteData.user.id,
++        role: "owner",
++        active: true,
++        full_name: ownerName,
++        email: ownerEmail,
++        invited_at: new Date().toISOString(),
++        invited_by: userData.user.id,
++        must_change_password: true,
++      });
++
++      if (membershipError) {
++        await admin.from("companies").delete().eq("id", company.id);
++        await admin.auth.admin.deleteUser(inviteData.user.id);
++        throw membershipError;
++      }
++
++      return json({ success: true, companyId: company.id });
++    }
++
++    if (action === "invite-company-user") {
++      const companyId = String(body.companyId ?? "");
++      const fullName = String(body.fullName ?? "").trim();
++      const email = String(body.email ?? "").trim().toLowerCase();
++      const role = String(body.role ?? "");
++      const redirectTo = String(body.redirectTo ?? "");
++
++      if (!companyId || fullName.length < 3 || !isEmail(email)) {
++        return json({ error: "Informe a empresa, o nome e um e-mail válido." }, 400);
++      }
++
++      if (!employeeRoles.has(role)) {
++        return json({ error: "A função selecionada é inválida." }, 400);
++      }
++
++      const {
++        data: company,
++        error: companyError,
++      } = await admin.from("companies")
++        .select("id, status")
++        .eq("id", companyId)
++        .maybeSingle();
++
++      if (companyError || !company) {
++        return json({ error: "Empresa não encontrada." }, 404);
++      }
++
++      if (company.status !== "active") {
++        return json({ error: "Reative a empresa antes de adicionar um funcionário." }, 409);
++      }
++
++      const {
++        data: existingMembership,
++        error: membershipLookupError,
++      } = await admin.from("company_members")
++        .select("id")
++        .ilike("email", email)
++        .maybeSingle();
++
++      if (membershipLookupError) {
++        throw membershipLookupError;
++      }
++
++      if (existingMembership) {
++        return json({ error: "Este e-mail já pertence a um usuário cadastrado." }, 409);
++      }
++
++      const {
++        data: usersData,
++        error: usersError,
++      } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
++
++      if (usersError) {
++        throw usersError;
++      }
++
++      if (usersData.users.some((user) => user.email?.toLowerCase() === email)) {
++        return json({ error: "Este e-mail já possui uma conta de acesso." }, 409);
++      }
++
++      const inviteOptions: {
++        data: { full_name: string };
++        redirectTo?: string;
++      } = {
++        data: { full_name: fullName },
++      };
++
++      if (/^https:\/\//i.test(redirectTo) || /^http:\/\/localhost(?::\d+)?/i.test(redirectTo)) {
++        inviteOptions.redirectTo = redirectTo;
++      }
++
++      const {
++        data: inviteData,
++        error: inviteError,
++      } = await admin.auth.admin.inviteUserByEmail(email, inviteOptions);
++
++      if (inviteError || !inviteData.user) {
++        throw inviteError ?? new Error("Não foi possível enviar o convite.");
++      }
++
++      const {
++        error: insertError,
++      } = await admin.from("company_members").insert({
++        company_id: companyId,
++        user_id: inviteData.user.id,
++        full_name: fullName,
++        email,
++        role,
++        active: true,
++        invited_at: new Date().toISOString(),
++        invited_by: userData.user.id,
++        must_change_password: true,
++      });
++
++      if (insertError) {
++        await admin.auth.admin.deleteUser(inviteData.user.id);
++        throw insertError;
++      }
++
++      return json({ success: true });
++    }
++
++    if (action === "set-company-status") {
++      const companyId = String(body.companyId ?? "");
++      const status = String(body.status ?? "");
++
++      if (!companyId || !["active", "inactive"].includes(status)) {
++        return json({ error: "Empresa ou status inválido." }, 400);
++      }
++
++      const {
++        error: updateError,
++      } = await admin.from("companies")
++        .update({ status, updated_at: new Date().toISOString() })
++        .eq("id", companyId);
++
++      if (updateError) {
++        throw updateError;
++      }
++
++      return json({ success: true });
++    }
++
++    if (action === "request-password-change") {
++      const memberId = String(body.memberId ?? "");
++      const redirectTo = String(body.redirectTo ?? "");
++
++      const {
++        data: member,
++        error: memberError,
++      } = await admin.from("company_members")
++        .select("id, email")
++        .eq("id", memberId)
++        .maybeSingle();
++
++      if (memberError || !member) {
++        return json({ error: "Usuário não encontrado." }, 404);
++      }
++
++      const {
++        error: flagError,
++      } = await admin.from("company_members").update({
++        must_change_password: true,
++        password_change_requested_at: new Date().toISOString(),
++        updated_at: new Date().toISOString(),
++      }).eq("id", memberId);
++
++      if (flagError) {
++        throw flagError;
++      }
++
++      if (member.email && !member.email.endsWith(".internal")) {
++        const options = /^https?:\/\//i.test(redirectTo)
++          ? { redirectTo }
++          : undefined;
++
++        const {
++          error: resetError,
++        } = await admin.auth.resetPasswordForEmail(member.email, options);
++
++        if (resetError) {
++          throw resetError;
++        }
++      }
++
++      return json({ success: true });
++    }
++
++    return json({ error: "Ação inválida." }, 400);
++  } catch (error) {
++    const message = error instanceof Error
++      ? error.message
++      : "Não foi possível concluir a operação.";
++
++    return json({ error: message }, 500);
++  }
++});
+diff --git a/supabase/functions/manage-company-members/index.ts b/supabase/functions/manage-company-members/index.ts
+index e2df2fc..0f5a039 100644
+--- a/supabase/functions/manage-company-members/index.ts
++++ b/supabase/functions/manage-company-members/index.ts
+@@ -78,11 +78,30 @@ Deno.serve(async (request) => {
+       .eq("user_id", userData.user.id)
+       .maybeSingle();
+ 
+-    if (
+-      callerError ||
+-      !callerMembership?.active ||
+-      !["owner", "admin"].includes(callerMembership.role)
+-    ) {
++    if (callerError || !callerMembership?.active) {
++      return response(
++        { error: "Seu acesso a esta empresa não está ativo." },
++        403,
++      );
++    }
++
++    if (body.action === "confirm-password-change") {
++      const {
++        error: confirmError,
++      } = await admin.from("company_members").update({
++        must_change_password: false,
++        password_change_requested_at: null,
++        updated_at: new Date().toISOString(),
++      }).eq("id", callerMembership.id);
++
++      if (confirmError) {
++        throw confirmError;
++      }
++
++      return response({ success: true });
++    }
++
++    if (!["owner", "admin"].includes(callerMembership.role)) {
+       return response(
+         { error: "Você não possui permissão para gerenciar funcionários." },
+         403,
+diff --git a/supabase/migrations/20261023010231_control_center_jiah.sql b/supabase/migrations/20261023010231_control_center_jiah.sql
+new file mode 100644
+index 0000000..e705e43
+--- /dev/null
++++ b/supabase/migrations/20261023010231_control_center_jiah.sql
+@@ -0,0 +1,458 @@
++create extension if not exists pgcrypto with schema extensions;
++
++insert into public.companies (
++  legal_name,
++  trade_name,
++  status
++)
++select
++  'Jiah',
++  'Jiah',
++  'active'::public.registration_status
++where not exists (
++  select 1
++  from public.companies
++  where lower(trade_name) = 'jiah'
++);
++
++alter table public.company_members
++  add column if not exists must_change_password boolean not null default false,
++  add column if not exists password_change_requested_at timestamptz;
++
++create table if not exists private.control_admins (
++  id uuid primary key default gen_random_uuid(),
++  company_id uuid not null references public.companies(id) on delete restrict,
++  user_id uuid unique references auth.users(id) on delete set null,
++  username text not null,
++  email text not null,
++  password_hash text not null,
++  must_change_password boolean not null default true,
++  failed_attempts integer not null default 0 check (failed_attempts >= 0),
++  locked_until timestamptz,
++  last_login_at timestamptz,
++  created_at timestamptz not null default now(),
++  updated_at timestamptz not null default now(),
++  constraint control_admins_username_format_check
++    check (username = lower(trim(username)) and username ~ '^[a-z0-9._-]{3,40}$')
++);
++
++create unique index if not exists control_admins_username_idx
++  on private.control_admins(lower(username));
++
++alter table private.control_admins enable row level security;
++revoke all on table private.control_admins from public, anon, authenticated;
++
++insert into private.control_admins (
++  company_id,
++  username,
++  email,
++  password_hash,
++  must_change_password
++)
++select
++  c.id,
++  'jiah',
++  'jiah@control.gestorfacil.internal',
++  extensions.crypt('1234', extensions.gen_salt('bf', 10)),
++  true
++from public.companies c
++where lower(c.trade_name) = 'jiah'
++  and not exists (
++    select 1
++    from private.control_admins ca
++    where lower(ca.username) = 'jiah'
++  )
++order by c.created_at
++limit 1;
++
++create or replace function private.is_control_admin_user(
++  p_user_id uuid
++) returns boolean
++language sql
++stable
++security definer
++set search_path = ''
++as $$
++  select exists (
++    select 1
++    from private.control_admins ca
++    where ca.user_id = p_user_id
++  );
++$$;
++
++revoke all on function private.is_control_admin_user(uuid)
++  from public, anon, authenticated;
++grant execute on function private.is_control_admin_user(uuid)
++  to service_role;
++
++create or replace function public.control_is_admin_user(
++  p_user_id uuid
++) returns boolean
++language sql
++stable
++security definer
++set search_path = ''
++as $$
++  select private.is_control_admin_user(p_user_id);
++$$;
++
++revoke all on function public.control_is_admin_user(uuid)
++  from public, anon, authenticated;
++grant execute on function public.control_is_admin_user(uuid)
++  to service_role;
++
++create or replace function public.control_verify_credentials(
++  p_username text,
++  p_password text
++) returns jsonb
++language plpgsql
++security definer
++set search_path = ''
++as $$
++declare
++  v_admin private.control_admins;
++begin
++  select *
++  into v_admin
++  from private.control_admins
++  where lower(username) = lower(trim(p_username))
++  for update;
++
++  if v_admin.id is null then
++    perform pg_sleep(0.35);
++    return null;
++  end if;
++
++  if v_admin.locked_until is not null
++     and v_admin.locked_until > now() then
++    return jsonb_build_object(
++      'locked', true,
++      'lockedUntil', v_admin.locked_until
++    );
++  end if;
++
++  if v_admin.password_hash <> extensions.crypt(p_password, v_admin.password_hash) then
++    update private.control_admins
++    set
++      failed_attempts = case
++        when failed_attempts >= 4 then 0
++        else failed_attempts + 1
++      end,
++      locked_until = case
++        when failed_attempts >= 4 then now() + interval '15 minutes'
++        else null
++      end,
++      updated_at = now()
++    where id = v_admin.id;
++
++    return null;
++  end if;
++
++  update private.control_admins
++  set
++    failed_attempts = 0,
++    locked_until = null,
++    updated_at = now()
++  where id = v_admin.id;
++
++  return jsonb_build_object(
++    'id', v_admin.id,
++    'companyId', v_admin.company_id,
++    'userId', v_admin.user_id,
++    'username', v_admin.username,
++    'email', v_admin.email,
++    'mustChangePassword', v_admin.must_change_password,
++    'locked', false
++  );
++end;
++$$;
++
++revoke all on function public.control_verify_credentials(text, text)
++  from public, anon, authenticated;
++grant execute on function public.control_verify_credentials(text, text)
++  to service_role;
++
++create or replace function public.control_link_bootstrap_user(
++  p_control_admin_id uuid,
++  p_user_id uuid
++) returns void
++language plpgsql
++security definer
++set search_path = ''
++as $$
++declare
++  v_admin private.control_admins;
++begin
++  select *
++  into v_admin
++  from private.control_admins
++  where id = p_control_admin_id
++  for update;
++
++  if v_admin.id is null then
++    raise exception 'Administrador de controle não encontrado.';
++  end if;
++
++  if v_admin.user_id is not null then
++    raise exception 'Administrador de controle já inicializado.';
++  end if;
++
++  update private.control_admins
++  set user_id = p_user_id, updated_at = now()
++  where id = v_admin.id;
++
++  insert into public.company_members (
++    company_id,
++    user_id,
++    role,
++    active,
++    full_name,
++    email,
++    invited_at,
++    must_change_password
++  ) values (
++    v_admin.company_id,
++    p_user_id,
++    'owner'::public.company_member_role,
++    true,
++    'Administrador Jiah',
++    v_admin.email,
++    now(),
++    true
++  );
++end;
++$$;
++
++revoke all on function public.control_link_bootstrap_user(uuid, uuid)
++  from public, anon, authenticated;
++grant execute on function public.control_link_bootstrap_user(uuid, uuid)
++  to service_role;
++
++create or replace function public.control_set_password(
++  p_user_id uuid,
++  p_password text
++) returns void
++language plpgsql
++security definer
++set search_path = ''
++as $$
++begin
++  if char_length(p_password) < 8 then
++    raise exception 'A nova senha deve possuir pelo menos 8 caracteres.';
++  end if;
++
++  update private.control_admins
++  set
++    password_hash = extensions.crypt(
++      p_password,
++      extensions.gen_salt('bf', 12)
++    ),
++    must_change_password = false,
++    failed_attempts = 0,
++    locked_until = null,
++    updated_at = now()
++  where user_id = p_user_id;
++
++  if not found then
++    raise exception 'Administrador de controle não encontrado.';
++  end if;
++
++  update public.company_members
++  set
++    must_change_password = false,
++    password_change_requested_at = null,
++    updated_at = now()
++  where user_id = p_user_id;
++end;
++$$;
++
++revoke all on function public.control_set_password(uuid, text)
++  from public, anon, authenticated;
++grant execute on function public.control_set_password(uuid, text)
++  to service_role;
++
++create or replace function public.control_mark_login(
++  p_user_id uuid
++) returns void
++language sql
++security definer
++set search_path = ''
++as $$
++  update private.control_admins
++  set last_login_at = now(), updated_at = now()
++  where user_id = p_user_id;
++$$;
++
++revoke all on function public.control_mark_login(uuid)
++  from public, anon, authenticated;
++grant execute on function public.control_mark_login(uuid)
++  to service_role;
++
++create or replace function public.get_control_session()
++returns jsonb
++language sql
++stable
++security definer
++set search_path = ''
++as $$
++  select jsonb_build_object(
++    'username', ca.username,
++    'companyId', ca.company_id,
++    'mustChangePassword', ca.must_change_password,
++    'lastLoginAt', ca.last_login_at
++  )
++  from private.control_admins ca
++  where ca.user_id = (select auth.uid());
++$$;
++
++revoke all on function public.get_control_session()
++  from public, anon;
++grant execute on function public.get_control_session()
++  to authenticated;
++
++create or replace function public.control_get_dashboard()
++returns jsonb
++language plpgsql
++stable
++security definer
++set search_path = ''
++as $$
++declare
++  v_result jsonb;
++begin
++  if not exists (
++    select 1
++    from private.control_admins ca
++    where ca.user_id = (select auth.uid())
++  ) then
++    raise exception 'Acesso restrito ao sistema de controle.';
++  end if;
++
++  select jsonb_build_object(
++    'overview', jsonb_build_object(
++      'companies', (select count(*) from public.companies),
++      'activeCompanies', (
++        select count(*) from public.companies where status = 'active'
++      ),
++      'users', (select count(*) from public.company_members),
++      'sales', (select count(*) from public.sales),
++      'salesTotal', coalesce((
++        select sum(total) from public.sales where status = 'completed'
++      ), 0),
++      'products', (select count(*) from public.products)
++    ),
++    'companies', coalesce((
++      select jsonb_agg(company_row order by company_row->>'tradeName')
++      from (
++        select jsonb_build_object(
++          'id', c.id,
++          'legalName', c.legal_name,
++          'tradeName', c.trade_name,
++          'document', c.document,
++          'email', c.email,
++          'phone', c.phone,
++          'city', c.city,
++          'state', c.state,
++          'status', c.status,
++          'createdAt', c.created_at,
++          'users', (select count(*) from public.company_members cm where cm.company_id = c.id),
++          'products', (select count(*) from public.products p where p.company_id = c.id),
++          'sales', (select count(*) from public.sales s where s.company_id = c.id),
++          'salesTotal', coalesce((
++            select sum(s.total)
++            from public.sales s
++            where s.company_id = c.id and s.status = 'completed'
++          ), 0)
++        ) as company_row
++        from public.companies c
++      ) rows
++    ), '[]'::jsonb),
++    'growth', coalesce((
++      select jsonb_agg(jsonb_build_object(
++        'month', to_char(month_start, 'YYYY-MM'),
++        'companies', (
++          select count(*)
++          from public.companies c
++          where date_trunc('month', c.created_at) <= month_start
++        ),
++        'sales', (
++          select count(*)
++          from public.sales s
++          where date_trunc('month', s.created_at) = month_start
++        )
++      ) order by month_start)
++      from generate_series(
++        date_trunc('month', now()) - interval '5 months',
++        date_trunc('month', now()),
++        interval '1 month'
++      ) month_start
++    ), '[]'::jsonb),
++    'database', jsonb_build_object(
++      'companies', (select count(*) from public.companies),
++      'members', (select count(*) from public.company_members),
++      'products', (select count(*) from public.products),
++      'customers', (select count(*) from public.customers),
++      'sales', (select count(*) from public.sales),
++      'saleItems', (select count(*) from public.sale_items),
++      'financialTransactions', (select count(*) from public.financial_transactions),
++      'inventoryMovements', (select count(*) from public.inventory_movements),
++      'purchases', (select count(*) from public.purchases),
++      'suppliers', (select count(*) from public.suppliers)
++    )
++  ) into v_result;
++
++  return v_result;
++end;
++$$;
++
++revoke all on function public.control_get_dashboard()
++  from public, anon;
++grant execute on function public.control_get_dashboard()
++  to authenticated;
++
++create or replace function public.control_get_company_users(
++  p_company_id uuid
++) returns jsonb
++language plpgsql
++stable
++security definer
++set search_path = ''
++as $$
++declare
++  v_result jsonb;
++begin
++  if not exists (
++    select 1
++    from private.control_admins ca
++    where ca.user_id = (select auth.uid())
++  ) then
++    raise exception 'Acesso restrito ao sistema de controle.';
++  end if;
++
++  select coalesce(jsonb_agg(jsonb_build_object(
++    'id', cm.id,
++    'userId', cm.user_id,
++    'internalCode', cm.internal_code,
++    'fullName', cm.full_name,
++    'email', cm.email,
++    'role', cm.role,
++    'active', cm.active,
++    'mustChangePassword', cm.must_change_password,
++    'createdAt', cm.created_at
++  ) order by cm.full_name), '[]'::jsonb)
++  into v_result
++  from public.company_members cm
++  where cm.company_id = p_company_id;
++
++  return v_result;
++end;
++$$;
++
++revoke all on function public.control_get_company_users(uuid)
++  from public, anon;
++grant execute on function public.control_get_company_users(uuid)
++  to authenticated;
++
++create index if not exists company_members_must_change_password_idx
++  on public.company_members(user_id)
++  where must_change_password;
