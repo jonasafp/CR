@@ -16,8 +16,24 @@ const executableName =
     process.execPath,
   ).toLowerCase();
 
+const variantArgument =
+  process.argv.find(
+    (argument) =>
+      argument.startsWith(
+        "--app-variant=",
+      ),
+  );
+
+const requestedVariant =
+  variantArgument
+    ?.split("=")[1];
+
 const appVariant =
-  executableName.includes("controle")
+  requestedVariant === "control" ||
+  (
+    requestedVariant !== "client" &&
+    executableName.includes("controle")
+  )
     ? "control"
     : "client";
 
@@ -81,11 +97,96 @@ function isAllowedAppUrl(value) {
 function getSecureWebPreferences() {
   return {
     contextIsolation: true,
-    devTools: false,
+    devTools: !app.isPackaged,
     nodeIntegration: false,
     sandbox: true,
     preload: preloadPath,
   };
+}
+
+const LOGIN_WINDOW_SIZE = {
+  width: 1040,
+  height: 688,
+};
+
+function isLoginPath(
+  pathname,
+) {
+  return (
+    pathname === "/login" ||
+    pathname ===
+      "/controle/login"
+  );
+}
+
+function sendWindowState(
+  window,
+) {
+  if (
+    !window ||
+    window.isDestroyed()
+  ) {
+    return;
+  }
+
+  window.webContents.send(
+    "desktop:window-state",
+    {
+      maximized:
+        window.isMaximized(),
+    },
+  );
+}
+
+function showLoginWindow(
+  window,
+) {
+  if (
+    !window ||
+    window.isDestroyed()
+  ) {
+    return;
+  }
+
+  window.setMinimumSize(
+    760,
+    560,
+  );
+
+  if (window.isMaximized()) {
+    window.unmaximize();
+  }
+
+  window.setSize(
+    LOGIN_WINDOW_SIZE.width,
+    LOGIN_WINDOW_SIZE.height,
+    true,
+  );
+
+  window.center();
+  sendWindowState(window);
+}
+
+function showApplicationWindow(
+  window,
+) {
+  if (
+    !window ||
+    window.isDestroyed()
+  ) {
+    return;
+  }
+
+  window.setMinimumSize(
+    1100,
+    700,
+  );
+
+  if (!window.isMaximized()) {
+    window.maximize();
+  }
+
+  sendWindowState(window);
 }
 
 function configureWebContents(
@@ -149,12 +250,12 @@ function configureWebContents(
 function createMainWindow() {
   const window =
     new BrowserWindow({
-      width: 1440,
-      height: 900,
-      minWidth: 1100,
-      minHeight: 700,
+      ...LOGIN_WINDOW_SIZE,
+      minWidth: 760,
+      minHeight: 560,
       autoHideMenuBar: true,
-      backgroundColor: "#f4f7fb",
+      backgroundColor: "#ffffff",
+      frame: false,
       show: false,
       title: applicationName,
       webPreferences:
@@ -164,8 +265,29 @@ function createMainWindow() {
   window.once(
     "ready-to-show",
     () => {
-      window.maximize();
+      showLoginWindow(
+        window,
+      );
+
       window.show();
+    },
+  );
+
+  window.on(
+    "maximize",
+    () => {
+      sendWindowState(
+        window,
+      );
+    },
+  );
+
+  window.on(
+    "unmaximize",
+    () => {
+      sendWindowState(
+        window,
+      );
     },
   );
 
@@ -174,6 +296,90 @@ function createMainWindow() {
   );
 
   return window;
+}
+
+function configureWindowControls() {
+  ipcMain.on(
+    "desktop:route-changed",
+    (
+      event,
+      pathname,
+    ) => {
+      if (
+        typeof pathname !==
+          "string" ||
+        !isAllowedAppUrl(
+          event.senderFrame.url,
+        )
+      ) {
+        return;
+      }
+
+      const window =
+        BrowserWindow
+          .fromWebContents(
+            event.sender,
+          );
+
+      if (
+        isLoginPath(pathname)
+      ) {
+        showLoginWindow(
+          window,
+        );
+      } else {
+        showApplicationWindow(
+          window,
+        );
+      }
+    },
+  );
+
+  ipcMain.on(
+    "desktop:window-control",
+    (
+      event,
+      action,
+    ) => {
+      if (
+        !isAllowedAppUrl(
+          event.senderFrame.url,
+        )
+      ) {
+        return;
+      }
+
+      const window =
+        BrowserWindow
+          .fromWebContents(
+            event.sender,
+          );
+
+      if (!window) {
+        return;
+      }
+
+      if (
+        action === "minimize"
+      ) {
+        window.minimize();
+      } else if (
+        action === "maximize"
+      ) {
+        if (
+          window.isMaximized()
+        ) {
+          window.unmaximize();
+        } else {
+          window.maximize();
+        }
+      } else if (
+        action === "close"
+      ) {
+        window.close();
+      }
+    },
+  );
 }
 
 function configurePrinting() {
@@ -299,6 +505,7 @@ if (!hasSingleInstanceLock) {
         );
 
       configurePrinting();
+      configureWindowControls();
       createMainWindow();
 
       app.on(
