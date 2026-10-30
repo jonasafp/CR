@@ -97,6 +97,28 @@ function isAllowedAppUrl(value) {
   }
 }
 
+function getTrustedWindow(
+  event,
+) {
+  const window =
+    BrowserWindow
+      .fromWebContents(
+        event.sender,
+      );
+
+  if (
+    !window ||
+    window.isDestroyed() ||
+    !isAllowedAppUrl(
+      event.sender.getURL(),
+    )
+  ) {
+    return null;
+  }
+
+  return window;
+}
+
 function getSecureWebPreferences() {
   return {
     contextIsolation: true,
@@ -309,21 +331,10 @@ function configureWindowControls() {
   ipcMain.handle(
     "desktop:get-window-state",
     (event) => {
-      if (
-        !isAllowedAppUrl(
-          event.senderFrame.url,
-        )
-      ) {
-        return {
-          maximized: false,
-        };
-      }
-
       const window =
-        BrowserWindow
-          .fromWebContents(
-            event.sender,
-          );
+        getTrustedWindow(
+          event,
+        );
 
       return {
         maximized:
@@ -341,19 +352,19 @@ function configureWindowControls() {
     ) => {
       if (
         typeof pathname !==
-          "string" ||
-        !isAllowedAppUrl(
-          event.senderFrame.url,
-        )
+          "string"
       ) {
         return;
       }
 
       const window =
-        BrowserWindow
-          .fromWebContents(
-            event.sender,
-          );
+        getTrustedWindow(
+          event,
+        );
+
+      if (!window) {
+        return;
+      }
 
       if (
         isLoginPath(pathname)
@@ -375,19 +386,10 @@ function configureWindowControls() {
       event,
       action,
     ) => {
-      if (
-        !isAllowedAppUrl(
-          event.senderFrame.url,
-        )
-      ) {
-        return;
-      }
-
       const window =
-        BrowserWindow
-          .fromWebContents(
-            event.sender,
-          );
+        getTrustedWindow(
+          event,
+        );
 
       if (!window) {
         return;
