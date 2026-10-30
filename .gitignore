@@ -13,6 +13,9 @@ dist
 .env.local
 .env.*.local
 dist-ssr
+release/
+build/icon-*.png
+build/icon-*.ico
 *.local
 backups/
 *.dump

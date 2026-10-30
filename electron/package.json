@@ -1,0 +1,8 @@
+{
+  "name": "gestor-facil-desktop",
+  "version": "1.0.0",
+  "description": "Aplicativo desktop do Gestor Fácil",
+  "author": "Jonas Pinto",
+  "private": true,
+  "main": "main.cjs"
+}

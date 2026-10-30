@@ -1,7 +1,10 @@
 {
   "name": "cr",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "Gestor Fácil — controle interno multiempresa",
+  "author": "Jonas Pinto",
+  "main": "electron/main.cjs",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,7 +13,12 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "validate": "npm run test && npm run lint && npm run build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "desktop:icons": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/generate-desktop-icons.ps1",
+    "desktop:package:client": "electron-packager electron GestorFacilCliente --platform=win32 --arch=x64 --out=release/electron/cliente --overwrite --executable-name=GestorFacilCliente --app-version=1.0.0 --icon=build/icon-client.ico --asar",
+    "desktop:package:control": "electron-packager electron GestorFacilControle --platform=win32 --arch=x64 --out=release/electron/controle --overwrite --executable-name=GestorFacilControle --app-version=1.0.0 --icon=build/icon-control.ico --asar",
+    "desktop:package": "npm run desktop:icons && npm run desktop:package:client && npm run desktop:package:control",
+    "desktop:installer": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-desktop.ps1"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.116.0",
@@ -26,13 +34,15 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@electron/packager": "20.3.0",
     "@types/node": "^24.13.2",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.3",
+    "electron": "45.1.0",
     "oxlint": "^1.71.0",
     "typescript": "~6.0.2",
     "vite": "^8.1.1",
-    "vitest": "^4.1.11"
+    "vitest": "5.0.5"
   }
 }

@@ -677,8 +677,34 @@ function print(
 
   printWindow.setTimeout(
     () => {
-      printWindow.focus();
-      printWindow.print();
+      void (async () => {
+        printWindow.focus();
+
+        const nativeResult =
+          await printWindow.gestorFacilPrinting?.print?.({
+            printerName:
+              settings.receipt.printerName,
+          });
+
+        if (!nativeResult) {
+          printWindow.print();
+          return;
+        }
+
+        if (!nativeResult.success) {
+          throw new Error(
+            nativeResult.error ??
+            "Não foi possível imprimir o comprovante.",
+          );
+        }
+      })()
+        .catch((error) => {
+          printWindow.alert(
+            error instanceof Error
+              ? error.message
+              : "Não foi possível imprimir o comprovante.",
+          );
+        });
     },
     250,
   );

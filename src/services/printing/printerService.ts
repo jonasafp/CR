@@ -5,6 +5,10 @@ export interface PrinterOption {
 
 type DesktopPrintingBridge = {
   getPrinters?: () => Promise<Array<{ name: string; displayName?: string }>>;
+  print?: (options?: { printerName?: string }) => Promise<{
+    success: boolean;
+    error?: string;
+  }>;
 };
 
 declare global {
