@@ -18,3 +18,26 @@ interface ImportMeta {
   readonly env:
     ImportMetaEnv;
 }
+
+type DesktopWindowState = {
+  maximized: boolean;
+};
+
+type GestorFacilDesktopBridge = {
+  isDesktop: true;
+  minimize: () => void;
+  toggleMaximize: () => void;
+  close: () => void;
+  getWindowState: () =>
+    Promise<DesktopWindowState>;
+  onWindowState: (
+    callback: (
+      state: DesktopWindowState,
+    ) => void,
+  ) => () => void;
+};
+
+interface Window {
+  gestorFacilDesktop?:
+    GestorFacilDesktopBridge;
+}

@@ -45,6 +45,8 @@ import {
   getErrorMessage,
 } from "../../utils/errors";
 
+import DesktopWindowControls from "../../components/common/DesktopWindowControls/DesktopWindowControls";
+
 import styles from "./Controle.module.css";
 
 type ControlTab = "overview" | "companies" | "database";
@@ -309,6 +311,8 @@ export default function Controle() {
               <Plus size={18} />
               Nova empresa
             </button>
+
+            <DesktopWindowControls />
           </div>
         </header>
 

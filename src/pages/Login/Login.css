@@ -289,6 +289,38 @@
   text-align: center;
 }
 
+html.gestor-facil-desktop .login-page {
+  background: var(--surface);
+  height: 100vh;
+  min-height: 0;
+  padding: 0;
+}
+
+html.gestor-facil-desktop .login-page::before,
+html.gestor-facil-desktop .login-page::after {
+  display: none;
+}
+
+html.gestor-facil-desktop .login-shell {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  height: 100%;
+  max-width: none;
+  min-height: 0;
+}
+
+html.gestor-facil-desktop .login-showcase {
+  -webkit-app-region: drag;
+}
+
+html.gestor-facil-desktop .login-card,
+html.gestor-facil-desktop .login-showcase__brand,
+html.gestor-facil-desktop .login-showcase__content,
+html.gestor-facil-desktop .login-showcase__footer {
+  -webkit-app-region: no-drag;
+}
+
 @media (max-width: 880px) {
   .login-shell {
     grid-template-columns: 1fr;

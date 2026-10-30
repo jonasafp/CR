@@ -55,6 +55,9 @@ const applicationId =
 const preloadPath =
   path.join(__dirname, "preload.cjs");
 
+const desktopUserAgent =
+  `GestorFacilDesktop/${app.getVersion()} Electron/${process.versions.electron} Chrome/${process.versions.chrome}`;
+
 function getInitialUrl() {
   return new URL(initialPath, APP_ORIGIN).toString();
 }
@@ -106,7 +109,7 @@ function getSecureWebPreferences() {
 
 const LOGIN_WINDOW_SIZE = {
   width: 1040,
-  height: 688,
+  height: 650,
 };
 
 function isLoginPath(
@@ -291,6 +294,10 @@ function createMainWindow() {
     },
   );
 
+  window.webContents.setUserAgent(
+    desktopUserAgent,
+  );
+
   void window.loadURL(
     getInitialUrl(),
   );
@@ -299,6 +306,33 @@ function createMainWindow() {
 }
 
 function configureWindowControls() {
+  ipcMain.handle(
+    "desktop:get-window-state",
+    (event) => {
+      if (
+        !isAllowedAppUrl(
+          event.senderFrame.url,
+        )
+      ) {
+        return {
+          maximized: false,
+        };
+      }
+
+      const window =
+        BrowserWindow
+          .fromWebContents(
+            event.sender,
+          );
+
+      return {
+        maximized:
+          window?.isMaximized() ??
+          false,
+      };
+    },
+  );
+
   ipcMain.on(
     "desktop:route-changed",
     (

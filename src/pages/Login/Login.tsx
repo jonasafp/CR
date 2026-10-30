@@ -13,6 +13,8 @@ import {
 
 import useAuth from "../../contexts/AuthContext/useAuth";
 
+import DesktopWindowControls from "../../components/common/DesktopWindowControls/DesktopWindowControls";
+
 import {
   getAuthErrorMessage,
   getCurrentCompanyMembership,
@@ -222,6 +224,8 @@ export default function Login({
   return (
     <main className="login-page">
       <section className="login-shell">
+        <DesktopWindowControls login />
+
         <aside className="login-showcase">
           <div className="login-showcase__brand">
             <span className="login-showcase__logo">

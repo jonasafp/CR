@@ -1,0 +1,76 @@
+.controls {
+  -webkit-app-region: drag;
+  align-items: center;
+  background: rgb(255 255 255 / 78%);
+  border: 1px solid rgb(221 228 239 / 92%);
+  border-radius: 14px;
+  box-shadow:
+    0 8px 22px rgb(30 46 78 / 8%),
+    inset 0 1px 0 rgb(255 255 255 / 80%);
+  display: inline-flex;
+  flex-shrink: 0;
+  gap: 3px;
+  padding: 4px;
+}
+
+.button {
+  -webkit-app-region: no-drag;
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 10px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  height: 34px;
+  justify-content: center;
+  padding: 0;
+  transition:
+    background 140ms ease,
+    color 140ms ease,
+    transform 140ms ease;
+  width: 34px;
+}
+
+.dragHandle {
+  align-items: center;
+  color: #a8b3c5;
+  cursor: grab;
+  display: inline-flex;
+  height: 34px;
+  justify-content: center;
+  width: 17px;
+}
+
+.button:hover {
+  background: #edf3ff;
+  color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.button:focus-visible {
+  box-shadow: 0 0 0 3px rgb(37 99 235 / 18%);
+  outline: none;
+}
+
+.close:hover {
+  background: #fff0f0;
+  color: var(--danger);
+}
+
+.loginClose {
+  -webkit-app-region: no-drag;
+  background: rgb(255 255 255 / 88%);
+  border: 1px solid rgb(221 228 239 / 90%);
+  box-shadow: 0 8px 24px rgb(15 23 42 / 10%);
+  color: var(--text-secondary);
+  position: absolute;
+  right: 18px;
+  top: 18px;
+  z-index: 3;
+}
+
+.loginClose:hover {
+  background: #fff0f0;
+  color: var(--danger);
+}

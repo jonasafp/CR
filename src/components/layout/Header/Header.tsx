@@ -8,6 +8,8 @@ import { useLocation } from "react-router-dom";
 
 import styles from "./Header.module.css";
 
+import DesktopWindowControls from "../../common/DesktopWindowControls/DesktopWindowControls";
+
 import { businessConfig } from "../../../config/businessConfig";
 
 import {
@@ -133,6 +135,8 @@ export default function Header({
               </span>
             </div>
           </div>
+
+          <DesktopWindowControls />
         </div>
       </div>
     </header>
