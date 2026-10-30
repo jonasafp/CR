@@ -29,3 +29,9 @@ Esse comando executa testes, lint, TypeScript e build de produção.
 - [Operação, backup e recuperação](docs/operacao-recuperacao.md)
 - [Homologação funcional](docs/homologacao-fase-12.md)
 
+
+## Licença e propriedade intelectual
+
+Este projeto é software proprietário. O acesso ao repositório ou ao sistema
+não concede permissão para copiar, modificar, distribuir, sublicenciar ou
+comercializar o código. Consulte o arquivo [LICENSE](LICENSE).

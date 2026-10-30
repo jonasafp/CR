@@ -1,21 +1,63 @@
-MIT License
+LICENÇA PROPRIETÁRIA — GESTOR FÁCIL
 
-Copyright (c) 2026 Jonas Pinto
+Copyright (c) 2026 Jonas Pinto. Todos os direitos reservados.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+1. TITULARIDADE
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+O Gestor Fácil, incluindo seu código-fonte, código compilado, estrutura,
+documentação, identidade visual, interfaces, modelos de dados, scripts,
+migrations e demais materiais originais, é software proprietário protegido
+pela legislação brasileira e por tratados internacionais aplicáveis.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+A disponibilização ou o acesso ao software não transfere ao usuário qualquer
+direito de propriedade intelectual.
+
+2. LICENÇA DE USO
+
+O uso do Gestor Fácil é permitido somente mediante autorização expressa do
+titular e nos limites do plano, contrato ou instrumento comercial aplicável.
+A licença concedida ao cliente é limitada, revogável, não exclusiva,
+intransferível e destinada exclusivamente às operações internas da empresa
+licenciada.
+
+3. RESTRIÇÕES
+
+Sem autorização prévia e escrita do titular, é proibido:
+
+a) copiar, reproduzir, publicar ou distribuir o software ou seu código-fonte;
+b) vender, sublicenciar, alugar, ceder ou disponibilizar o software a terceiros;
+c) modificar, adaptar, traduzir ou criar obras derivadas;
+d) realizar engenharia reversa, descompilar ou tentar reconstruir o código-fonte,
+   ressalvadas apenas as hipóteses expressamente permitidas por lei;
+e) remover avisos de autoria, propriedade ou identificação;
+f) utilizar o software, sua estrutura ou seus materiais para desenvolver,
+   treinar, reproduzir ou comercializar produto substancialmente derivado;
+g) contornar controles de acesso, autenticação, cobrança ou limitação de uso.
+
+4. DADOS DO CLIENTE
+
+Os dados inseridos pelo cliente permanecem sob responsabilidade e titularidade
+do respectivo cliente. O acesso técnico a esses dados deverá ocorrer somente
+para operação, suporte, segurança, manutenção ou cumprimento de obrigação legal,
+observados os contratos e a legislação aplicável.
+
+5. COMPONENTES DE TERCEIROS
+
+Bibliotecas, frameworks e demais componentes de terceiros utilizados pelo
+Gestor Fácil permanecem sujeitos às suas próprias licenças. Esta licença não
+altera nem restringe direitos concedidos diretamente pelos respectivos
+titulares desses componentes.
+
+6. ENCERRAMENTO
+
+O descumprimento desta licença poderá resultar na suspensão ou extinção da
+autorização de uso, sem prejuízo das medidas contratuais e legais cabíveis.
+Após o encerramento, o usuário deverá cessar o acesso e o uso do software,
+ressalvados os direitos relativos à obtenção dos seus próprios dados.
+
+7. GARANTIAS E RESPONSABILIDADE
+
+Garantias, níveis de serviço, suporte, disponibilidade, responsabilidade e
+condições comerciais serão definidos no contrato aplicável. Na extensão
+permitida pela legislação, o titular não assume obrigações além daquelas
+expressamente estabelecidas nesse instrumento.
