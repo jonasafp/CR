@@ -9,6 +9,13 @@ on:
 permissions:
   contents: read
 
+env:
+  VITE_SUPABASE_URL: https://ci-placeholder.supabase.co
+  VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
+  VITE_APP_ENV: development
+  VITE_APP_VERSION: ci
+  VITE_PUBLIC_APP_URL: https://ci-placeholder.vercel.app
+
 jobs:
   validate:
     runs-on: ubuntu-latest
