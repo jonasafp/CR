@@ -58,6 +58,8 @@ const preloadPath =
 const desktopUserAgent =
   `GestorFacilDesktop/${app.getVersion()} Electron/${process.versions.electron} Chrome/${process.versions.chrome}`;
 
+let mainWindow = null;
+
 function getInitialUrl() {
   return new URL(initialPath, APP_ORIGIN).toString();
 }
@@ -100,23 +102,16 @@ function isAllowedAppUrl(value) {
 function getTrustedWindow(
   event,
 ) {
-  const window =
-    BrowserWindow
-      .fromWebContents(
-        event.sender,
-      );
-
   if (
-    !window ||
-    window.isDestroyed() ||
-    !isAllowedAppUrl(
-      event.sender.getURL(),
-    )
+    !mainWindow ||
+    mainWindow.isDestroyed() ||
+    event.sender.id !==
+      mainWindow.webContents.id
   ) {
     return null;
   }
 
-  return window;
+  return mainWindow;
 }
 
 function getSecureWebPreferences() {
@@ -287,6 +282,8 @@ function createMainWindow() {
         getSecureWebPreferences(),
     });
 
+  mainWindow = window;
+
   window.once(
     "ready-to-show",
     () => {
@@ -313,6 +310,15 @@ function createMainWindow() {
       sendWindowState(
         window,
       );
+    },
+  );
+
+  window.on(
+    "closed",
+    () => {
+      if (mainWindow === window) {
+        mainWindow = null;
+      }
     },
   );
 

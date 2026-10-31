@@ -34,18 +34,6 @@
   width: 34px;
 }
 
-.dragHandle {
-  -webkit-app-region: drag;
-  app-region: drag;
-  align-items: center;
-  color: #a8b3c5;
-  cursor: grab;
-  display: inline-flex;
-  height: 34px;
-  justify-content: center;
-  width: 17px;
-}
-
 .button:hover {
   background: #edf3ff;
   color: var(--primary);

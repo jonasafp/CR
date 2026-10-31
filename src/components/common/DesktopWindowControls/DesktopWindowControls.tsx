@@ -2,7 +2,6 @@ import {
   Maximize2,
   Minimize2,
   Minus,
-  GripVertical,
   X,
 } from "lucide-react";
 
@@ -59,7 +58,9 @@ export default function DesktopWindowControls({
       <button
         type="button"
         className={`${styles.button} ${styles.loginClose}`}
-        onClick={desktop.close}
+        onClick={() => {
+          void desktop.close();
+        }}
         aria-label="Fechar aplicativo"
         title="Fechar aplicativo"
       >
@@ -73,18 +74,12 @@ export default function DesktopWindowControls({
       className={styles.controls}
       aria-label="Controles da janela"
     >
-      <span
-        className={styles.dragHandle}
-        aria-hidden="true"
-        title="Arrastar janela"
-      >
-        <GripVertical size={14} />
-      </span>
-
       <button
         type="button"
         className={styles.button}
-        onClick={desktop.minimize}
+        onClick={() => {
+          void desktop.minimize();
+        }}
         aria-label="Minimizar"
         title="Minimizar"
       >
@@ -94,7 +89,9 @@ export default function DesktopWindowControls({
       <button
         type="button"
         className={styles.button}
-        onClick={desktop.toggleMaximize}
+        onClick={() => {
+          void desktop.toggleMaximize();
+        }}
         aria-label={isMaximized ? "Restaurar" : "Maximizar"}
         title={isMaximized ? "Restaurar" : "Maximizar"}
       >
@@ -106,7 +103,9 @@ export default function DesktopWindowControls({
       <button
         type="button"
         className={`${styles.button} ${styles.close}`}
-        onClick={desktop.close}
+        onClick={() => {
+          void desktop.close();
+        }}
         aria-label="Fechar aplicativo"
         title="Fechar aplicativo"
       >
