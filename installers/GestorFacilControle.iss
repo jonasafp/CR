@@ -23,12 +23,14 @@ CloseApplications=yes
 [Files]
 Source: "..\release\electron\cliente\GestorFacilCliente-win32-x64\*"; DestDir: "{app}\Cliente"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\release\electron\controle\GestorFacilControle-win32-x64\*"; DestDir: "{app}\Controle"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\build\icon-client.ico"; DestDir: "{app}\Cliente\assets"; DestName: "GestorFacilCliente.ico"; Flags: ignoreversion
+Source: "..\build\icon-control.ico"; DestDir: "{app}\Controle\assets"; DestName: "GestorFacilControle.ico"; Flags: ignoreversion
 
 [Icons]
-Name: "{group}\Gestor Fácil Cliente"; Filename: "{app}\Cliente\GestorFacilCliente.exe"; WorkingDir: "{app}\Cliente"
-Name: "{group}\Gestor Fácil Controle"; Filename: "{app}\Controle\GestorFacilControle.exe"; WorkingDir: "{app}\Controle"
-Name: "{autodesktop}\Gestor Fácil Cliente"; Filename: "{app}\Cliente\GestorFacilCliente.exe"; WorkingDir: "{app}\Cliente"
-Name: "{autodesktop}\Gestor Fácil Controle"; Filename: "{app}\Controle\GestorFacilControle.exe"; WorkingDir: "{app}\Controle"
+Name: "{group}\Gestor Fácil Cliente"; Filename: "{app}\Cliente\GestorFacilCliente.exe"; WorkingDir: "{app}\Cliente"; IconFilename: "{app}\Cliente\assets\GestorFacilCliente.ico"; IconIndex: 0
+Name: "{group}\Gestor Fácil Controle"; Filename: "{app}\Controle\GestorFacilControle.exe"; WorkingDir: "{app}\Controle"; IconFilename: "{app}\Controle\assets\GestorFacilControle.ico"; IconIndex: 0
+Name: "{autodesktop}\Gestor Fácil Cliente"; Filename: "{app}\Cliente\GestorFacilCliente.exe"; WorkingDir: "{app}\Cliente"; IconFilename: "{app}\Cliente\assets\GestorFacilCliente.ico"; IconIndex: 0
+Name: "{autodesktop}\Gestor Fácil Controle"; Filename: "{app}\Controle\GestorFacilControle.exe"; WorkingDir: "{app}\Controle"; IconFilename: "{app}\Controle\assets\GestorFacilControle.ico"; IconIndex: 0
 
 [Run]
 Filename: "{app}\Controle\GestorFacilControle.exe"; Description: "Abrir Gestor Fácil Controle"; Flags: nowait postinstall skipifsilent

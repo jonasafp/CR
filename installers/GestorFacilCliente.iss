@@ -22,10 +22,11 @@ CloseApplications=yes
 
 [Files]
 Source: "..\release\electron\cliente\GestorFacilCliente-win32-x64\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\build\icon-client.ico"; DestDir: "{app}\assets"; DestName: "GestorFacilCliente.ico"; Flags: ignoreversion
 
 [Icons]
-Name: "{group}\Gestor Fácil Cliente"; Filename: "{app}\GestorFacilCliente.exe"; WorkingDir: "{app}"
-Name: "{autodesktop}\Gestor Fácil Cliente"; Filename: "{app}\GestorFacilCliente.exe"; WorkingDir: "{app}"
+Name: "{group}\Gestor Fácil Cliente"; Filename: "{app}\GestorFacilCliente.exe"; WorkingDir: "{app}"; IconFilename: "{app}\assets\GestorFacilCliente.ico"; IconIndex: 0
+Name: "{autodesktop}\Gestor Fácil Cliente"; Filename: "{app}\GestorFacilCliente.exe"; WorkingDir: "{app}"; IconFilename: "{app}\assets\GestorFacilCliente.ico"; IconIndex: 0
 
 [Run]
 Filename: "{app}\GestorFacilCliente.exe"; Description: "Abrir Gestor Fácil Cliente"; Flags: nowait postinstall skipifsilent
