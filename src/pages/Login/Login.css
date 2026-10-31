@@ -92,6 +92,13 @@
   width: 48px;
 }
 
+.login-showcase__logo img {
+  display: block;
+  height: 100%;
+  object-fit: contain;
+  width: 100%;
+}
+
 .login-showcase__brand div {
   display: grid;
   gap: 3px;

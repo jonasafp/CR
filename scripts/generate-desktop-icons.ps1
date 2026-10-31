@@ -5,174 +5,83 @@ Add-Type -AssemblyName System.Drawing
 $projectRoot =
   Split-Path -Parent $PSScriptRoot
 
+$sourceLogo =
+  Join-Path $projectRoot "public\brand\gestor-facil-logo.png"
+
 $buildDirectory =
   Join-Path $projectRoot "build"
 
-New-Item -ItemType Directory -Path $buildDirectory -Force |
+if (-not (Test-Path $sourceLogo)) {
+  throw "A logo oficial não foi encontrada em public\brand\gestor-facil-logo.png."
+}
+
+New-Item `
+  -ItemType Directory `
+  -Path $buildDirectory `
+  -Force |
   Out-Null
 
-function New-DesktopIcon {
+function New-IconFrame {
   param(
     [Parameter(Mandatory)]
-    [string] $Text,
+    [System.Drawing.Image] $SourceImage,
 
     [Parameter(Mandatory)]
-    [string] $Background,
-
-    [Parameter(Mandatory)]
-    [string] $OutputPath
+    [int] $Size
   )
 
   $bitmap =
-    [System.Drawing.Bitmap]::new(256, 256)
+    [System.Drawing.Bitmap]::new(
+      $Size,
+      $Size,
+      [System.Drawing.Imaging.PixelFormat]::Format32bppArgb
+    )
 
   $graphics =
-    [System.Drawing.Graphics]::FromImage($bitmap)
+    [System.Drawing.Graphics]::FromImage(
+      $bitmap
+    )
 
   try {
-    $graphics.SmoothingMode =
-      [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
-
     $graphics.Clear(
       [System.Drawing.Color]::Transparent
     )
 
-    $backgroundBrush =
-      [System.Drawing.SolidBrush]::new(
-        [System.Drawing.ColorTranslator]::FromHtml($Background)
-      )
+    $graphics.CompositingMode =
+      [System.Drawing.Drawing2D.CompositingMode]::SourceCopy
 
-    $font =
-      [System.Drawing.Font]::new(
-        "Segoe UI",
-        82,
-        [System.Drawing.FontStyle]::Bold,
-        [System.Drawing.GraphicsUnit]::Pixel
-      )
+    $graphics.CompositingQuality =
+      [System.Drawing.Drawing2D.CompositingQuality]::HighQuality
 
-    $textBrush =
-      [System.Drawing.SolidBrush]::new(
-        [System.Drawing.Color]::White
-      )
+    $graphics.InterpolationMode =
+      [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+
+    $graphics.PixelOffsetMode =
+      [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
+
+    $graphics.SmoothingMode =
+      [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
+
+    $graphics.DrawImage(
+      $SourceImage,
+      0,
+      0,
+      $Size,
+      $Size
+    )
+
+    $stream =
+      [System.IO.MemoryStream]::new()
 
     try {
-      $graphics.FillEllipse(
-        $backgroundBrush,
-        8,
-        8,
-        240,
-        240
-      )
-
-      $format =
-        [System.Drawing.StringFormat]::new()
-
-      try {
-        $format.Alignment =
-          [System.Drawing.StringAlignment]::Center
-
-        $format.LineAlignment =
-          [System.Drawing.StringAlignment]::Center
-
-        $rectangle =
-          [System.Drawing.RectangleF]::new(0, 0, 256, 250)
-
-        $graphics.DrawString(
-          $Text,
-          $font,
-          $textBrush,
-          $rectangle,
-          $format
-        )
-      } finally {
-        $format.Dispose()
-      }
-
       $bitmap.Save(
-        $OutputPath,
+        $stream,
         [System.Drawing.Imaging.ImageFormat]::Png
       )
 
-      $pngBytes =
-        [System.IO.File]::ReadAllBytes(
-          $OutputPath
-        )
-
-      $iconPath =
-        [System.IO.Path]::ChangeExtension(
-          $OutputPath,
-          ".ico"
-        )
-
-      $iconStream =
-        [System.IO.MemoryStream]::new()
-
-      $iconWriter =
-        [System.IO.BinaryWriter]::new(
-          $iconStream
-        )
-
-      try {
-        $iconWriter.Write(
-          [UInt16] 0
-        )
-
-        $iconWriter.Write(
-          [UInt16] 1
-        )
-
-        $iconWriter.Write(
-          [UInt16] 1
-        )
-
-        $iconWriter.Write(
-          [Byte] 0
-        )
-
-        $iconWriter.Write(
-          [Byte] 0
-        )
-
-        $iconWriter.Write(
-          [Byte] 0
-        )
-
-        $iconWriter.Write(
-          [Byte] 0
-        )
-
-        $iconWriter.Write(
-          [UInt16] 1
-        )
-
-        $iconWriter.Write(
-          [UInt16] 32
-        )
-
-        $iconWriter.Write(
-          [UInt32] $pngBytes.Length
-        )
-
-        $iconWriter.Write(
-          [UInt32] 22
-        )
-
-        $iconWriter.Write(
-          $pngBytes
-        )
-
-        [System.IO.File]::WriteAllBytes(
-          $iconPath,
-          $iconStream.ToArray()
-        )
-      } finally {
-        $iconWriter.Dispose()
-        $iconStream.Dispose()
-      }
+      return ,$stream.ToArray()
     } finally {
-      $backgroundBrush.Dispose()
-      $font.Dispose()
-      $textBrush.Dispose()
+      $stream.Dispose()
     }
   } finally {
     $graphics.Dispose()
@@ -180,17 +89,144 @@ function New-DesktopIcon {
   }
 }
 
-$clientIconParameters = @{
-  Text = "GF"
-  Background = "#1F6A43"
-  OutputPath = Join-Path $buildDirectory "icon-client.png"
+function Write-MultiSizeIcon {
+  param(
+    [Parameter(Mandatory)]
+    [System.Drawing.Image] $SourceImage,
+
+    [Parameter(Mandatory)]
+    [string] $OutputPath
+  )
+
+  $sizes = @(
+    16,
+    24,
+    32,
+    48,
+    64,
+    128,
+    256
+  )
+
+  $frames = @(
+    foreach ($size in $sizes) {
+      [PSCustomObject]@{
+        Size = $size
+        Bytes = New-IconFrame `
+          -SourceImage $SourceImage `
+          -Size $size
+      }
+    }
+  )
+
+  $stream =
+    [System.IO.MemoryStream]::new()
+
+  $writer =
+    [System.IO.BinaryWriter]::new(
+      $stream
+    )
+
+  try {
+    $writer.Write([UInt16] 0)
+    $writer.Write([UInt16] 1)
+    $writer.Write([UInt16] $frames.Count)
+
+    $dataOffset =
+      6 + (16 * $frames.Count)
+
+    foreach ($frame in $frames) {
+      $dimension =
+        if ($frame.Size -eq 256) {
+          [Byte] 0
+        } else {
+          [Byte] $frame.Size
+        }
+
+      $writer.Write($dimension)
+      $writer.Write($dimension)
+      $writer.Write([Byte] 0)
+      $writer.Write([Byte] 0)
+      $writer.Write([UInt16] 1)
+      $writer.Write([UInt16] 32)
+      $writer.Write([UInt32] $frame.Bytes.Length)
+      $writer.Write([UInt32] $dataOffset)
+
+      $dataOffset +=
+        $frame.Bytes.Length
+    }
+
+    foreach ($frame in $frames) {
+      $writer.Write(
+        $frame.Bytes
+      )
+    }
+
+    [System.IO.File]::WriteAllBytes(
+      $OutputPath,
+      $stream.ToArray()
+    )
+  } finally {
+    $writer.Dispose()
+    $stream.Dispose()
+  }
 }
 
-$controlIconParameters = @{
-  Text = "JC"
-  Background = "#183B73"
-  OutputPath = Join-Path $buildDirectory "icon-control.png"
+function Write-PreviewPng {
+  param(
+    [Parameter(Mandatory)]
+    [System.Drawing.Image] $SourceImage,
+
+    [Parameter(Mandatory)]
+    [string] $OutputPath
+  )
+
+  $bytes =
+    New-IconFrame `
+      -SourceImage $SourceImage `
+      -Size 256
+
+  [System.IO.File]::WriteAllBytes(
+    $OutputPath,
+    $bytes
+  )
 }
 
-New-DesktopIcon @clientIconParameters
-New-DesktopIcon @controlIconParameters
+$logo =
+  [System.Drawing.Image]::FromFile(
+    $sourceLogo
+  )
+
+try {
+  $clientPng =
+    Join-Path $buildDirectory "icon-client.png"
+
+  $controlPng =
+    Join-Path $buildDirectory "icon-control.png"
+
+  $clientIco =
+    Join-Path $buildDirectory "icon-client.ico"
+
+  $controlIco =
+    Join-Path $buildDirectory "icon-control.ico"
+
+  Write-PreviewPng `
+    -SourceImage $logo `
+    -OutputPath $clientPng
+
+  Write-PreviewPng `
+    -SourceImage $logo `
+    -OutputPath $controlPng
+
+  Write-MultiSizeIcon `
+    -SourceImage $logo `
+    -OutputPath $clientIco
+
+  Write-MultiSizeIcon `
+    -SourceImage $logo `
+    -OutputPath $controlIco
+
+  Write-Host "Ícones do Gestor Fácil gerados com sucesso em build\."
+} finally {
+  $logo.Dispose()
+}

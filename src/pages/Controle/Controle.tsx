@@ -227,7 +227,10 @@ export default function Controle() {
     <main className={styles.shell}>
       <aside className={styles.sidebar}>
         <div className={styles.brand}>
-          <span>JC</span>
+          <img
+            src="/brand/gestor-facil-logo.png"
+            alt="Gestor Fácil"
+          />
           <div>
             <strong>Jiah Controle</strong>
             <small>Gestor Fácil</small>

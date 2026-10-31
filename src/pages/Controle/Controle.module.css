@@ -22,7 +22,7 @@
   gap: 12px;
 }
 
-.brand > span,
+.brand > img,
 .profile > span {
   align-items: center;
   background: rgb(255 255 255 / 14%);
@@ -33,6 +33,11 @@
   height: 46px;
   justify-content: center;
   width: 46px;
+}
+
+.brand > img {
+  background: transparent;
+  object-fit: contain;
 }
 
 .brand div,

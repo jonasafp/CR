@@ -14,6 +14,7 @@ OutputBaseFilename=GestorFacilControle-Setup-{#AppVersion}
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
+SetupIconFile=..\build\icon-control.ico
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 UninstallDisplayIcon={app}\Controle\GestorFacilControle.exe

@@ -229,7 +229,10 @@ export default function Login({
         <aside className="login-showcase">
           <div className="login-showcase__brand">
             <span className="login-showcase__logo">
-              {controlMode ? "JC" : "GF"}
+              <img
+                src="/brand/gestor-facil-logo.png"
+                alt="Gestor Fácil"
+              />
             </span>
 
             <div>

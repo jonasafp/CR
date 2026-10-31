@@ -2,7 +2,6 @@ import {
   ChevronRight,
   LogOut,
   Settings,
-  Store,
   X,
 } from "lucide-react";
 
@@ -105,7 +104,10 @@ export default function Sidebar({
     >
       <div className={styles.brandArea}>
         <div className={styles.brandIcon}>
-          <Store size={25} strokeWidth={2.3} />
+          <img
+            src="/brand/gestor-facil-logo.png"
+            alt="Gestor Fácil"
+          />
         </div>
 
         <div className={styles.brandText}>
