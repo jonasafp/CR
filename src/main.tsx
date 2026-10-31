@@ -30,10 +30,17 @@ import SettingsProvider from "./contexts/SettingsContext/SettingsProvider";
 import AppErrorBoundary from "./components/common/AppErrorBoundary/AppErrorBoundary";
 import ConnectionStatus from "./components/common/ConnectionStatus/ConnectionStatus";
 
+import {
+  initializeMobilePlatform,
+} from "./services/mobile/mobilePlatformService";
+
 import "./styles/reset.css";
 import "./styles/variables.css";
 import "./styles/globals.css";
 import "./styles/animations.css";
+import "./styles/mobile.css";
+
+initializeMobilePlatform();
 
 createRoot(
   document.getElementById(
