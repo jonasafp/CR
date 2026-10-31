@@ -380,7 +380,7 @@ function configureWindowControls() {
     },
   );
 
-  ipcMain.on(
+  ipcMain.handle(
     "desktop:window-control",
     (
       event,
@@ -392,7 +392,7 @@ function configureWindowControls() {
         );
 
       if (!window) {
-        return;
+        return false;
       }
 
       if (
@@ -413,7 +413,11 @@ function configureWindowControls() {
         action === "close"
       ) {
         window.close();
+      } else {
+        return false;
       }
+
+      return true;
     },
   );
 }

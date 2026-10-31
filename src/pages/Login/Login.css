@@ -312,6 +312,7 @@ html.gestor-facil-desktop .login-shell {
 
 html.gestor-facil-desktop .login-showcase {
   -webkit-app-region: drag;
+  app-region: drag;
 }
 
 html.gestor-facil-desktop .login-card,
@@ -319,6 +320,7 @@ html.gestor-facil-desktop .login-showcase__brand,
 html.gestor-facil-desktop .login-showcase__content,
 html.gestor-facil-desktop .login-showcase__footer {
   -webkit-app-region: no-drag;
+  app-region: no-drag;
 }
 
 @media (max-width: 880px) {

@@ -24,26 +24,23 @@ contextBridge.exposeInMainWorld(
   {
     isDesktop: true,
 
-    minimize: () => {
-      ipcRenderer.send(
+    minimize: () =>
+      ipcRenderer.invoke(
         "desktop:window-control",
         "minimize",
-      );
-    },
+      ),
 
-    toggleMaximize: () => {
-      ipcRenderer.send(
+    toggleMaximize: () =>
+      ipcRenderer.invoke(
         "desktop:window-control",
         "maximize",
-      );
-    },
+      ),
 
-    close: () => {
-      ipcRenderer.send(
+    close: () =>
+      ipcRenderer.invoke(
         "desktop:window-control",
         "close",
-      );
-    },
+      ),
 
     getWindowState: () =>
       ipcRenderer.invoke(

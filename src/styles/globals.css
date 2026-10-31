@@ -133,3 +133,33 @@ p{
     color:var(--primary);
 
 }
+
+* {
+    scrollbar-color:#a9b7ca transparent;
+    scrollbar-width:thin;
+}
+
+*::-webkit-scrollbar {
+    height:8px;
+    width:8px;
+}
+
+*::-webkit-scrollbar-track {
+    background:transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+    background:rgb(148 163 184 / 65%);
+    background-clip:content-box;
+    border:2px solid transparent;
+    border-radius:999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background:rgb(37 99 235 / 72%);
+    background-clip:content-box;
+}
+
+*::-webkit-scrollbar-corner {
+    background:transparent;
+}

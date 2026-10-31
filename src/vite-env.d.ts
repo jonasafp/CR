@@ -25,9 +25,9 @@ type DesktopWindowState = {
 
 type GestorFacilDesktopBridge = {
   isDesktop: true;
-  minimize: () => void;
-  toggleMaximize: () => void;
-  close: () => void;
+  minimize: () => Promise<boolean>;
+  toggleMaximize: () => Promise<boolean>;
+  close: () => Promise<boolean>;
   getWindowState: () =>
     Promise<DesktopWindowState>;
   onWindowState: (
