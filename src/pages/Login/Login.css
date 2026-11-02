@@ -7,6 +7,7 @@
   overflow: hidden;
   padding: var(--space-7);
   position: relative;
+  width: 100%;
 }
 
 .login-page::before,
@@ -50,6 +51,7 @@
   position: relative;
   width: 100%;
   z-index: 1;
+  min-width: 0;
 }
 
 .login-showcase {
@@ -181,11 +183,13 @@
 .login-card {
   align-self: center;
   background: var(--surface);
+  min-width: 0;
   padding: 54px 64px;
 }
 
 .login-card__header {
   margin-bottom: 28px;
+  min-width: 0;
 }
 
 .login-card__eyebrow {
@@ -200,6 +204,7 @@
   color: var(--text);
   font-size: 30px;
   margin: 9px 0 8px;
+  overflow-wrap: anywhere;
 }
 
 .login-card__header p {
@@ -210,6 +215,8 @@
 .login-form {
   display: grid;
   gap: 18px;
+  min-width: 0;
+  width: 100%;
 }
 
 .login-form label {
@@ -218,6 +225,7 @@
   font-size: 13px;
   font-weight: 600;
   gap: 8px;
+  min-width: 0;
 }
 
 .login-form input {
@@ -230,6 +238,9 @@
   outline: none;
   padding: 0 14px;
   transition: var(--transition);
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
 }
 
 .login-form input:focus {
@@ -361,5 +372,65 @@ html.gestor-facil-desktop .login-showcase__footer {
 
   .login-card__header h2 {
     font-size: 25px;
+  }
+}
+
+@media (max-width: 380px) {
+  .login-page {
+    padding: 10px;
+  }
+
+  .login-card {
+    padding: 28px 18px;
+  }
+
+  .login-card__header {
+    margin-bottom: 24px;
+  }
+
+  .login-card__header h2 {
+    font-size: 23px;
+    line-height: 1.18;
+  }
+
+  .login-card__footer {
+    margin-top: 23px;
+    padding-top: 17px;
+  }
+}
+
+@media (max-height: 620px) and (max-width: 880px) {
+  .login-page {
+    align-items: flex-start;
+  }
+}
+
+html.gestor-facil-mobile .login-page {
+  min-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding:
+    max(12px, var(--safe-area-top))
+    max(12px, var(--safe-area-right))
+    max(12px, var(--safe-area-bottom))
+    max(12px, var(--safe-area-left));
+}
+
+html.gestor-facil-mobile .login-shell,
+html.gestor-facil-mobile .login-card,
+html.gestor-facil-mobile .login-form,
+html.gestor-facil-mobile .login-form label,
+html.gestor-facil-mobile .login-form input {
+  max-width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 380px) {
+  html.gestor-facil-mobile .login-page {
+    padding:
+      max(8px, var(--safe-area-top))
+      max(8px, var(--safe-area-right))
+      max(8px, var(--safe-area-bottom))
+      max(8px, var(--safe-area-left));
   }
 }

@@ -243,6 +243,23 @@
   .profile {
     display: none;
   }
+
+  :global(html.gestor-facil-mobile) .header {
+    min-height: calc(70px + var(--safe-area-top));
+    padding:
+      calc(10px + var(--safe-area-top))
+      max(14px, var(--safe-area-right))
+      10px
+      max(14px, var(--safe-area-left));
+  }
+
+  :global(html.gestor-facil-mobile) .headerContent {
+    min-height: 50px;
+  }
+
+  :global(html.gestor-facil-mobile) .notificationButton {
+    display: none;
+  }
 }
 
 @media (max-width: 420px) {

@@ -1,8 +1,12 @@
-import { useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
 import { Outlet } from "react-router-dom";
 
 import Header from "../../components/layout/Header/Header";
 import Sidebar from "../../components/layout/Sidebar/Sidebar";
+import MobileBottomNavigation from "../../components/layout/MobileBottomNavigation/MobileBottomNavigation";
 
 import styles from "./DashboardLayout.module.css";
 
@@ -16,6 +20,19 @@ export default function DashboardLayout() {
   function handleCloseSidebar() {
     setIsSidebarOpen(false);
   }
+
+  useEffect(() => {
+    if (!isSidebarOpen) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isSidebarOpen]);
 
   return (
     <div className={styles.layout}>
@@ -41,6 +58,10 @@ export default function DashboardLayout() {
             <Outlet />
           </div>
         </main>
+
+        <MobileBottomNavigation
+          onOpenMenu={handleToggleSidebar}
+        />
       </div>
     </div>
   );

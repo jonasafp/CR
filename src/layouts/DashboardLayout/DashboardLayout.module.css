@@ -56,4 +56,22 @@
     background: rgb(15 23 42 / 48%);
     backdrop-filter: blur(2px);
   }
+
+  :global(html.gestor-facil-mobile) .layout {
+    min-height: 100dvh;
+  }
+
+  :global(html.gestor-facil-mobile) .content {
+    padding:
+      18px
+      max(14px, var(--safe-area-right))
+      calc(96px + var(--safe-area-bottom))
+      max(14px, var(--safe-area-left));
+  }
+}
+
+@media (max-width: 420px) {
+  :global(html.gestor-facil-mobile) .content {
+    padding-top: 14px;
+  }
 }

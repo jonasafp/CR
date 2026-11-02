@@ -387,4 +387,17 @@
   .closeButton {
     display: grid;
   }
+
+  :global(html.gestor-facil-mobile) .sidebar {
+    width: min(310px, 88vw);
+    padding:
+      calc(18px + var(--safe-area-top))
+      16px
+      calc(14px + var(--safe-area-bottom));
+  }
+
+  :global(html.gestor-facil-mobile) .businessCard,
+  :global(html.gestor-facil-mobile) .navigation {
+    margin-top: 20px;
+  }
 }

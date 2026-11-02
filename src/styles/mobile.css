@@ -10,12 +10,27 @@ html.gestor-facil-mobile body,
 html.gestor-facil-mobile #root {
   min-height: 100%;
   overscroll-behavior: none;
+  width: 100%;
+  max-width: 100%;
+}
+
+html.gestor-facil-mobile {
+  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 html.gestor-facil-mobile body {
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
   text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+  overflow-x: clip;
+}
+
+html.gestor-facil-mobile #root,
+html.gestor-facil-mobile main,
+html.gestor-facil-mobile main > * {
+  min-width: 0;
 }
 
 html.gestor-facil-mobile button,
@@ -30,4 +45,41 @@ html.gestor-facil-mobile input,
 html.gestor-facil-mobile select,
 html.gestor-facil-mobile textarea {
   font-size: max(16px, 1em);
+  max-width: 100%;
+}
+
+html.gestor-facil-mobile [role="dialog"] {
+  max-height: calc(
+    100dvh - var(--safe-area-top) - var(--safe-area-bottom) - 20px
+  );
+}
+
+html.gestor-facil-mobile main table {
+  font-size: 13px;
+}
+
+html.gestor-facil-mobile main button,
+html.gestor-facil-mobile main a {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+@media (max-width: 768px) {
+  html.gestor-facil-mobile h1 {
+    font-size: 26px;
+  }
+
+  html.gestor-facil-mobile h2 {
+    font-size: 22px;
+  }
+
+  html.gestor-facil-mobile [role="dialog"] {
+    width: calc(100vw - 20px);
+    max-width: none;
+    border-radius: 18px;
+  }
+
+  html.gestor-facil-mobile main table {
+    white-space: nowrap;
+  }
 }
