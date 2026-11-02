@@ -27,4 +27,10 @@
     bottom: 12px;
     left: 12px;
   }
+
+  :global(html.gestor-facil-mobile) .banner {
+    right: max(12px, var(--safe-area-right));
+    bottom: calc(80px + var(--safe-area-bottom));
+    left: max(12px, var(--safe-area-left));
+  }
 }

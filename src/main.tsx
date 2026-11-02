@@ -29,6 +29,7 @@ import SettingsProvider from "./contexts/SettingsContext/SettingsProvider";
 
 import AppErrorBoundary from "./components/common/AppErrorBoundary/AppErrorBoundary";
 import ConnectionStatus from "./components/common/ConnectionStatus/ConnectionStatus";
+import NativeAppController from "./components/mobile/NativeAppController/NativeAppController";
 
 import {
   initializeMobilePlatform,
@@ -49,6 +50,8 @@ createRoot(
 ).render(
   <StrictMode>
     <BrowserRouter>
+      <NativeAppController />
+
       <QueryClientProvider
         client={
           queryClient

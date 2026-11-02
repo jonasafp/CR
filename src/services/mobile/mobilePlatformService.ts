@@ -1,5 +1,7 @@
 import {
   Capacitor,
+  SystemBars,
+  SystemBarsStyle,
 } from "@capacitor/core";
 
 const MOBILE_CLASS = "gestor-facil-mobile";
@@ -21,4 +23,10 @@ export function initializeMobilePlatform() {
   );
 
   document.documentElement.dataset.appPlatform = platform;
+
+  void SystemBars.setStyle({
+    style: SystemBarsStyle.Light,
+  }).catch(() => {
+    // A configuração visual não deve impedir a inicialização do aplicativo.
+  });
 }

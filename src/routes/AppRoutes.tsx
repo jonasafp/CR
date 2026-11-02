@@ -1,4 +1,5 @@
 import {
+  Navigate,
   Route,
   Routes,
 } from "react-router-dom";
@@ -24,8 +25,13 @@ import Vendas from "../pages/Vendas/Vendas";
 import DefinirSenha from "../pages/DefinirSenha/DefinirSenha";
 import NotFound from "../pages/NotFound/NotFound";
 import Controle from "../pages/Controle/Controle";
+import {
+  isMobileApp,
+} from "../services/mobile/mobilePlatformService";
 
 export default function AppRoutes() {
+  const isNativeClient = isMobileApp();
+
   return (
     <Routes>
       <Route
@@ -35,22 +41,31 @@ export default function AppRoutes() {
         }
       />
 
-      <Route
-        path="controle/login"
-        element={<Login controlMode />}
-      />
+      {isNativeClient ? (
+        <Route
+          path="controle/*"
+          element={<Navigate to="/login" replace />}
+        />
+      ) : (
+        <>
+          <Route
+            path="controle/login"
+            element={<Login controlMode />}
+          />
+
+          <Route element={<ControlProtectedRoute />}>
+            <Route
+              path="controle"
+              element={<Controle />}
+            />
+          </Route>
+        </>
+      )}
 
       <Route
         path="definir-senha"
         element={<DefinirSenha />}
       />
-
-      <Route element={<ControlProtectedRoute />}>
-        <Route
-          path="controle"
-          element={<Controle />}
-        />
-      </Route>
 
       <Route
         element={
