@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
+  readonly VITE_APP_VARIANT?: "client" | "control";
   readonly VITE_SUPABASE_URL:
     string;
 

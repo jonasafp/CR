@@ -28,18 +28,30 @@ import Controle from "../pages/Controle/Controle";
 import {
   isMobileApp,
 } from "../services/mobile/mobilePlatformService";
+import {
+  isControlApp,
+} from "../config/appVariant";
 
 export default function AppRoutes() {
-  const isNativeClient = isMobileApp();
+  const isNativeApp = isMobileApp();
+  const isNativeControl = isNativeApp && isControlApp;
+  const isNativeClient = isNativeApp && !isControlApp;
 
   return (
     <Routes>
       <Route
         path="login"
         element={
-          <Login />
+          <Login controlMode={isNativeControl} />
         }
       />
+
+      {isNativeControl && (
+        <Route
+          index
+          element={<Navigate to="/controle/login" replace />}
+        />
+      )}
 
       {isNativeClient ? (
         <Route
@@ -62,16 +74,19 @@ export default function AppRoutes() {
         </>
       )}
 
-      <Route
-        path="definir-senha"
-        element={<DefinirSenha />}
-      />
+      {!isNativeControl && (
+        <Route
+          path="definir-senha"
+          element={<DefinirSenha />}
+        />
+      )}
 
-      <Route
-        element={
-          <ProtectedRoute />
-        }
-      >
+      {!isNativeControl && (
+        <Route
+          element={
+            <ProtectedRoute />
+          }
+        >
         <Route
           element={
             <DashboardLayout />
@@ -170,12 +185,15 @@ export default function AppRoutes() {
             }
           />
         </Route>
-      </Route>
+        </Route>
+      )}
 
       <Route
         path="*"
         element={
-          <NotFound />
+          isNativeControl
+            ? <Navigate to="/controle" replace />
+            : <NotFound />
         }
       />
     </Routes>

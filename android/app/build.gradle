@@ -2,6 +2,8 @@ apply plugin: 'com.android.application'
 
 def versionProperties = new Properties()
 def versionPropertiesFile = rootProject.file('version.properties')
+def appVariant = project.findProperty('appVariant') ?: 'client'
+def isControlApp = appVariant == 'control'
 
 if (!versionPropertiesFile.exists()) {
     throw new GradleException('android/version.properties não foi encontrado.')
@@ -27,7 +29,7 @@ android {
     namespace = "com.jiah.gestorfacil"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.jiah.gestorfacil"
+        applicationId isControlApp ? "com.jiah.gestorfacil.controle" : "com.jiah.gestorfacil"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode versionProperties['VERSION_CODE'].toInteger()

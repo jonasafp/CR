@@ -1,8 +1,14 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
+const isControlApp = process.env.VITE_APP_VARIANT === "control";
+
 const config: CapacitorConfig = {
-  appId: "com.jiah.gestorfacil",
-  appName: "Gestor Fácil",
+  appId: isControlApp
+    ? "com.jiah.gestorfacil.controle"
+    : "com.jiah.gestorfacil",
+  appName: isControlApp
+    ? "Gestor Fácil Controle"
+    : "Gestor Fácil",
   webDir: "dist",
   server: {
     androidScheme: "https",
