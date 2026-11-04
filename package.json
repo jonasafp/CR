@@ -29,7 +29,9 @@
     "mobile:open:android": "cap open android",
     "mobile:open:ios": "cap open ios",
     "mobile:run:android": "npm run mobile:sync:android && cap run android",
-    "mobile:run:ios": "npm run mobile:sync:ios && cap run ios"
+    "mobile:run:ios": "npm run mobile:sync:ios && cap run ios",
+    "mobile:release:setup": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup-android-release.ps1",
+    "mobile:release:android": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-android-release.ps1"
   },
   "dependencies": {
     "@capacitor/android": "^8.6.0",
