@@ -7,7 +7,7 @@ const config: CapacitorConfig = {
     ? "com.jiah.gestorfacil.controle"
     : "com.jiah.gestorfacil",
   appName: isControlApp
-    ? "Gestor Fácil Controle"
+    ? "Gestor Controle"
     : "Gestor Fácil",
   webDir: "dist",
   server: {

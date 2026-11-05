@@ -225,6 +225,29 @@ export default function Controle() {
 
   return (
     <main className={styles.shell}>
+      <header className={styles.mobileHeader}>
+        <div className={styles.mobileBrand}>
+          <img
+            src="/brand/gestor-facil-logo.png"
+            alt="Gestor Fácil"
+          />
+          <div>
+            <strong>Jiah Controle</strong>
+            <small>Gestor Fácil</small>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          className={styles.mobileLogout}
+          onClick={handleLogout}
+          aria-label="Sair do sistema de controle"
+        >
+          <LogOut size={20} />
+          <span>Sair</span>
+        </button>
+      </header>
+
       <aside className={styles.sidebar}>
         <div className={styles.brand}>
           <img
@@ -517,6 +540,40 @@ export default function Controle() {
           </>
         )}
       </section>
+
+      <nav
+        className={styles.mobileNavigation}
+        aria-label="Navegação do sistema de controle"
+      >
+        <div className={styles.mobileNavigationInner}>
+          <button
+            type="button"
+            className={tab === "overview" ? styles.mobileNavActive : ""}
+            onClick={() => setTab("overview")}
+          >
+            <ChartNoAxesCombined size={21} />
+            <span>Visão geral</span>
+          </button>
+
+          <button
+            type="button"
+            className={tab === "companies" ? styles.mobileNavActive : ""}
+            onClick={() => setTab("companies")}
+          >
+            <Building2 size={21} />
+            <span>Empresas</span>
+          </button>
+
+          <button
+            type="button"
+            className={tab === "database" ? styles.mobileNavActive : ""}
+            onClick={() => setTab("database")}
+          >
+            <Database size={21} />
+            <span>Banco</span>
+          </button>
+        </div>
+      </nav>
 
       {isCreateOpen && (
         <CreateCompanyModal
