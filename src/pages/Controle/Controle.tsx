@@ -3,6 +3,7 @@ import {
   Building2,
   ChartNoAxesCombined,
   ChevronRight,
+  CreditCard,
   Database,
   KeyRound,
   LogOut,
@@ -46,10 +47,11 @@ import {
 } from "../../utils/errors";
 
 import DesktopWindowControls from "../../components/common/DesktopWindowControls/DesktopWindowControls";
+import BillingControlPanel from "../../components/control/BillingControlPanel/BillingControlPanel";
 
 import styles from "./Controle.module.css";
 
-type ControlTab = "overview" | "companies" | "database";
+type ControlTab = "overview" | "companies" | "billing" | "database";
 
 const emptyCompany: CreateControlCompanyInput = {
   legalName: "",
@@ -289,6 +291,15 @@ export default function Controle() {
 
           <button
             type="button"
+            className={tab === "billing" ? styles.activeNav : ""}
+            onClick={() => setTab("billing")}
+          >
+            <CreditCard size={19} />
+            Mensalidades
+          </button>
+
+          <button
+            type="button"
             className={tab === "database" ? styles.activeNav : ""}
             onClick={() => setTab("database")}
           >
@@ -318,11 +329,13 @@ export default function Controle() {
             <h1>
               {tab === "overview" && "Visão geral da plataforma"}
               {tab === "companies" && "Empresas cadastradas"}
+              {tab === "billing" && "Mensalidades e acessos"}
               {tab === "database" && "Controle do banco de dados"}
             </h1>
             <p>
               {tab === "overview" && "Crescimento e desempenho do Gestor Fácil."}
               {tab === "companies" && "Cadastros, acessos e situação de cada empresa."}
+              {tab === "billing" && "Cobranças, vencimentos e liberações automáticas."}
               {tab === "database" && "Consultas operacionais seguras e indicadores de integridade."}
             </p>
           </div>
@@ -492,6 +505,10 @@ export default function Controle() {
           </article>
         )}
 
+        {tab === "billing" && (
+          <BillingControlPanel />
+        )}
+
         {tab === "database" && data && (
           <>
             <div className={styles.databaseNotice}>
@@ -562,6 +579,15 @@ export default function Controle() {
           >
             <Building2 size={21} />
             <span>Empresas</span>
+          </button>
+
+          <button
+            type="button"
+            className={tab === "billing" ? styles.mobileNavActive : ""}
+            onClick={() => setTab("billing")}
+          >
+            <CreditCard size={21} />
+            <span>Mensalidades</span>
           </button>
 
           <button

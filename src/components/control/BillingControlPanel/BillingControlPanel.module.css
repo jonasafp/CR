@@ -1,0 +1,465 @@
+.loading {
+  display: grid;
+  min-height: 260px;
+  place-items: center;
+  color: var(--text-secondary);
+}
+
+.successMessage,
+.errorMessage {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border-radius: 11px;
+  font-size: 13px;
+}
+
+.successMessage {
+  color: #166534;
+  background: var(--success-light);
+}
+
+.errorMessage {
+  color: var(--danger);
+  background: var(--danger-light);
+}
+
+.environmentNotice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding: 15px 17px;
+  border: 1px solid #bfdbfe;
+  border-radius: 15px;
+  color: #1e3a8a;
+  background: #eff6ff;
+}
+
+.environmentNotice > div {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+}
+
+.environmentNotice strong {
+  font-size: 13px;
+}
+
+.environmentNotice span {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.environmentNotice button {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  color: var(--primary);
+  background: white;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.environmentNotice button:disabled {
+  cursor: wait;
+  opacity: .65;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.metric,
+.panel {
+  border: 1px solid #e7eaf0;
+  border-radius: 16px;
+  background: white;
+  box-shadow: 0 5px 18px rgb(25 45 80 / 5%);
+}
+
+.metric {
+  padding: 18px;
+}
+
+.metric > span {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  margin-bottom: 14px;
+  border-radius: 11px;
+  place-items: center;
+}
+
+.metric small {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.metric > strong {
+  display: block;
+  margin: 4px 0 2px;
+  color: #172033;
+  font-size: 24px;
+}
+
+.metric p {
+  margin: 0;
+  color: var(--text-light);
+  font-size: 10px;
+}
+
+.blue > span { color: #2563eb; background: #eaf2ff; }
+.green > span { color: #16a34a; background: #e8fbef; }
+.orange > span { color: #d97706; background: #fff7df; }
+.red > span { color: #dc2626; background: #fee2e2; }
+.purple > span { color: #7c3aed; background: #f0eaff; }
+
+.panel {
+  padding: 22px;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.toolbar label {
+  display: flex;
+  width: min(100%, 430px);
+  align-items: center;
+  gap: 9px;
+  padding: 0 13px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.toolbar input {
+  width: 100%;
+  height: 42px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+}
+
+.toolbar > span {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.tableWrap table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tableWrap th {
+  padding: 11px;
+  color: var(--text-light);
+  font-size: 10px;
+  letter-spacing: .05em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.tableWrap td {
+  padding: 14px 11px;
+  border-top: 1px solid #eef0f4;
+  color: #4b5563;
+  font-size: 12px;
+  vertical-align: middle;
+}
+
+.tableWrap td:first-child {
+  min-width: 180px;
+}
+
+.tableWrap td:first-child strong,
+.tableWrap td:first-child small {
+  display: block;
+}
+
+.tableWrap td:first-child strong {
+  color: #273247;
+}
+
+.tableWrap td:first-child small {
+  color: var(--text-light);
+  font-size: 10px;
+}
+
+[class*="status_"],
+.enforcementOn,
+.enforcementOff {
+  display: inline-flex;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.status_active { color: #15803d; background: var(--success-light); }
+.status_due_soon { color: #b45309; background: var(--warning-light); }
+.status_overdue,
+.status_suspended,
+.status_canceled { color: #b91c1c; background: var(--danger-light); }
+.status_manual_release { color: #6d28d9; background: var(--purple-light); }
+.status_trial { color: #1d4ed8; background: var(--primary-light); }
+.status_not_configured { color: #64748b; background: #f1f5f9; }
+.enforcementOn { color: #166534; background: var(--success-light); }
+.enforcementOff { color: #64748b; background: #f1f5f9; }
+
+.rowActions {
+  display: flex;
+  min-width: 270px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.rowActions button {
+  display: inline-flex;
+  min-height: 31px;
+  align-items: center;
+  gap: 5px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 8px;
+  color: #2459d6;
+  background: #edf3ff;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.rowActions button:disabled {
+  cursor: wait;
+  opacity: .55;
+}
+
+.rowActions .dangerAction {
+  color: var(--danger);
+  background: var(--danger-light);
+}
+
+.modalBackdrop {
+  position: fixed;
+  z-index: 1300;
+  inset: 0;
+  display: grid;
+  padding: 22px;
+  place-items: center;
+  background: rgb(15 23 42 / 58%);
+  backdrop-filter: blur(5px);
+}
+
+.modal {
+  display: grid;
+  width: min(100%, 510px);
+  gap: 16px;
+  padding: 26px;
+  border-radius: 19px;
+  background: white;
+  box-shadow: 0 24px 70px rgb(15 23 42 / 24%);
+}
+
+.modal header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  margin-bottom: 3px;
+}
+
+.modal header span {
+  color: var(--primary);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.modal header h2 {
+  margin: 5px 0 3px;
+  color: #172033;
+  font-size: 22px;
+}
+
+.modal header p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.modal header > button {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 9px;
+  place-items: center;
+  color: #64748b;
+  background: #f1f5f9;
+  cursor: pointer;
+}
+
+.modal > label:not(.checkbox) {
+  display: grid;
+  gap: 7px;
+  color: #334155;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.modal input[type="number"],
+.modal input[type="date"] {
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  outline: 0;
+  font: inherit;
+  font-size: 13px;
+}
+
+.modal input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgb(37 99 235 / 10%);
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 13px;
+  border-radius: 11px;
+  background: #f8fafc;
+  cursor: pointer;
+}
+
+.checkbox input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+}
+
+.checkbox span {
+  display: grid;
+  gap: 2px;
+}
+
+.checkbox strong {
+  color: #334155;
+  font-size: 12px;
+}
+
+.checkbox small {
+  color: var(--text-secondary);
+  font-size: 10px;
+}
+
+.modal footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.modal footer button {
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  background: white;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.modal footer button[type="submit"] {
+  border-color: var(--primary);
+  color: white;
+  background: var(--primary);
+}
+
+.modal footer button:disabled {
+  cursor: not-allowed;
+  opacity: .55;
+}
+
+.spinning {
+  animation: billing-admin-spin .8s linear infinite;
+}
+
+@keyframes billing-admin-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 1200px) {
+  .metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .environmentNotice {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .environmentNotice button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 420px) {
+  .metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .modalBackdrop {
+    align-items: end;
+    padding:
+      14px
+      max(14px, var(--safe-area-right))
+      max(14px, var(--safe-area-bottom))
+      max(14px, var(--safe-area-left));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinning {
+    animation: none;
+  }
+}

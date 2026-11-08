@@ -7,6 +7,7 @@ import { Outlet } from "react-router-dom";
 import Header from "../../components/layout/Header/Header";
 import Sidebar from "../../components/layout/Sidebar/Sidebar";
 import MobileBottomNavigation from "../../components/layout/MobileBottomNavigation/MobileBottomNavigation";
+import BillingAccessGuard from "../../components/billing/BillingAccessGuard/BillingAccessGuard";
 
 import styles from "./DashboardLayout.module.css";
 
@@ -55,7 +56,9 @@ export default function DashboardLayout() {
 
         <main className={styles.content}>
           <div className={styles.contentContainer}>
-            <Outlet />
+            <BillingAccessGuard>
+              <Outlet />
+            </BillingAccessGuard>
           </div>
         </main>
 

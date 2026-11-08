@@ -1,0 +1,269 @@
+.blockedContent {
+  max-height: 100vh;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+
+.checkingBadge {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-secondary);
+  background: rgb(255 255 255 / 94%);
+  box-shadow: var(--shadow-sm);
+  font-size: 13px;
+  font-weight: 700;
+  backdrop-filter: blur(12px);
+}
+
+.backdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  overflow: auto;
+  place-items: center;
+  padding: 24px;
+  background: rgb(15 23 42 / 58%);
+  backdrop-filter: blur(7px);
+}
+
+.modal {
+  position: relative;
+  width: min(100%, 520px);
+  padding: 30px;
+  border: 1px solid rgb(255 255 255 / 72%);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  box-shadow: 0 24px 80px rgb(15 23 42 / 28%);
+}
+
+.closeButton {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  display: grid;
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 12px;
+  place-items: center;
+  color: var(--text-secondary);
+  background: var(--background);
+  cursor: pointer;
+}
+
+.closeButton:hover {
+  color: var(--text);
+  background: var(--border);
+}
+
+.warningIcon,
+.dangerIcon {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  margin-bottom: 20px;
+  border-radius: 17px;
+  place-items: center;
+}
+
+.warningIcon {
+  color: #b45309;
+  background: var(--warning-light);
+}
+
+.dangerIcon {
+  color: var(--danger);
+  background: var(--danger-light);
+}
+
+.heading {
+  padding-right: 26px;
+}
+
+.eyebrow {
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .09em;
+}
+
+.heading h2 {
+  margin: 8px 0;
+  color: var(--text);
+  font-size: clamp(25px, 5vw, 32px);
+  line-height: 1.1;
+}
+
+.heading p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.paymentCard {
+  display: grid;
+  gap: 12px;
+  margin-top: 24px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--background);
+}
+
+.paymentSummary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.paymentSummary span {
+  display: grid;
+  gap: 5px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.paymentSummary strong {
+  color: var(--text);
+  font-size: 17px;
+}
+
+.qrContainer {
+  display: grid;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  place-items: center;
+  background: var(--white);
+}
+
+.qrContainer img {
+  display: block;
+  width: min(100%, 220px);
+  aspect-ratio: 1;
+}
+
+.primaryButton,
+.secondaryButton,
+.refreshButton,
+.logoutButton {
+  display: inline-flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.primaryButton {
+  border: 1px solid var(--primary);
+  color: var(--white);
+  background: var(--primary);
+}
+
+.primaryButton:hover {
+  border-color: var(--primary-hover);
+  background: var(--primary-hover);
+}
+
+.secondaryButton,
+.refreshButton {
+  border: 1px solid var(--border);
+  color: var(--text);
+  background: var(--white);
+}
+
+.secondaryButton:hover,
+.refreshButton:hover {
+  border-color: var(--primary-light);
+  color: var(--primary);
+}
+
+.actions {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.refreshButton:disabled {
+  cursor: wait;
+  opacity: .65;
+}
+
+.logoutButton {
+  border: 0;
+  color: var(--text-secondary);
+  background: transparent;
+}
+
+.logoutButton:hover {
+  color: var(--danger);
+  background: var(--danger-light);
+}
+
+.footer {
+  margin: 15px 0 0;
+  color: var(--text-light);
+  font-size: 12px;
+  text-align: center;
+}
+
+.spinning {
+  animation: billing-spin .8s linear infinite;
+}
+
+@keyframes billing-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 600px) {
+  .backdrop {
+    align-items: end;
+    padding:
+      14px
+      max(14px, var(--safe-area-right))
+      max(14px, var(--safe-area-bottom))
+      max(14px, var(--safe-area-left));
+  }
+
+  .modal {
+    max-height: calc(100dvh - 28px);
+    overflow-y: auto;
+    padding: 24px 20px;
+    border-radius: 24px;
+  }
+
+  .qrContainer img {
+    width: min(100%, 190px);
+  }
+}
+
+@media (max-width: 360px) {
+  .paymentSummary {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinning {
+    animation: none;
+  }
+}
